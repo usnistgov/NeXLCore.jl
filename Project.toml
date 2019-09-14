@@ -1,6 +1,6 @@
-name = "Example"
-uuid = "7876af07-990d-54b4-ab0e-23690620f79a"
-version = "0.5.4"
+name = "NeXLCore"
+uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
+version = "0.0.1"
 [compat]
 julia = "1"
 

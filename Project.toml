@@ -1,6 +1,17 @@
 name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
 version = "0.0.1"
+
+[deps]
+BoteSalvatICX = "fe54227b-96c7-489b-9963-dd1ce2905f30"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+FFAST = "10506e09-08cd-5f0b-aee5-631de1bcc925"
+PeriodicTable = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Requires = "ae029012-a4dd-5104-9daa-d747884805df"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
 [compat]
 julia = "1"
 
@@ -9,4 +20,3 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
-

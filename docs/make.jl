@@ -1,5 +1,5 @@
 using Documenter, Example
 
-makedocs(modules = [Example], sitename = "Example.jl")
+makedocs(modules = [NeXLCore], sitename = "NeXLCore.jl")
 
-deploydocs(repo = "github.com/JuliaLang/Example.jl.git")
+# deploydocs(repo = "github.com/JuliaLang/NeXLCore.jl.git")

@@ -5,11 +5,11 @@ using BoteSalvatICX # For ionization crosssections
 const shellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
     "N1", "N2", "N3", "N4", "N5", "N6", "N7", "O1", "O2", "O3",
     "O4", "O5", "O6", "O7", "O8", "O9", "P1", "P2", "P3", "P4", "P5",
-    "P6", "P7", "P8", "P9", "P10", "P11" )
+    "P6", "P7", "P8", "P9", "P10", "P11", "Q1" )
 """
     shellIndex(shell::AbstractString)
 
-Maps shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, etc).
+Maps shell names ("K","L1", ...,"P11", "Q1") to an integer index ("K"==1,"L1"==2, etc).
 """
 shellIndex(shell::AbstractString) =
     findfirst(name->shell==name, shellnames)
@@ -30,6 +30,13 @@ The minimum energy (in eV) necessary to ionize the specified shell in the specif
 shellEnergy(z::Int, sh::Int)::Float64 =
     ffastEdgeEnergy(z,sh)
 
+"""
+    elementCount() =
+
+The atomic number of the last element for which there is a complete set of energy, weight, MAC, ... data
+"""
+elementCount() =
+    ffastElementCount()
 
 """
     shellCount(z::Int)::Int
@@ -55,7 +62,7 @@ Computes the absolute ionization crosssection (in cm2) for the specified element
 electon energy (in eV).
 """
 ionizationCrossSection(z::Int, shell::Int, energy::AbstractFloat) =
-    boteSalvatICX(z, shell, energy, shellEnergy(z,shell))
+    boteSalvatAvailable(z, shell) ? boteSalvatICX(z, shell, energy, shellEnergy(z,shell)) : 0.0
 
 
 include("strength.jl")

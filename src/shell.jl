@@ -89,12 +89,35 @@ that the shell can hold, not the actual number a specific ground-state element m
 have in that shell.
 """
 capacity(shell::Shell) =
-    (2, # K
-     2, 2, 4, # L1, L2, L3
-     2, 2, 4, 4, 6, # M1, M2, M3, M4, M5
-     2, 2, 4, 4, 6, 6, 8, # N1, N2, N3, N4, N5, N6, N7
-     2, 2, 4, 4, 6, 6, 8, 8, 10, # O1, O2, O3, O4, O5, O6, O7, O8, O9
-     2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 12 )[shell.index] # P1.. P11
+    convert(Int,2*j(shell)+1)
+
+n(shell::Shell) =
+    ( 1,
+      2, 2, 2,
+      3, 3, 3, 3, 3,
+      4, 4, 4, 4, 4, 4, 4,
+      5, 5, 5, 5, 5, 5, 5, 5, 5,
+      6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+      7 )[shell.index]
+
+l(shell::Shell) =
+    ( 0,
+    0, 1, 1,
+    0, 1, 1, 2, 2,
+    0, 1, 1, 2, 2, 3, 3,
+    0, 1, 1, 2, 2, 3, 3, 4, 4,
+    0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5,
+    0  )[shell.index]
+
+j(shell::Shell) =
+    ( 1//2,
+      1//2, 1//2, 3//2,
+      1//2, 1//2, 3//2, 3//2, 5//2,
+      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2,
+      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2,
+      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2, 9//2, 11//2,
+      1//2
+    )[shell.index]
 
 
  # AtomicShell functions
@@ -117,18 +140,18 @@ capacity(shell::Shell) =
 
  The Element associated with the specified shell.
  """
- element(as::AtomicShell) = element(as.z)
+element(as::AtomicShell) = element(as.z)
 
- Base.isequal(as1::AtomicShell, as2::AtomicShell) =
+Base.isequal(as1::AtomicShell, as2::AtomicShell) =
      (as1.z==as2.z) && isequal(as1.shell,as2.shell)
 
- Base.isless(as1::AtomicShell, as2::AtomicShell) =
+Base.isless(as1::AtomicShell, as2::AtomicShell) =
      return as1.z==as2.z ? isless(as1.shell,as2.shell) : as1.z<as2.z
 
- Base.show(io::IO, ash::AtomicShell) =
+Base.show(io::IO, ash::AtomicShell) =
      print(io, element(ash.z).symbol," ",ash.shell)
 
- family(ash::AtomicShell) = family(ash.shell)
+family(ash::AtomicShell) = family(ash.shell)
 
 
  """
@@ -154,7 +177,7 @@ capacity(shell::Shell) =
  The edge energy in eV for the specified element and shell
  """
  energy(elm::Element, shell::Shell)::Float64 =
-         elementdatum(elm).edgeenergies[shell]
+    shellEnergy(z(elm), shell.index)
 
  """
      atomicshells(elm::Element, maxE=1.0e6)::Vector{AtomicShell}
@@ -163,11 +186,10 @@ capacity(shell::Shell) =
  specified element with less than the specified energy (in eV).
  """
  function atomicshells(elm::Element, maxE=1.0e6)::Vector{AtomicShell}
-     datum=NeXL.elementdatum(elm)
      res = Vector{AtomicShell}()
-     for (sh, ee) in datum.edgeenergies
-         if ee<maxE
-             push!(res,AtomicShell(z(elm),sh))
+     for sh in 1:shellCount(z(elm))
+         if shellEnergy(z(elm), sh) < maxE
+             push!(res, atomicshell(elm, Shell(sh)))
          end
      end
      return res
@@ -181,3 +203,17 @@ capacity(shell::Shell) =
  """
  ionizationCrossSection(ashell::AtomicShell, energy::AbstractFloat) =
      ionizationCrossSection(z(ashell), ashell.shell.index, energy, ffastEdgeEnergy(z(ashell), ashell.shell.index))
+
+
+"""
+    relativeIonizationCrossSection(z::Int, shell::Int, ev::AbstractFloat)
+
+An approximate expression based of Pouchou and Pouchoir's 1991 (Green Book) expression
+for the ionization crosssection plus an additional factor for shell capacity.
+"""
+function relativeIonizationCrossSection(ashell::AtomicShell, ev::AbstractFloat)
+     u = ev / energy(ashell)
+     shell = ashell.shell.index
+     m = shell==1 ? 0.86 + 0.12*exp(-(0.2*ashell.z)^2) : (shell <= 4 ? 0.82 : 0.78)
+     return capacity(ashell.shell) * log(u)/((energy(ashell)^2) * (u^m))
+ end

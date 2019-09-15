@@ -174,7 +174,7 @@ struct CharXRay
     z::Int
     transition::Transition
     function CharXRay(z::Int, transition::Transition)
-        @assert(charactericXRayAvailable(z,transition.innershell.index,transition.outershell.index),"$(element(z)) $(transition) does not occur.")
+        @assert(charactericXRayAvailable(z,transition.innershell.index,transition.outershell.index),"$(symbol(element(z))) $(transition) does not occur.")
         return new(z,transition)
     end
 end
@@ -191,6 +191,7 @@ characteristic(elm::Element, tr::Transition) =
 Base.parse(::Type{CharXRay}, str::AbstractString)::CharXRay =
         characteristic(str)
 
+
 """
     characteristic(str::AbstractString)::CharXRay
 
@@ -206,7 +207,7 @@ function characteristic(str::AbstractString)::CharXRay
                 inner = shell(sp2[1])
                 outer = shell(sp2[2])
                 if (!ismissing(inner)) && (!ismissing(outer))
-                    return CharXRay(z(elm),Transition(inner,outer))
+                    return CharXRay(z(elm),transition(inner,outer))
                 end
             end
         end
@@ -278,13 +279,14 @@ strength(elm::Element, tr::Transition)::Float64 =
     characteristicXRayStrength(z(elm),tr.innershell.index,tr.outershell.index)
 
 """
-    strength(elm::Element, tr::Transition)::Float64
+    weight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
 
 Returns the nominal line strength for the specified transition in the specified element.
 The strength differs from the weight in that the weight is normalized to the most intense line in the family.
 """
-weight(elm::Element, tr::Transition)::Float64 =
-    strength(elm,tr)*capacity(tr.innershell)/maximum(strength(elm, tr2)*capacity(tr2.innershell) for tr2 in transitionsbyfamily[family(tr)])
+weight(elm::Element, tr::Transition, overvoltage = 4.0) =
+    nexlIsAvailable(z(elm), tr.innershell.index, tr.outershell.index) ? weight(characteristic(elm,tr),overvoltage) : 0.0
+
 
 """
     fluorescenceyield(ashell::AtomicShell)::Float64
@@ -308,8 +310,13 @@ energy(cxr::CharXRay)::Float64 =
 
 The line weight of the specified characteristic X-ray
 """
-weight(cxr::CharXRay)::Float64 =
-    weight(element(cxr.z), cxr.transition)
+function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
+    e0 = overvoltage * energy(inner(cxr))
+    ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
+    safeSS(z, tr) = (nexlIsAvailable(cxr.z, tr.innershell.index, tr.outershell.index) ?
+        ss(CharXRay(cxr.z, tr)) : 0.0)
+    return ss(cxr)/maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
+end
 
 """
     brightest(elm::Element, family)
@@ -317,8 +324,8 @@ weight(cxr::CharXRay)::Float64 =
 Returns the brightest transition among the family of transitions for the
 specified element.  (group="K"|"Ka"|"Kb"|"L" etc)
 """
-brightest(elm::Element, group::AbstractString) =
-    last(sort(characteristic(elm, transitionsbygroup[family]),lt = (a,b)->isless(weight(a),weight(b))))
+brightest(elm::Element, transitions) =
+    last(sort(characteristic(elm, transitions), lt = (a,b)->isless(weight(a),weight(b))))
 
 """
     strength(cxr::CharXRay)::Float64
@@ -335,7 +342,7 @@ strength(cxr::CharXRay)::Float64 =
 The edge energy in eV for the specified AtomicShell.
 """
 has(elm::Element, tr::Transition)::Bool =
-    haskey(elementdatum(elm).charxrays, tr)
+    charactericXRayAvailable(z(elm),tr.innershell.index,tr.outershell.index)
 
 """
     transitions(elm::Element, iter, minweight=0.0, maxE=1.0e6)
@@ -344,7 +351,7 @@ The collection of available Transition(s) for the specified element.
 maxE is compared to the edge energy.
 """
 transitions(elm::Element, iter, minweight=0.0, maxE=1.0e6) =
-    collect(filter(tr -> (tr in iter) && (weight(elm, tr)>=minweight) && (energy(atomicshell(elm,tr.innershell))<=maxE), keys(elementdatum(elm).charxrays)))
+    filter(tr -> (weight(elm, tr)>minweight) && (energy(atomicshell(elm,tr.innershell))<=maxE), collect(iter))
 
 """
     characteristic(elm::Element, iter, minweight=1.0e-9, maxE=1.0e6)

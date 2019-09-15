@@ -58,4 +58,4 @@ density(elm::Element) = elm.density / 1.0u"g/cm^3"
 
 Compares Element structures by atomic number.
 """
-isless(elm1::Element, elm2::Element) = elm1.number < elm2.number
+Base.isless(elm1::Element, elm2::Element) = elm1.number < elm2.number

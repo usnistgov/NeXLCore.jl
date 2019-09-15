@@ -2,6 +2,8 @@ module NeXLCore
 
 using Requires
 
+# using Base.isless, Base.isequal, Base.show
+
 include("algorithm.jl")
 include("element.jl")
 include("shell.jl")
@@ -30,6 +32,7 @@ export name # Full English name
 export density # Returns Element or Mateial data
 export energy # Returns CharXRay and AtomicShell eneries
 export weight # Returns CharXRay weights
+export strength #
 export has # Element has a specific Transition, a Material has an element
 export transitions # Creates CharXRays for an Element
 export dtsamac # Calculates the MAC using Heinrich's formula

@@ -27,29 +27,65 @@ function innerOuter(trName::AbstractString)
     return ( shellIndex(shells[1]), shellIndex(shells[2]) )
 end
 
-const transitionShellIdx = Dict( ( innerOuter(transitionnames[i]), i + 1 ) for i in eachindex(transitionnames))
+const transitionShellIdx = Dict( ( innerOuter(transitionnames[i]), i ) for i in eachindex(transitionnames))
 
 transitionIndex(inner::Int, outer::Int) =
     get(transitionShellIdx, (inner, outer), nothing)
 
-const transitionNameIdx = Dict( ( transitionnames[i], i + 1 ) for i in eachindex(transitionnames))
+const transitionNameIdx = Dict( ( transitionnames[i], i ) for i in eachindex(transitionnames))
 
 transitionIndex(trName::AbstractString) =
     get(transitionNameIdx, trName, nothing)
 
-function loadWeights()
+function loadAltWeights()
+    fam(ss) = ss < 1 ? 'K' : (ss < 4 ? 'L' : ( ss<9 ? 'M' : (ss < 16 ? 'N' : (ss < 25 ? 'N' : (ss < 36 ? 'O' : 'P')))))
+    isck(s1, s2,s3) = (s1==0) && (fam(s2) == fam(s3))
     path = dirname(pathof(@__MODULE__))
-    return CSV.read("$(path)\\..\\data\\weights.csv")
+    for row in CSV.File("$(path)\\..\\data\\relax.csv")
+        if row.S1==0
+            if isck(row.S1, row.S2, row.S3)
+                costerkronigweights[ ( row.Z, row.S2+1, row. S3+1 ) ] = row.W
+            else
+                inner, outer = row.S2+1, row.S3+1
+                if (row.Z<=elementCount()) && (outer<=shellCount(row.Z)) # make sure that their is an edge energy asssociated with the shell
+                    # @assert(!isnothing(transitionIndex(inner,outer)),"Unexpected transition: $(inner)-$(outer)")
+                    xrayweights[ ( row.Z, inner, outer ) ] = row.W
+                    if !haskey(xraytransitions,(row.Z,inner))
+                        xraytransitions[(row.Z, inner)] = Vector{Tuple{Int,Int}}()
+                    end
+                    push!(xraytransitions[(row.Z,inner)],(inner,outer))
+                end
+            end
+        else
+            augerweights[ ( row.Z, row.S1+1, row.S2+1, row.S3+1 ) ] = row.W
+        end
+    end
 end
 
-const weights = loadWeights() # as a DataFrame
+const xrayweights = Dict{Tuple{Int,Int,Int},Float64}()
+const costerkronigweights = Dict{Tuple{Int,Int,Int},Float64}()
+const augerweights = Dict{Tuple{Int,Int,Int,Int},Float64}()
+const xraytransitions = Dict{Tuple{Int,Int}, Vector{Tuple{Int,Int}}}()
 
-function nexlWeights(z::Int,inner::Int,outer::Int)::Float64
-    trIdx = transitionIndex(inner,outer)
-    return isnothing(trIdx) ? 0.0 : (ismissing(weights[z,trIdx]) ? 0.0 : weights[z][trIdx])
-end
+loadAltWeights()
 
-function nexlIsAvailable(z::Int, inner::Int, outer::Int)
-    trIdx = transitionIndex(inner,outer)
-    return !(isnothing(trIdx) || ismissing(weights[z,trIdx]))
-end
+nexlWeights(z::Int,inner::Int,outer::Int) =
+    get(xrayweights, (z, inner, outer), 0.0)
+
+nexlIsAvailable(z::Int,inner::Int,outer::Int) =
+    get(xrayweights, (z, inner, outer), -1.0) > 0.0
+
+nexlGetTransitions(z::Int, inner::Int) =
+    get(xraytransitions, (z, inner), Vector{Tuple{Int,Int}}())
+
+nexlGetTransitions(z::Int) =
+    mapreduce(inner->nexlGetTransitions(z, inner), append!, 1:37)
+
+nexlAuger(z::Int,s1::Int,s2::Int,s3::Int) =
+    get(augerweights, (z, s1, s2, s3), 0.0)
+
+nexlIsAuger(z::Int, s1::Int,s2::Int,s3::Int) =
+    get(augerweights, (z, s1, s2, s3), -1.0) > 0.0
+
+nexlCosterKronig(z::Int, inner::Int, outer::Int) =
+    get(consterkronigweights, (z, inner, outer), 0.0)

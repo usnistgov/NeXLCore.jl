@@ -5,11 +5,11 @@ using BoteSalvatICX # For ionization crosssections
 const shellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
     "N1", "N2", "N3", "N4", "N5", "N6", "N7", "O1", "O2", "O3",
     "O4", "O5", "O6", "O7", "O8", "O9", "P1", "P2", "P3", "P4", "P5",
-    "P6", "P7", "P8", "P9", "P10", "P11", "Q1" )
+    "P6", "P7", "P8", "P9", "P10", "P11" )
 """
     shellIndex(shell::AbstractString)
 
-Maps shell names ("K","L1", ...,"P11", "Q1") to an integer index ("K"==1,"L1"==2, etc).
+Maps shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, etc).
 """
 shellIndex(shell::AbstractString) =
     findfirst(name->shell==name, shellnames)
@@ -31,20 +31,20 @@ shellEnergy(z::Int, sh::Int)::Float64 =
     ffastEdgeEnergy(z,sh)
 
 """
-    elementCount() =
+    elementRange() = 1:92
 
-The atomic number of the last element for which there is a complete set of energy, weight, MAC, ... data
+The range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data
 """
-elementCount() =
-    ffastElementCount()
+elementRange() =
+    ffastElementRange()
 
 """
-    shellCount(z::Int)::Int
+    shellindexes(z::Int)
 
-The number of shells in a neutral, ground state atom of the specified atomic number.
+The shells occupied in a neutral, ground state atom of the specified atomic number.
 """
-shellCount(z::Int)::Int =
-    ffastEdgeCount(z)
+shellindexes(z::Int) =
+    ffastEdges(z)
 
 """
     characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64

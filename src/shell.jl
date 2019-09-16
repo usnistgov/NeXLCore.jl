@@ -187,7 +187,7 @@ family(ash::AtomicShell) = family(ash.shell)
  """
  function atomicshells(elm::Element, maxE=1.0e6)::Vector{AtomicShell}
      res = Vector{AtomicShell}()
-     for sh in 1:shellCount(z(elm))
+     for sh in shellindexes(z(elm))
          if shellEnergy(z(elm), sh) < maxE
              push!(res, atomicshell(elm, Shell(sh)))
          end

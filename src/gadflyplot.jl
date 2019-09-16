@@ -9,23 +9,25 @@ function plotXrayEnergies(transitions::AbstractArray{Transition})
     layers, names, colors = [], [], []
     for tr in transitions
         x, y = [], []
-        for z in 1:92
-            if has(element(z), tr)
-                push!(x,z)
-                push!(y,energy(element(z),tr))
+        for elm in element.(80:92)
+            if has(elm, tr)
+                push!(x,z(elm))
+                push!(y,energy(elm,tr))
             end
+        end
         if length(x)>0
             push!(names, repr(tr))
             push!(colors, linecolors[length(colors) % length(linecolors) + 1])
             push!(layers, Gadfly.layer(x=x, y=y, Geom.point,
-                Gadfly.Theme(default_color = colors[end] ))
+                Gadfly.Theme(default_color = colors[end] )))
         end
     end
+    println("Plotting $(length(layers)) layers.")
     Gadfly.plot(layers...,
         Gadfly.Guide.title("Characteristic X-ray Energies"),
-        Gadfly.Guide.manual_color_key("Type", name = names, colors = colors),
+        # Gadfly.Guide.manual_color_key("Type", names, colors),
         Gadfly.Guide.xlabel("Atomic Number"), Guide.ylabel("Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = 1, xmax = 92))
+        Gadfly.Coord.cartesian(xmin = 80, xmax = 92))
 end
 
 function plotXrayWeights(transitions::AbstractArray{Transition})
@@ -34,21 +36,22 @@ function plotXrayWeights(transitions::AbstractArray{Transition})
         x, y = [], []
         for z in 1:92
             if has(element(z), tr)
-                push!(x, z)
+                push!(x, z(element))
                 push!(y, strength(element(z),tr))
             end
-        if length(x)>0
-            push!(names, repr(tr))
-            push!(colors, linecolors[length(colors) % length(linecolors) + 1])
-            push!(layers, Gadfly.layer(x=x, y=y, Geom.point,
-                Gadfly.Theme(default_color = colors[end] ))
+            if length(x)>0
+                push!(names, repr(tr))
+                push!(colors, linecolors[length(colors) % length(linecolors) + 1])
+                push!(layers, Gadfly.layer(x=x, y=y, Geom.point,
+                    Gadfly.Theme(default_color = colors[end] )))
+            end
         end
     end
     Gadfly.plot(layers...,
         Gadfly.Guide.title("Characteristic X-ray Energies"),
         Gadfly.Guide.manual_color_key("Type", name = names, colors = colors),
         Gadfly.Guide.xlabel("Atomic Number"), Guide.ylabel("Line Weight"),
-        Gadfly.Coord.cartesian(xmin = 1, xmax = 92))
+        Gadfly.Coord.cartesian(xmin = 80, xmax = 92))
 end
 
 function plotEdgeEnergies(shells::AbstractArray{Shell})

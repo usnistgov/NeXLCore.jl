@@ -313,9 +313,8 @@ The line weight of the specified characteristic X-ray
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0 = overvoltage * energy(inner(cxr))
     ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
-    safeSS(z, tr) = (nexlIsAvailable(cxr.z, tr.innershell.index, tr.outershell.index) ?
-        ss(CharXRay(cxr.z, tr)) : 0.0)
-    return ss(cxr)/maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
+    safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
+    return ss(cxr) / maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
 end
 
 """

@@ -47,7 +47,7 @@ function loadAltWeights()
                 costerkronigweights[ ( row.Z, row.S2+1, row. S3+1 ) ] = row.W
             else
                 inner, outer = row.S2+1, row.S3+1
-                if (row.Z<=elementCount()) && (outer<=shellCount(row.Z)) # make sure that their is an edge energy asssociated with the shell
+                if (row.Z in elementRange()) && (outer in shellindexes(row.Z)) # make sure that their is an edge energy asssociated with the shell
                     # @assert(!isnothing(transitionIndex(inner,outer)),"Unexpected transition: $(inner)-$(outer)")
                     xrayweights[ ( row.Z, inner, outer ) ] = row.W
                     if !haskey(xraytransitions,(row.Z,inner))

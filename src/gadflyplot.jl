@@ -80,11 +80,11 @@ end
 
 
 function compareMACs(elm::Element)
-    l1 = layer(ev->mac(elm,ev), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color="tomato"))
-    l2 = layer(ev->dtsamac(elm,ev), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color="darkseagreen4"))
+    l1 = layer(ev->log10(mac(elm,ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color="tomato"))
+    l2 = layer(ev->log10(dtsamac(elm,ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color="darkseagreen4"))
     Gadfly.plot( l1, l2,
         Gadfly.Guide.title("Comparing MACs"),
         Gadfly.Guide.manual_color_key("Type", ("Default", "Heinrich"), ("tomato", "darkseagreen4")),
-        Gadfly.Guide.xlabel("Energy (eV)"), Guide.ylabel("MAC (cm²/g)"),
+        Gadfly.Guide.xlabel("Energy (eV)"), Guide.ylabel("log₁₀(MAC (cm²/g))"),
         Gadfly.Coord.cartesian(xmin = 0.0, xmax = 20.0e3))
 end

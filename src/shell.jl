@@ -7,12 +7,14 @@ using PeriodicTable
 # THe Shell and AtomicShell structures
 
 """
-Shell
+    Shell
 
 Represents one of the various different shells in an atom.
 Member data items are index::Int where 1=>K, 2=>L1, ..., 36=>P11.
 Construct using Shell(name::AbstractString) where name = "K", "L1"...,"P11"
+
 Data items:
+
     index::Int
 """
 struct Shell
@@ -34,9 +36,14 @@ Base.isequal(sh1::Shell, sh2::Shell) = sh1.index==sh2.index
 Base.isless(sh1::Shell, sh2::Shell) = sh1.index < sh2.index
 
 """
-family(sh::Shell)
+    family(sh::Shell)
 
 Returns on of 'K', 'L', 'M', 'N', or 'O' for the shell family.
+
+Example:
+
+    julia> family(n"M5")
+    'M': ASCII/Unicode U+004d (category Lu: Letter, uppercase)
 """
 family(sh::Shell) =
     shellnames[sh.index][1]
@@ -51,32 +58,36 @@ const allshells = Shell.(shellnames)
 """
     kshells
 
-All K shells [ "K" ]
+All K shells ( K )
 """
 const kshells = tuple(filter(sh -> family(sh) == 'K', collect(allshells))...)
 
 """
     lshells
-All L shells [ "L1", "L2", "L3" ]
+
+All L shells ( L1, L2, L3 )
 """
 const lshells = tuple(filter(sh -> family(sh) == 'L', collect(allshells))...)
 
 """
     mshells
-All M shells [ "M1", "M2",.., "M5" ]
+
+All M shells ( M1, M2,.., M5 )
 """
 const mshells = tuple(filter(sh -> family(sh) == 'M', collect(allshells))...)
 
 """
     nshells
-All N shells [ "N1", "N2",.., "N7" ]
+
+All N shells ( N1, N2,.., N7 ) ]
 """
 const nshells = tuple(filter(sh -> family(sh) == 'N', collect(allshells))...)
 
 
 """
     oshells
-All O shells [ "O1", "O2",.., "O9" ]
+
+All O shells  ( O1, O2,.., O9 )
 """
 const oshells = tuple(filter(sh -> family(sh) == 'O', collect(allshells))...)
 
@@ -97,17 +108,15 @@ n(shell::Shell) =
       3, 3, 3, 3, 3,
       4, 4, 4, 4, 4, 4, 4,
       5, 5, 5, 5, 5, 5, 5, 5, 5,
-      6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-      7 )[shell.index]
+      6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6 )[shell.index]
 
 l(shell::Shell) =
     ( 0,
-    0, 1, 1,
-    0, 1, 1, 2, 2,
-    0, 1, 1, 2, 2, 3, 3,
-    0, 1, 1, 2, 2, 3, 3, 4, 4,
-    0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5,
-    0  )[shell.index]
+      0, 1, 1,
+      0, 1, 1, 2, 2,
+      0, 1, 1, 2, 2, 3, 3,
+      0, 1, 1, 2, 2, 3, 3, 4, 4,
+      0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 )[shell.index]
 
 j(shell::Shell) =
     ( 1//2,
@@ -115,8 +124,7 @@ j(shell::Shell) =
       1//2, 1//2, 3//2, 3//2, 5//2,
       1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2,
       1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2,
-      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2, 9//2, 11//2,
-      1//2
+      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2, 9//2, 11//2
     )[shell.index]
 
 
@@ -140,15 +148,34 @@ j(shell::Shell) =
              error("The shell $(shell) in $(element(z)) is not occupied in the ground state.")
          end
          return new(z,shell)
-
      end
-
+     AtomicShell(elm::Element, shell::Shell) =
+        AtomicShell(z(elm),shell)
  end
 
  """
      element(as::AtomicShell)
 
- The Element associated with the specified shell.
+The Element associated with the specified shell.
+
+Example:
+
+    julia> element(n"Fe L3")
+    Iron (Fe), number 26:
+        category: transition metal
+     atomic mass: 55.8452 u
+         density: 7.874 g/cm³
+      molar heat: 25.1 J/mol⋅K
+   melting point: 1811.0 K
+   boiling point: 3134.0 K
+           phase: Solid
+          shells: [2, 8, 14, 2]
+e⁻-configuration: 1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d⁶
+      appearance: lustrous metallic with a grayish tinge
+         summary: Iron is a chemical element with symbol Fe (from Latin:ferrum) and atomic number 26. It is a metal in the first transition series. It is by mass the most common element on Earth, forming much of Earth's outer and inner core.
+   discovered by: 5000 BC
+          source: https://en.wikipedia.org/wiki/Iron
+  spectral image: https://en.wikipedia.org/wiki/File:Iron_Spectrum.jpg
  """
 element(as::AtomicShell) = element(as.z)
 
@@ -161,6 +188,14 @@ Base.isless(as1::AtomicShell, as2::AtomicShell) =
 Base.show(io::IO, ash::AtomicShell) =
      print(io, element(ash.z).symbol," ",ash.shell)
 
+"""
+    family(ash::AtomicShell)
+
+Example:
+
+    julia> family(n"Fe L3")
+    'L': ASCII/Unicode U+004c (category Lu: Letter, uppercase)
+"""
 family(ash::AtomicShell) = family(ash.shell)
 
  """
@@ -184,6 +219,11 @@ has(elm::Element, shell::Shell) =
      energy(ash::AtomicShell)
 
  The edge energy in eV for the specified AtomicShell
+
+Example:
+
+    julia> energy(n"Fe L3")
+    708.0999999999999
  """
  energy(ash::AtomicShell)::Float64 =
      shellEnergy(ash.z, ash.shell.index)
@@ -193,6 +233,19 @@ has(elm::Element, shell::Shell) =
 
  Returns a Vector containing all AtomicShell structs associated with the
  specified element with less than the specified energy (in eV).
+
+Example:
+
+    julia> atomicshells(n"Fe",1.0e3)
+    8-element Array{AtomicShell,1}:
+     Fe M3
+     Fe L3
+     Fe M5
+     Fe L1
+     Fe L2
+     Fe M1
+     Fe M4
+     Fe M2
  """
  function atomicshells(elm::Element, maxE=1.0e6)::Vector{AtomicShell}
      res = Vector{AtomicShell}()
@@ -211,7 +264,7 @@ has(elm::Element, shell::Shell) =
  electon energy (in eV) using the default algorithm.
 
  Example:
- 
+
      julia> (/)(map(e->NeXLCore.ionizationCrossSection(n"Fe K",e),[10.0e3,20.0e3])...)
      0.5672910174711278
  """

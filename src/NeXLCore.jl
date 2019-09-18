@@ -46,6 +46,11 @@ export relativeIonizationCrossSection # Computes a number proportional to the io
 export ionizationCrossSection # Computes the absolute ionization crosssection
 export @n_str
 
+
+export approxKShellFluorescenceYield
+export dtsamac
+
+
 include("material.jl")
 export material # Construct a Material struct
 export pure # Construct a pure element material

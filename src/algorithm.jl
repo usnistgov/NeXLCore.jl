@@ -82,3 +82,15 @@ Is the weight associated with this transition greater than zero.
 """
 charactericXRayAvailable(z::Int, inner::Int, outer::Int)::Bool =
     nexlIsAvailable(z,inner,outer)
+
+
+"""
+    approxKShellFluorescenceYield(z::Int)
+
+An approximate expression for the K-shell fluorescence yield due to
+E.H.S Burhop, J. Phys. Radium, 16, 625 (1965)
+"""
+function approxKShellFluorescenceYield(z::Int)
+    d = -0.044 + 0.0346z - 1.35e-6z^3
+    return d^4/(1.0+d^4)
+end

@@ -34,7 +34,6 @@ export energy # Returns CharXRay and AtomicShell eneries
 export weight # Returns CharXRay weights
 export strength #
 export has # Element has a specific Transition, a Material has an element
-export transitions # Creates CharXRays for an Element
 export dtsamac # Calculates the MAC using Heinrich's formula
 export mac # Calculates the MAC using the default algorithm
 export family # The family ('K','L','M',...) for an AtomicShell, Transition, CharXRay etc.
@@ -43,6 +42,8 @@ export eV2keV # Convert eV to keV
 export atomicshells # Gets an iterator of AtomicShell for the specified element
 export brightest # Returns the brightest characteristic X-ray from a set of transitions for an element
 export splitbyshell # Creates a Dict{AtomicShell,CharXRay} from a collection of CharXRay and the associated inner AtomicShell.
+export relativeIonizationCrossSection # Computes a number proportional to the ionization crosssection
+export ionizationCrossSection # Computes the absolute ionization crosssection
 export @n_str
 
 include("material.jl")

@@ -46,39 +46,39 @@ family(sh::Shell) =
 
 A tuple containing all K, L, M, N and O shells
 """
-allshells = map(Shell, shellnames)
+const allshells = Shell.(shellnames)
 
 """
     kshells
 
 All K shells [ "K" ]
 """
-kshells = tuple(filter(sh -> family(sh) == 'K', collect(allshells))...)
+const kshells = tuple(filter(sh -> family(sh) == 'K', collect(allshells))...)
 
 """
     lshells
 All L shells [ "L1", "L2", "L3" ]
 """
-lshells = tuple(filter(sh -> family(sh) == 'L', collect(allshells))...)
+const lshells = tuple(filter(sh -> family(sh) == 'L', collect(allshells))...)
 
 """
     mshells
 All M shells [ "M1", "M2",.., "M5" ]
 """
-mshells = tuple(filter(sh -> family(sh) == 'M', collect(allshells))...)
+const mshells = tuple(filter(sh -> family(sh) == 'M', collect(allshells))...)
 
 """
     nshells
 All N shells [ "N1", "N2",.., "N7" ]
 """
-nshells = tuple(filter(sh -> family(sh) == 'N', collect(allshells))...)
+const nshells = tuple(filter(sh -> family(sh) == 'N', collect(allshells))...)
 
 
 """
     oshells
 All O shells [ "O1", "O2",.., "O9" ]
 """
-oshells = tuple(filter(sh -> family(sh) == 'O', collect(allshells))...)
+const oshells = tuple(filter(sh -> family(sh) == 'O', collect(allshells))...)
 
 
 """
@@ -125,14 +125,24 @@ j(shell::Shell) =
  """
      AtomicShell
 
- Represents a specific shell in a specific element.
+ Represents a specific ground-state occupied shell in a specific element.
+
  Data items:
+
      z::Int
      shell::Shell
  """
  struct AtomicShell
      z::Int
      shell::Shell
+     function AtomicShell(z::Int, shell::Shell)
+         if(!(shell.index in shellindexes(z)))
+             error("The shell $(shell) in $(element(z)) is not occupied in the ground state.")
+         end
+         return new(z,shell)
+
+     end
+
  end
 
  """
@@ -146,22 +156,29 @@ Base.isequal(as1::AtomicShell, as2::AtomicShell) =
      (as1.z==as2.z) && isequal(as1.shell,as2.shell)
 
 Base.isless(as1::AtomicShell, as2::AtomicShell) =
-     return as1.z==as2.z ? isless(as1.shell,as2.shell) : as1.z<as2.z
+     return as1.z == as2.z ? isless(as1.shell, as2.shell) : as1.z < as2.z
 
 Base.show(io::IO, ash::AtomicShell) =
      print(io, element(ash.z).symbol," ",ash.shell)
 
 family(ash::AtomicShell) = family(ash.shell)
 
-
  """
      atomicshell(elm::Element, sh::Shell)::AtomicShell
 
  Construct an AtomicShell from from an Element and a Shell.
  """
- atomicshell(elm::Element, sh::Shell) =
+atomicshell(elm::Element, sh::Shell) =
      AtomicShell(z(elm),sh)
 
+"""
+    has(elm::Element, shell::Shell) =
+
+Is the specified shell occupied by one or more electrons in a ground-state
+atom of the specified element?
+"""
+has(elm::Element, shell::Shell) =
+    shell.index in shellindexes(z(elm))
 
  """
      energy(ash::AtomicShell)
@@ -169,15 +186,7 @@ family(ash::AtomicShell) = family(ash.shell)
  The edge energy in eV for the specified AtomicShell
  """
  energy(ash::AtomicShell)::Float64 =
-     energy(element(ash.z), ash.shell)
-
- """
-     energy(elm::Element, sh::Shell)
-
- The edge energy in eV for the specified element and shell
- """
- energy(elm::Element, shell::Shell)::Float64 =
-    shellEnergy(z(elm), shell.index)
+     shellEnergy(ash.z, ash.shell.index)
 
  """
      atomicshells(elm::Element, maxE=1.0e6)::Vector{AtomicShell}
@@ -200,16 +209,27 @@ family(ash::AtomicShell) = family(ash.shell)
 
  Computes the absolute ionization crosssection (in cm2) for the specified AtomicShell and
  electon energy (in eV) using the default algorithm.
+
+ Example:
+ 
+     julia> (/)(map(e->NeXLCore.ionizationCrossSection(n"Fe K",e),[10.0e3,20.0e3])...)
+     0.5672910174711278
  """
  ionizationCrossSection(ashell::AtomicShell, energy::AbstractFloat) =
-     ionizationCrossSection(z(ashell), ashell.shell.index, energy, ffastEdgeEnergy(z(ashell), ashell.shell.index))
+     ionizationCrossSection(ashell.z, ashell.shell.index, energy)
 
 
 """
     relativeIonizationCrossSection(z::Int, shell::Int, ev::AbstractFloat)
 
+
 An approximate expression based of Pouchou and Pouchoir's 1991 (Green Book) expression
 for the ionization crosssection plus an additional factor for shell capacity.
+
+Example:
+
+    > (/)(map(e->NeXLCore.relativeIonizationCrossSection(n"Fe K",e),[10.0e3,20.0e3])...)
+    0.5982578301818324
 """
 function relativeIonizationCrossSection(ashell::AtomicShell, ev::AbstractFloat)
      u = ev / energy(ashell)

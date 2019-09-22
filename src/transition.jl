@@ -386,4 +386,13 @@ The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
 """
 mac(elm::Element, cxr::CharXRay)::Float64 =
-    massAbsorptionCoefficient(z(elm),energy(cxr))
+    massAbsorptionCoefficient(z(elm), energy(cxr))
+
+"""
+    mac(elm::Element, cxr::Float64)::Float64
+
+The mass absorption coefficient for an X-ray of the specified energy (eV) in the
+specified element.
+"""
+mac(elm::Element, energy::Float64)::Float64 =
+    massAbsorptionCoefficient(z(elm), energy)

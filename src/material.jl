@@ -2,11 +2,13 @@
 using Unitful
 using PeriodicTable
 using Printf
+using DataFrames
 
 """
-    Material structure
-    Holds basic data about a material including name, density and
-    composition in mass fraction.
+    Material
+
+Holds basic data about a material including name, density and composition in
+mass fraction.
 """
 struct Material
     name::String
@@ -17,18 +19,26 @@ struct Material
         new(name, density, a, massfrac)
 end
 
+
+"""
+    name(mat::Material)
+
+Human friendly short name for the Material.
+"""
 name(mat::Material) = mat.name
 
 """
     density(mat::Material)
-    Density in g/cm^3
+
+Density in g/cm³ (Might be 'missing')
 """
 density(mat::Material) = mat.density
 
 
 """
     material(name::AbstractString, massfrac::Dict{Element,<:AbstractFloat}, density=missing, a::Dict{Element,<:AbstractFloat}=Dict{Element,Float64}() )
-    Construct a material from mass fractions and (optional) atomic weights.
+
+Construct a material from mass fractions and (optional) atomic weights.
 """
 function material(name::AbstractString,
     massfrac::Dict{Element, U},
@@ -40,6 +50,15 @@ function material(name::AbstractString,
     return Material(name, mf, density, aw)
 end
 
+"""
+    pure(elm::Element)
+
+Construct a Material to represent a pure element.
+
+Example:
+
+    > pure(n"Fe")
+"""
 pure(elm::Element) =
     material("Pure "*symbol(elm), Dict{}(elm=>1.0), density(elm))
 
@@ -58,6 +77,7 @@ end
 
 """
     a(elm::Element, mat::Material)
+
 Get the atomic weight for the specified Element in the specified Material.
 """
 a(elm::Element, mat::Material) =
@@ -71,6 +91,7 @@ Base.getindex(mat::Material, elm::Element) =
 
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
+
 The normalized mass fraction as a Dict{Element, AbstractFloat}
 """
 function normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
@@ -80,6 +101,7 @@ end
 
 """
     massfraction(mat::Material)::Dict{Element, AbstractFloat}
+
 The mass fraction as a Dict{Element, AbstractFloat}
 """
 massfraction(mat::Material)::Dict{Element, AbstractFloat} =
@@ -87,6 +109,7 @@ massfraction(mat::Material)::Dict{Element, AbstractFloat} =
 
 """
     keys(mat::Material)
+
 Returns an interator over the elements in the Material.
 """
 Base.keys(mat::Material) =
@@ -94,12 +117,14 @@ Base.keys(mat::Material) =
 
 """
     labeled(mat::Material)
+
 Transform the mass fraction representation of a material into a Dict{MassFractionLabel,AbstractFloat}"""
 labeled(mat::Material) =
     Dict( (MassFractionLabel(element(z), mat), mf) for (z, mf) in mat.massfraction)
 
 """
     atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
+
 The composition in atomic fraction representation.
 """
 function atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
@@ -109,17 +134,24 @@ end
 
 """
     analyticaltotal(mat::Material)
+
 The sum of the mass fractions.
 """
 analyticaltotal(mat::Material) =
     sum(values(mat.massfraction))
 
+"""
+    has(mat::Material, elm::Element)
+
+Does this material contain this element?
+"""
 has(mat::Material, elm::Element) =
     haskey(mat.massfraction, z(elm))
 
 
 """
     atomicfraction(name::String, atomfracs::Dict{Element,Float64}, density = nothing, atomicweights::Dict{Element,Float64}=Dict())
+
 Build a Material from atomic fractions (or stoichiometries).
 """
 function atomicfraction(
@@ -134,15 +166,53 @@ function atomicfraction(
 end
 
 """
-    mac(mat::Material, energy::Float64)::Float64
-Compute the material MAC using the standard mass fraction weighted formula.
+    summarize(mat::Material)
+
+Summarize the composition of this Material as a DataFrame.  Columns for
+material name, element abbreviation, atomic number, atomic weight, mass fraction,
+normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
-mac(mat::Material, energy::Float64) =
-    sum(mac(elm, energy) * massfraction(elm, mat) for elm in keys(mat))
+function summarize(mat::Material)
+    res = DataFrame( Material = Vector{String}(), Element = Vector{String}(),
+                AtomicNumber = Vector{Int}(), AtomicWeight = Vector{AbstractFloat}(),
+                MassFraction = Vector{AbstractFloat}(), NormalizedMassFraction = Vector{AbstractFloat}(),
+                AtomicFraction = Vector{AbstractFloat}() )
+    af, tot = atomicfraction(mat), analyticaltotal(mat)
+    for elm in sort(collect(keys(mat)))
+        push!(res, ( name(mat), symbol(elm), z(elm), a(elm), mat[elm], mat[elm]/tot, af[elm]) )
+    end
+    return res
+end
+
 
 """
-    mac(mat::Material, energy::Float64)::Float64
+    summarize(mats::AbstractArray{Material}, mode=:MassFraction)
+
+Summarize the composition of a list of materials in a DataFrame.  One column
+for each element in any of the materials.
+
+    mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
+"""
+function summarize(mats::AbstractArray{Material}, mode=:MassFraction)
+    elms = convert(Array{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
+    cols = ( Symbol("Material"), Symbol.(symbol.(elms))...) # Column names
+    empty = NamedTuple{cols}( map(c->c==:Material ? Vector{String}() : Vector{AbstractFloat}(), cols) )
+    res = DataFrame(empty) # Emtpy data frame with necessary columns
+    for mat in mats
+        vals = ( mode==:AtomicFraction ? atomicfraction(mat) :
+                ( mode==:NormalizedMassFraction ? normalizedmassfraction(mat) :
+                    massfraction(mat)))
+        tmp = [ name(mat), (get(vals, elm, 0.0) for elm in elms)... ]
+        push!(res, tmp)
+    end
+    return res
+end
+
+
+"""
+    mac(mat::Material, xray::Union{Float64,CharXRay})::Float64
+
 Compute the material MAC using the standard mass fraction weighted formula.
 """
-mac(mat::Material, xray::CharXRay) =
-    sum(mac(elm, xray) * massfraction(elm, mat) for elm in keys(mat))
+mac(mat::Material, xray::Union{Float64,CharXRay}) =
+    mapreduce(elm->mac(elm, xray)*massfraction(elm,mat),+,keys(mat))

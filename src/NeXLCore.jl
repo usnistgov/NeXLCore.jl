@@ -53,8 +53,10 @@ export atomicfraction # Returns the composition as atom fraction
 export normalizedmassfraction # Returns the composition as normalized mass fraction
 export analyticaltotal # Returns the analytical total
 export labeled # Transform a data item into a Dict of (Label, value)
-export BaseMaterial, Material, MaterialType # Material struct
+export Material # Material struct
 export keys # Element keys into Material
+export name # Material name
+export summarize # As a DataFrame
 # export asDataFrame # Convert a collection of materials to a DataFrame
 
 function __init__()

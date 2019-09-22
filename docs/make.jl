@@ -1,4 +1,4 @@
-using Documenter, Example
+using Documenter, NeXLCore
 
 makedocs(modules = [NeXLCore], sitename = "NeXLCore.jl")
 

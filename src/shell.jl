@@ -135,6 +135,9 @@ j(shell::Shell) =
      shell::Shell
  end
 
+ jumpRatio(ashell::AtomicShell) =
+    jumpRatio(ashell.z, ashell.shell.index)
+
  """
      element(as::AtomicShell)
 

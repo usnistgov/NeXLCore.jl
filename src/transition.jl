@@ -289,6 +289,16 @@ weight(elm::Element, tr::Transition, overvoltage = 4.0) =
 
 
 """
+    normWeight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
+
+Returns the nominal line strength for the specified transition in the specified element.
+The strength differs from the weight in that the weight is normalized to the most intense line in the family.
+"""
+normWeight(elm::Element, tr::Transition, overvoltage = 4.0) =
+    nexlIsAvailable(z(elm), tr.innershell.index, tr.outershell.index) ? normWeight(characteristic(elm,tr),overvoltage) : 0.0
+
+
+"""
     fluorescenceyield(ashell::AtomicShell)::Float64
 
 The fraction of relaxations from the specified shell that decay via radiative transition
@@ -308,13 +318,27 @@ energy(cxr::CharXRay)::Float64 =
 """
     weight(cxr::CharXRay)
 
-The line weight of the specified characteristic X-ray
+The line weight of the specified characteristic X-ray with the most intense
+line normalized to unity.
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0 = overvoltage * energy(inner(cxr))
     ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
     safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
     return ss(cxr) / maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
+end
+
+"""
+    normWeight(cxr::CharXRay)
+
+The line weight of the specified characteristic X-ray with the sum of the
+weights equal to unity.
+"""
+function normWeight(cxr::CharXRay, overvoltage = 4.0)::Float64
+    e0 = overvoltage * energy(inner(cxr))
+    ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
+    safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
+    return ss(cxr) / sum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
 end
 
 """

@@ -33,7 +33,8 @@ export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name
 export density # Returns Element or Mateial data
 export energy # Returns CharXRay and AtomicShell eneries
-export weight # Returns CharXRay weights
+export weight # Returns CharXRay weights with the most intense in a family = 1
+export normWeight # Returns CharXRay weights normalized by family to a sum of one.
 export strength #
 export has # Element has a specific Transition, a Material has an element
 export transitions # Creates CharXRays for an Element

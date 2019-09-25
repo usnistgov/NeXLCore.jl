@@ -18,6 +18,7 @@ export AtomicShell # A shell in an Element
 export atomicshell # Construct AtomicShell structs from a string
 export capacity # The total shell capacity
 export jumpRatio # The jump ratio for the specified shell
+export meanFluorescenceYield # The mean family-based fluorescence yield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
 export transition # Constructs Transition from Shell objects or a string

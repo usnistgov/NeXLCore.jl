@@ -396,3 +396,12 @@ specified element.
 """
 mac(elm::Element, energy::Float64)::Float64 =
     massAbsorptionCoefficient(z(elm), energy)
+
+"""
+    kLinewidths(elm::Element)
+
+Linewidth of the K shell according to Bambynek'1974 errata to Bambynek 1972.
+Shown to work for Z>36 or so.
+"""
+kLinewidths(elm::Element) =
+   1.73e-6*z(elm)^3.93

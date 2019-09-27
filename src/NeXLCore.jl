@@ -70,4 +70,6 @@ export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitio
 export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
 
+include("misc.jl")
+
 end

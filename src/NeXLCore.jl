@@ -57,7 +57,7 @@ export normalizedmassfraction # Returns the composition as normalized mass fract
 export analyticaltotal # Returns the analytical total
 export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
-export keys # Element keys into Material
+# export Base.keys # Element keys into Material
 export name # Material name
 export summarize # As a DataFrame
 # export asDataFrame # Convert a collection of materials to a DataFrame

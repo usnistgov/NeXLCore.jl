@@ -59,8 +59,9 @@ export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
-export summarize # As a DataFrame
-# export asDataFrame # Convert a collection of materials to a DataFrame
+export summarize # One or more Materials as a DataFrame
+export Layer # A thickness of Material
+export transmission # Transmission fraction through a Layer
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")

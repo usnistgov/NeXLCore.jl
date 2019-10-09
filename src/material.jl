@@ -28,22 +28,26 @@ end
 
 import Base.+
 
-function +(mat1::Material, mat2::Material)::Material
-    sum(mat1,mat2,missing)
-end
++(mat1::Material, mat2::Material)::Material = sum(mat1, mat2, missing, missing)
 
 import Base.sum
 
-function sum(mat1::Material, mat2::Material, name::Union{Missing,AbstractString} = missing)::Material
-    mf = Dict{Int,AbstractFloat}((z(elm), mat1[elm] + mat2[elm]) for elm in union(
+function sum(
+    mat1::Material,
+    mat2::Material,
+    name::Union{Missing,AbstractString} = missing,
+    density::Union{Missing,AbstractFloat} = missing,
+    atomicweight::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}()
+)::Material
+    mf = Dict{Element,AbstractFloat}((elm, mat1[elm] + mat2[elm]) for elm in union(
         keys(mat1),
         keys(mat2),
     ))
-    return Material(
+    return material(
         ismissing(name) ? "$(mat1.name) + $(mat2.name)" : name,
         mf,
-        missing,
-        Dict{Int,Float64}(),
+        density,
+        atomicweight
     )
 end
 
@@ -224,8 +228,8 @@ function Base.parse(
     tmp = split(expr, c -> c == '+')
     if length(tmp) > 1
         return mapreduce(
-            t -> parse(Material, strip(t), name=name, density=density, atomicweights=atomicweights),
-            (a, b) -> sum(a, b, name),
+            t -> parse(Material, strip(t)),
+            (a, b) -> sum(a, b, name, density, atomicweights),
             tmp,
         )
     end

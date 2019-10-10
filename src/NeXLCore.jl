@@ -17,6 +17,8 @@ export shell # Construct Shell structs from a string
 export AtomicShell # A shell in an Element
 export atomicshell # Construct AtomicShell structs from a string
 export capacity # The total shell capacity
+export jumpRatio # The jump ratio for the specified shell
+export meanFluorescenceYield # The mean family-based fluorescence yield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
 export transition # Constructs Transition from Shell objects or a string
@@ -31,7 +33,8 @@ export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name
 export density # Returns Element or Mateial data
 export energy # Returns CharXRay and AtomicShell eneries
-export weight # Returns CharXRay weights
+export weight # Returns CharXRay weights with the most intense in a family = 1
+export normWeight # Returns CharXRay weights normalized by family to a sum of one.
 export strength #
 export has # Element has a specific Transition, a Material has an element
 export dtsamac # Calculates the MAC using Heinrich's formula
@@ -59,9 +62,12 @@ export atomicfraction # Returns the composition as atom fraction
 export normalizedmassfraction # Returns the composition as normalized mass fraction
 export analyticaltotal # Returns the analytical total
 export labeled # Transform a data item into a Dict of (Label, value)
-export BaseMaterial, Material, MaterialType # Material struct
-export keys # Element keys into Material
-# export asDataFrame # Convert a collection of materials to a DataFrame
+export Material # Material struct
+# export Base.keys # Element keys into Material
+export name # Material name
+export summarize # One or more Materials as a DataFrame
+export Layer # A thickness of Material
+export transmission # Transmission fraction through a Layer
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
@@ -70,5 +76,7 @@ end
 export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions
 export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
+
+include("misc.jl")
 
 end

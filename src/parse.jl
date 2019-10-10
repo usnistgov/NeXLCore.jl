@@ -51,9 +51,6 @@ function element(str::AbstractString)::Element
     return elm
 end
 
- Base.parse(::Type{AtomicShell}, str::AbstractString)::AtomicShell =
-     atomicshell(str)
-
 """
     shell(name::AbstractString)::Shell
 
@@ -64,6 +61,9 @@ function shell(name::AbstractString)::Shell
     @assert(!isnothing(ff), "$(name) is not one of the known shells - K, L1, L2...,P11.")
     return allshells[ff]
 end
+
+Base.parse(::Type{Shell}, str::AbstractString)::Shell =
+    shell(str)
 
 """
     atomicshell(str::AbstractString)::AtomicShell
@@ -80,6 +80,53 @@ function atomicshell(str::AbstractString)::AtomicShell
     error("Cannot parse ", str, " as an AtomicShell like \"Fe L3\"")
 end
 
+Base.parse(::Type{AtomicShell}, str::AbstractString)::AtomicShell =
+     atomicshell(str)
+
+"""
+    transition(str::AbstractString)::Transition
+
+Constructs a Transition structure from a string representation of the form \"K-L3\"
+or \"L3-M5\".  Asserts if the transition is not a known transition.
+"""
+function transition(str::AbstractString)::Transition
+    ff = findfirst(name -> name == str, transitionnames)
+    if isnothing(ff)
+        error("$(str) does not represent a known transition.")
+    end
+    return alltransitions[ff]
+end
+
+Base.parse(::Type{Transition}, str::AbstractString) =
+        transition(str)
+
+
+"""
+    characteristic(str::AbstractString)::CharXRay
+
+Create a CharXRay structure from a string like \"Fe K-L3\" or \"U L3-M5\".
+"""
+function characteristic(str::AbstractString)::CharXRay
+    sp1=split(str," ")
+    if length(sp1)==2
+        elm = element(sp1[1])
+        if !ismissing(elm)
+            sp2=split(sp1[2],"-")
+            if length(sp2)==2
+                inner = shell(sp2[1])
+                outer = shell(sp2[2])
+                if (!ismissing(inner)) && (!ismissing(outer))
+                    return CharXRay(z(elm),transition(inner,outer))
+                end
+            end
+        end
+    end
+    error("Unable to parse ", str, " as a characteristic X-ray.")
+end
+
+Base.parse(::Type{CharXRay}, str::AbstractString)::CharXRay =
+        characteristic(str)
+
 """
     parsex(str::AbstractString)::Union{Element, Shell, AtomicShell, Transition, CharXRay}
 
@@ -92,10 +139,10 @@ function parsex(str::AbstractString)::Union{Element, Shell, AtomicShell, Transit
     sp1=split(str," ")
     if length(sp1)==1  # Could be an Element, an Shell or a Transition
         if length(split(sp1[1],"-"))==2 # A transition like "L3-M5"
-            return transition(str)
+            return parse(Transition, str)
         else # An Element or a Shell like "Fe" or "L3"
             try # Try and Element first
-                return element(str)
+                return parse(Element, str)
             catch # If it isn't an element, it must be a Shell
                 # Note that since "K" is an element we use "K1" to denote the Shell
                 return str=="K1" ? shell("K") : shell(str)
@@ -104,9 +151,9 @@ function parsex(str::AbstractString)::Union{Element, Shell, AtomicShell, Transit
     else # Could be a AtomicShell or a CharXRay
         sp2 = split(sp1[2],"-")
         if length(sp2)==1  # Like "Fe L3"
-            return atomicshell(str)
+            return parse(AtomicShell, str)
         else  # Like "Fe L3-M5"
-            return characteristic(str)
+            return parse(CharXRay, str)
         end
     end
     error("Unable to parse ", str, " as an Element, a Shell, a Transition, an AtomicShell or a CharXRay.")

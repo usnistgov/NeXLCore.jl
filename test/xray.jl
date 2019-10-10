@@ -128,8 +128,8 @@ using NeXLCore
                 @test has(n"U",n"L3-M5")
                 @test has(n"U",n"M5-N7")
 
-                @test all(tr->family(tr)=='L',transitions(n"Fe",ltransitions))
-                @test all(tr->family(tr)=='K',transitions(n"Fe",ktransitions))
+                @test all(tr->family(tr)=='L',characteristic(n"Fe",ltransitions))
+                @test all(tr->family(tr)=='K',characteristic(n"Fe",ktransitions))
 
                 @test length(characteristic(n"Fe",ltransitions,0.1))==5
                 @test length(characteristic(n"Fe",ltransitions,0.01))==9

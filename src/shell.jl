@@ -88,8 +88,7 @@ Electron capacity for the specified shell.  This is the total number of electron
 that the shell can hold, not the actual number a specific ground-state element may
 have in that shell.
 """
-capacity(shell::Shell) =
-    convert(Int,2*j(shell)+1)
+capacity(shell::Shell) = Base.convert(Int, 2 * j(shell)) + 1
 
 n(shell::Shell) =
     ( 1,

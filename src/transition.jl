@@ -335,8 +335,10 @@ Example:
 
     characteristic(n"Fe",ltransitions,0.01)
 """
-characteristic(elm::Element, iter, minweight=0.0, maxE=1.0e6) =
-    filter(cxr -> (weight(cxr)>minweight) && (energy(inner(cxr))<=maxE), filter(tr->has(elm,tr), collect(iter)))
+function characteristic(elm::Element, iter, minweight=0.0, maxE=1.0e6)
+    avail = map(tr->characteristic(elm,tr), filter(tr->has(elm,tr), collect(iter)))
+    return filter(cxr -> (weight(cxr)>minweight) && (energy(inner(cxr))<=maxE), avail)
+end
 
 """
     splitbyshell(cxrs)

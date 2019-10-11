@@ -66,8 +66,8 @@ export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
 export summarize # One or more Materials as a DataFrame
-export Layer # A thickness of Material
-export transmission # Transmission fraction through a Layer
+export Film # A thin film of Material
+export transmission # Transmission fraction through a Film
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")

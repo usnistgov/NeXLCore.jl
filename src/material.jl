@@ -423,28 +423,28 @@ mac(mat::Material, xray::Union{Float64,CharXRay}) =
 
 
 """
-    A structure defining a layer of material.
+    A structure defining a thin film of Material.
 """
-struct Layer
+struct Film
     material::Material
     thickness::AbstractFloat
 end
 
-Base.show(io::IO, layer::Layer) =
-    print(io, 1.0e7 * layer.thickness, " nm of ", name(layer.coating))
+Base.show(io::IO, flm::Film) =
+    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.coating))
 
 """
-    transmission(lyr::Layer, xrayE::AbstractFloat, θ::AbstractFloat) =
+    transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat) =
 
-Transmission fraction of an X-ray at the specified angle through a Layer.
+Transmission fraction of an X-ray at the specified angle through a Film.
 """
-transmission(lyr::Layer, xrayE::AbstractFloat, θ::AbstractFloat) =
-    exp(-mac(lyr.material, xrayE) * csc(θ) * lyr.thickness)
+transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat) =
+    exp(-mac(flm.material, xrayE) * csc(θ) * flm.thickness)
 
 """
-    transmission(lyr::Layer, cxr::CharXRay, θ::AbstractFloat) =
+    transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
 
-Transmission fraction of an X-ray at the specified angle through a Layer.
+Transmission fraction of an X-ray at the specified angle through a Film.
 """
-transmission(lyr::Layer, cxr::CharXRay, θ::AbstractFloat) =
-    transmission(lyr, energy(cxr), θ)
+transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
+    transmission(flm, energy(cxr), θ)

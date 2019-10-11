@@ -12,18 +12,32 @@ mass fraction.
 """
 struct Material
     name::String
-    density::Union{Missing, AbstractFloat}
+    properties::Dict{Symbol,Any} # :Density, :Description,
     a::Dict{Int,AbstractFloat} # Optional: custom atomic weights for the keys in this Material
     massfraction::Dict{Int,AbstractFloat}
-    Material(name::AbstractString, massfrac::Dict{Int,U}, density=missing, a::Dict{Int,V}=Dict{Int,Float64}()) where { U <: AbstractFloat, V <: AbstractFloat } =
-        new(name, density, a, massfrac)
+    function Material(
+        name::AbstractString,
+        massfrac::Dict{Int,U},
+        density::AbstractFloat,
+        a::Dict{Int,V} = Dict{Int,Float64}(),
+        description::Union{AbstractString,Missing} = missing,
+    ) where {U<:AbstractFloat,V<:AbstractFloat}
+        props = Dict{Symbol,Any}()
+        if !ismissing(density)
+            props[:Density] = density
+        end
+        if !ismissing(description)
+            props[:Description] = string(description)
+        end
+        new(name, props, a, massfrac)
+    end
 end
 
 import Base.*
 
 function *(k::AbstractFloat, mat::Material)::Material
-    mf = Dict{Int,AbstractFloat}( (z, q*k) for (z,q) in mat.massfraction)
-    return Material("$(k)×$(mat.name)",mf,mat.density,mat.a)
+    mf = Dict{Int,AbstractFloat}((z, q * k) for (z, q) in mat.massfraction)
+    return Material("$(k)×$(mat.name)", mf, density(mat), mat.a)
 end
 
 import Base.+
@@ -64,22 +78,32 @@ name(mat::Material) = mat.name
 
 Density in g/cm³ (Might be 'missing')
 """
-density(mat::Material) = mat.density
+density(mat::Material) = property(mat,:Density)
 
+description(mat::Material) = property(mat,:Description)
+
+property(mat::Material, sym::Symbol) = get(mat.properties, sym, missing)
 
 """
-    material(name::AbstractString, massfrac::Dict{Element,<:AbstractFloat}, density=missing, a::Dict{Element,<:AbstractFloat}=Dict{Element,Float64}() )
+    material(
+      name::AbstractString,
+      massfrac::Dict{Element,<:AbstractFloat},
+      density=missing,
+      a::Dict{Element,<:AbstractFloat}=Dict{Element,Float64}(),
+      description::Union{Missing,AbstractString}=missing
+    )
 
 Construct a material from mass fractions and (optional) atomic weights.
 """
 function material(name::AbstractString,
     massfrac::Dict{Element, U},
     density::Union{Missing,AbstractFloat}=missing,
-    a::Dict{Element, V}=Dict{Element,Float64}()
+    a::Dict{Element, V}=Dict{Element,Float64}(),
+    description::Union{Missing,AbstractString}=missing
 ) where { U <: AbstractFloat, V <: AbstractFloat }
     mf = Dict( (z(elm), val) for (elm, val) in massfrac )
     aw = Dict( (z(elm), val) for (elm, val) in a )
-    return Material(name, mf, density, aw)
+    return Material(name, mf, density, aw, description)
 end
 
 """
@@ -101,8 +125,8 @@ function Base.show(io::IO, mat::Material)
         print(io, @sprintf("%s%s = %0.4f", comma, element(z).symbol, mf))
         comma=", "
     end
-    if !ismissing(mat.density)
-        print(io, @sprintf(", %0.2f g/cc", mat.density))
+    if !ismissing(density(mat))
+        print(io, @sprintf(", %0.2f g/cc", density(mat)))
     end
     print(io,")")
 end
@@ -119,7 +143,7 @@ function convert(::Type{Material}, str::AbstractString)
             qty = parse(Float64,zd[2])/100.0
             tmp[elm]=qty
         else
-            density = parse(Float64,zd[2])/100.0
+            density = parse(Float64,zd[2])
         end
     end
     return Material(name, tmp, density)
@@ -139,6 +163,9 @@ massfraction(elm::Element, mat::Material) =
 
 Base.getindex(mat::Material, elm::Element) =
     massfraction(elm,mat)
+
+Base.getindex(mat::Material, sym::Symbol) =
+    property(mat, sym)
 
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}

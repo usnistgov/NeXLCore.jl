@@ -26,7 +26,7 @@ export alltransitions, ktransitions, ltransitions, mtransitions, ntransitions, o
 export kalpha, kbeta, kother # K-L?, K->M? and K->!L
 export CharXRay # A characteristic X-ray
 export characteristic # Constructs CharXRay
-export inner, outer # Returns AtomiShell for inner and outer CharXRay
+export inner, outer  # Returns AtomiShell for inner and outer CharXRay
 export a  # Atomic weight
 export z # Atomic number
 export symbol # Atomic symbol ("H", "He" etc)
@@ -49,10 +49,8 @@ export relativeIonizationCrossSection # Computes a number proportional to the io
 export ionizationCrossSection # Computes the absolute ionization crosssection
 export @n_str
 
-
 export approxKShellFluorescenceYield
 export dtsamac
-
 
 include("material.jl")
 export material # Construct a Material struct

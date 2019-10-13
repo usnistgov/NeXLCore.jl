@@ -77,11 +77,11 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[FFAST]]
 deps = ["CSV", "DataFrames", "Requires"]
-git-tree-sha1 = "49dbac8ecb4ae453fab67037c4b5077626571d09"
+git-tree-sha1 = "208e00e751b6b4fb639724329be98ba5d9414f78"
 repo-rev = "master"
 repo-url = "https://github.com/usnistgov/FFAST.jl"
 uuid = "10506e09-08cd-5f0b-aee5-631de1bcc925"
-version = "0.0.1"
+version = "0.0.2"
 
 [[FixedPointNumbers]]
 git-tree-sha1 = "d14a6fa5890ea3a7e5dcab6811114f132fec2b4b"

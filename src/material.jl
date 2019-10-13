@@ -370,13 +370,13 @@ end
 
 
 """
-    summarize(mat::Material)
+    tabulate(mat::Material)
 
-Summarize the composition of this Material as a DataFrame.  Columns for
+tabulate the composition of this Material as a DataFrame.  Columns for
 material name, element abbreviation, atomic number, atomic weight, mass fraction,
 normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
-function summarize(mat::Material)
+function tabulate(mat::Material)
     res = DataFrame( Material = Vector{String}(), Element = Vector{String}(),
                 AtomicNumber = Vector{Int}(), AtomicWeight = Vector{AbstractFloat}(),
                 MassFraction = Vector{AbstractFloat}(), NormalizedMassFraction = Vector{AbstractFloat}(),
@@ -390,14 +390,14 @@ end
 
 
 """
-    summarize(mats::AbstractArray{Material}, mode=:MassFraction)
+    tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
 
-Summarize the composition of a list of materials in a DataFrame.  One column
+tabulate the composition of a list of materials in a DataFrame.  One column
 for each element in any of the materials.
 
     mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
 """
-function summarize(mats::AbstractArray{Material}, mode=:MassFraction)
+function tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
     elms = convert(Array{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
     cols = ( Symbol("Material"), Symbol.(symbol.(elms))...) # Column names
     empty = NamedTuple{cols}( map(c->c==:Material ? Vector{String}() : Vector{AbstractFloat}(), cols) )

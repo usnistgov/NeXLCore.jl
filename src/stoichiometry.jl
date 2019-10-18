@@ -35,3 +35,11 @@ By default, <code>val = NeXLCore.valences</code>, a typical set of valences.
 """
 asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence) =
     mapreduce(x->x[2]*asoxide(x[1], val),+,elms)
+
+"""
+    obystoichiometry(elms::Dict{Element, <:AbstractFloat}, val = valence)
+
+Computes O-by-stoichiometry from the provided mass fractions of elements.
+"""
+obystoichiometry(elms::Dict{Element, <:AbstractFloat}, val = valence) =
+    sum(f*(-val[z(elm)]*a(n"O"))/(a(elm)*val[z(n"O")]) for (elm,f) in elms)

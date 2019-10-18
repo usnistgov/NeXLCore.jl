@@ -18,7 +18,7 @@ struct Material
     function Material(
         name::AbstractString,
         massfrac::Dict{Int,U},
-        density::AbstractFloat,
+        density::Union{Missing,AbstractFloat},
         a::Dict{Int,V} = Dict{Int,Float64}(),
         description::Union{AbstractString,Missing} = missing,
     ) where {U<:AbstractFloat,V<:AbstractFloat}
@@ -251,6 +251,94 @@ function Base.parse(
     density = missing,
     atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
 )::Material where {V<:AbstractFloat}
+    # Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
+    function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element,Int}
+        parseSymbol(expr::AbstractString) =
+            findfirst(z -> isequal(elements[z].symbol, expr), 1:length(elements))
+        res = Dict{PeriodicTable.Element,Int}()
+        start = 1
+        for i in eachindex(expr)
+            if i<start
+                continue
+            elseif (i==start) || (i==start+1) # Abbreviations are 1 or 2 letters
+                if (i == start) && !isuppercase(expr[i]) # Abbrevs start with cap
+                    error("Element abbreviations must start with a capital letter. $(expr[i])")
+                end
+                next=i+1
+                if (next>length(expr)) || isuppercase(expr[next]) || isdigit(expr[next])
+                    z = parseSymbol(expr[start:i])
+                    if isnothing(z)
+                        error("Unrecognized element parsing compound: $(expr[start:i])")
+                    end
+                    elm, cx = elements[z], 1
+                    if (next<=length(expr)) && isdigit(expr[next])
+                        for stop in next:length(expr)
+                            if (stop == length(expr)) || (!isdigit(expr[stop+1]))
+                                cx = parse(Int, expr[next:stop])
+                                start = stop + 1
+                                break
+                            end
+                        end
+                    else
+                        start = next
+                    end
+                    res[elm] = get(res, elm, 0) + cx
+                end
+            else
+                error("Can't interpret $(expr[start:i]) as an element.")
+            end
+        end
+        return res
+    end
+    # Parses expressions like 'Ca5(PO4)3⋅(OH)'
+    function parseCompH2(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
+        # println("Parsing: $(expr)")
+        tmp = split(expr, c->(c=='⋅') || (c=='.'))
+        if length(tmp)>1
+            println(tmp)
+            return mapreduce(parseCompH2, merge, tmp)
+        end
+        cx, start, stop = 0, -1, -1
+        for i in eachindex(expr)
+            if expr[i]=='('
+                if cx==0 start=i end
+                cx+=1
+            end
+            if expr[i]==')'
+                cx-=1
+                if cx<0
+                    error("Unmatched right parenthesis.")
+                elseif cx==0
+                    stop = i
+                    break
+                end
+            end
+        end
+        if (start>0) && (stop>start)
+            tmp, q = parseCompH2(expr[start+1:stop-1]), 1
+            if (stop+1 > length(expr)) || isdigit(expr[stop+1])
+                for i in stop:length(expr)
+                    if (i+1>length(expr)) || (!isdigit(expr[i+1]))
+                        q = parse(Int, expr[stop+1:i])
+                        stop=i
+                        break
+                    end
+                end
+            end
+            for elm in keys(tmp) tmp[elm] *= q end
+            if start>1
+                merge!(tmp,parseCompH2(expr[1:start-1]))
+            end
+            if stop<length(expr)
+                merge!(tmp,parseCompH2(expr[stop+1:end]))
+            end
+        else
+            tmp = parseCompH1(expr)
+        end
+        # println("Parsing: $(expr) to $(tmp)")
+        return tmp
+    end
+
     # First split sums of Materials
     tmp = split(expr, c -> c == '+')
     if length(tmp) > 1
@@ -278,95 +366,7 @@ function Base.parse(
     return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr), density, atomicweights)
 end
 
-# Parses expressions like 'Ca5(PO4)3⋅(OH)'
-function parseCompH2(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
-    # println("Parsing: $(expr)")
-    tmp = split(expr, c->(c=='⋅') || (c=='.'))
-    if length(tmp)>1
-        println(tmp)
-        return mapreduce(parseCompH2, merge, tmp)
-    end
-    cx, start, stop = 0, -1, -1
-    for i in eachindex(expr)
-        if expr[i]=='('
-            if cx==0 start=i end
-            cx+=1
-        end
-        if expr[i]==')'
-            cx-=1
-            if cx<0
-                error("Unmatched right parenthesis.")
-            elseif cx==0
-                stop = i
-                break
-            end
-        end
-    end
-    if (start>0) && (stop>start)
-        tmp, q = parseCompH2(expr[start+1:stop-1]), 1
-        if (stop+1 > length(expr)) || isdigit(expr[stop+1])
-            for i in stop:length(expr)
-                if (i+1>length(expr)) || (!isdigit(expr[i+1]))
-                    q = parse(Int, expr[stop+1:i])
-                    stop=i
-                    break
-                end
-            end
-        end
-        for elm in keys(tmp) tmp[elm] *= q end
-        if start>1
-            merge!(tmp,parseCompH2(expr[1:start-1]))
-        end
-        if stop<length(expr)
-            merge!(tmp,parseCompH2(expr[stop+1:end]))
-        end
-    else
-        tmp = parseCompH1(expr)
-    end
-    # println("Parsing: $(expr) to $(tmp)")
-    return tmp
-end
 
-
-# Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
-function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element,Int}
-    parseSymbol(expr::AbstractString) =
-        findfirst(z -> isequal(elements[z].symbol, expr), 1:length(elements))
-    res = Dict{PeriodicTable.Element,Int}()
-    start = 1
-    for i in eachindex(expr)
-        if i<start
-            continue
-        elseif (i==start) || (i==start+1) # Abbreviations are 1 or 2 letters
-            if (i == start) && !isuppercase(expr[i]) # Abbrevs start with cap
-                error("Element abbreviations must start with a capital letter. $(expr[i])")
-            end
-            next=i+1
-            if (next>length(expr)) || isuppercase(expr[next]) || isdigit(expr[next])
-                z = parseSymbol(expr[start:i])
-                if isnothing(z)
-                    error("Unrecognized element parsing compound: $(expr[start:i])")
-                end
-                elm, cx = elements[z], 1
-                if (next<=length(expr)) && isdigit(expr[next])
-                    for stop in next:length(expr)
-                        if (stop == length(expr)) || (!isdigit(expr[stop+1]))
-                            cx = parse(Int, expr[next:stop])
-                            start = stop + 1
-                            break
-                        end
-                    end
-                else
-                    start = next
-                end
-                res[elm] = get(res, elm, 0) + cx
-            end
-        else
-            error("Can't interpret $(expr[start:i]) as an element.")
-        end
-    end
-    return res
-end
 
 
 """

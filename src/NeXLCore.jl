@@ -67,6 +67,10 @@ export tabulate # One or more Materials as a DataFrame
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 
+include("stoichiometry.jl")
+export asoxide # Compute the standard oxide
+export valences # a table of elemental valences
+
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
 end

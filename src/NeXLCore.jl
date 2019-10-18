@@ -69,7 +69,8 @@ export transmission # Transmission fraction through a Film
 
 include("stoichiometry.jl")
 export asoxide # Compute the standard oxide
-export valences # a table of elemental valences
+export valence # a table of elemental valences (valence[z(n"O")] = -2)
+export obystoichiometry # computes the mass fraction of O using valence rules.
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")

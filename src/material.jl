@@ -431,7 +431,7 @@ struct Film
 end
 
 Base.show(io::IO, flm::Film) =
-    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.coating))
+    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material))
 
 """
     transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat) =

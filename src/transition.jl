@@ -359,6 +359,29 @@ function splitbyshell(cxrs)
     return res
 end
 
+brightest(cxrs::Vector{CharXRay}) =
+    last(sort(cxrs, lt = (a,b)->isless(weight(a),weight(b))))
+
+"""
+    NeXLCore.name(cxrs::Vector{CharXRay})
+
+An abbeviated name for a collection of CharXRay.
+"""
+function NeXLCore.name(cxrs::AbstractVector{CharXRay})::String
+    res = []
+    elms = Set{Element}(element.(cxrs))
+    for elm in elms
+        fams = Set{Char}(family.(filter(cxr->element(cxr)==elm,cxrs)))
+        for fam in fams
+            fc = filter(cxr->(element(cxr)==elm) && (family(cxr)==fam),cxrs)
+            br, cx = brightest(fc), length(fc)
+            other = cx>2 ? "others" : "other"
+            push!(res,cx > 1 ? "$(br) + $(cx-1) $(other)" : "$(br)")
+        end
+    end
+    return join(res, ", ")
+end
+
 """
     mac(elm::Element, cxr::CharXRay)::Float64
 

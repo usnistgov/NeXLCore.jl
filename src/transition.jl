@@ -231,6 +231,20 @@ Returns the element for this CharXRay.
 element(cxr::CharXRay) =
     element(cxr.z)
 
+
+function ionizationFraction(z::Int, sh::Int, over=4.0)
+    function relativeTo(z, sh)
+        # Find the largest available shell in family
+        relTo = ( 1, 4, 4, 4, 9, 9, 9, 9, 9, 16, 16, 16, 16, 16, 16, 16, 25, 25, 25, 25, 25, 25, 25, 25, 25 )
+        avail = shellindexes(z)
+        return findlast(i->(relTo[i] in avail) && (relTo[i]==relTo[sh]), 1:relTo[sh])
+    end
+    ee, rel = over*shellEnergy(z,sh), relativeTo(z,sh)
+    return rel == sh ? 1.0 : ionizationCrossSection(z, sh, ee) / ionizationCrossSection(z, rel, ee)
+end
+
+
+
 """
     strength(elm::Element, tr::Transition)::Float64
 
@@ -238,8 +252,7 @@ Returns the nominal line strenth for the specified transition in the specified e
 The strength differs from the weight by the fluorescence yield.
 """
 strength(elm::Element, tr::Transition)::Float64 =
-    characteristicXRayStrength(z(elm),tr.innershell,tr.outershell)
-
+    ionizationFraction(z(elm), tr.innershell) * characteristicXRayFraction(z(elm),tr.innershell,tr.outershell)
 
 """
     normWeight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
@@ -271,12 +284,11 @@ energy(cxr::CharXRay)::Float64 =
 """
     weight(cxr::CharXRay)
 
-The line weight of the specified characteristic X-ray with the most intense
-line normalized to unity.
+The line weight of the specified characteristic X-ray relative to the other lines from the same element in the
+same family.  The most intense line is normalized to unity.
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    e0 = overvoltage * energy(inner(cxr))
-    ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
+    ss(cxr2) = strength(cxr2) * ionizationFraction(z(element(cxr2)), inner(cxr2).shell.index, overvoltage)
     safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
     return ss(cxr) / maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
 end
@@ -305,11 +317,14 @@ brightest(elm::Element, transitions) =
 
 """
     strength(cxr::CharXRay)::Float64
-Returns the nominal line strenth for the specified transition in the specified element.
-The strength differs from the weight by the normalization relative to other members of the family.
+
+The fraction of ionizations of <code>inner(cxr)</code> that relax via a characteristic X-ray resulting
+from an electronic transition from <code>outer(cxr)</code> to <code>inner(cxr)</code>.
+
+See also <code>weight(cxr)</code>.
 """
 strength(cxr::CharXRay)::Float64 =
-    characteristicXRayStrength(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index)
+    characteristicXRayFraction(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index)
 
 """
     has(elm::Element, tr::Transition)::Bool

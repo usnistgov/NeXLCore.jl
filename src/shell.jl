@@ -276,6 +276,7 @@ Example:
  ionizationCrossSection(ashell::AtomicShell, energy::AbstractFloat) =
      ionizationCrossSection(ashell.z, ashell.shell.index, energy)
 
+capacity(ash::AtomicShell) = capacity(ash.shell)
 
 """
     relativeIonizationCrossSection(z::Int, shell::Int, ev::AbstractFloat)

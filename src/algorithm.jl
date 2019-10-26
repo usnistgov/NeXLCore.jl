@@ -70,11 +70,12 @@ jumpRatio(z::Int, shell::Int) =
 include("strength.jl")
 
 """
-    characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64
+    characteristicXRayFraction(z::Int, inner::Int, outer::Int)::Float64
 
-The transition strength of the transition by specified inner and outer shell index.
+The fraction of <code>inner</code> shell ionizations that relax via a characteristic X-ray resulting from an electronic
+transition from <code>outer</code> to <code>inner</code>.
 """
-characteristicXRayStrength(z::Int, inner::Int, outer::Int)::Float64 =
+characteristicXRayFraction(z::Int, inner::Int, outer::Int)::Float64 =
     nexlWeights(z,inner,outer)
 
 """

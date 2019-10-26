@@ -448,3 +448,6 @@ Transmission fraction of an X-ray at the specified angle through a Film.
 """
 transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
     transmission(flm, energy(cxr), θ)
+
+material(film::Film) = film.material
+thickness(film::Film) = film.thickness

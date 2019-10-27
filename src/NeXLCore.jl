@@ -11,17 +11,17 @@ include("transition.jl")
 include("parse.jl")
 
 export element # Construct Element structs
-export Shell # An atomic shell
-export allshells, kshells, lshells, mshells, nshells, oshells, pshell # Shell type lists
-export shell # Construct Shell structs from a string
-export AtomicShell # A shell in an Element
-export atomicshell # Construct AtomicShell structs from a string
+export SubShell # An atomic shell
+export allsubshells, ksubshells, lsubshells, msubshells, nsubshells, osubshells, pshell # SubShell type lists
+export subshell # Construct SubShell structs from a string
+export AtomicSubShell # A shell in an Element
+export atomicsubshell # Construct AtomicSubShell structs from a string
 export capacity # The total shell capacity
 export jumpRatio # The jump ratio for the specified shell
-export meanFluorescenceYield # The mean family-based fluorescence yield
+export meanFluorescenceYield # The mean shell-based fluorescence yield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
-export transition # Constructs Transition from Shell objects or a string
+export transition # Constructs Transition from SubShell objects or a string
 export alltransitions, ktransitions, ltransitions, mtransitions, ntransitions, otransitions
 export kalpha, kbeta, kother # K-L?, K->M? and K->!L
 export CharXRay # A characteristic X-ray
@@ -32,24 +32,22 @@ export z # Atomic number
 export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name
 export density # Returns Element or Mateial data
-export energy # Returns CharXRay and AtomicShell eneries
-export weight # Returns CharXRay weights with the most intense in a family = 1
-export normWeight # Returns CharXRay weights normalized by family to a sum of one.
+export energy # Returns CharXRay and AtomicSubShell eneries
+export weight # Returns CharXRay weights with the most intense in a shell = 1
+export normWeight # Returns CharXRay weights normalized by shell to a sum of one.
 export strength #
 export has # Element has a specific Transition, a Material has an element
 export dtsamac # Calculates the MAC using Heinrich's formula
 export mac # Calculates the MAC using the default algorithm
-export family # The family ('K','L','M',...) for an AtomicShell, Transition, CharXRay etc.
+export shell # The shell ('K','L','M',...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyfamily # Dictionary mapping transition families to lists of Transition(s)
-export eV2keV # Convert eV to keV
-export atomicshells # Gets an iterator of AtomicShell for the specified element
+export atomicsubshells # Gets an iterator of AtomicSubShell for the specified element
 export brightest # Returns the brightest characteristic X-ray from a set of transitions for an element
-export splitbyshell # Creates a Dict{AtomicShell,CharXRay} from a collection of CharXRay and the associated inner AtomicShell.
+export splitbyshell # Creates a Dict{AtomicSubShell,CharXRay} from a collection of CharXRay and the associated inner AtomicSubShell.
 export relativeIonizationCrossSection # Computes a number proportional to the ionization crosssection
 export ionizationCrossSection # Computes the absolute ionization crosssection
 export @n_str
 
-export approxKShellFluorescenceYield
 export dtsamac
 
 include("material.jl")
@@ -81,5 +79,9 @@ export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
 
 include("misc.jl")
+export castellanobremsstrahlung # Castellano-2004 Bremsstrahlung model
+export pwhjumpratios # Poehn, Wernisch, Hanke (1985) jump ratios
+export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
+export burhopfluorescenceyield # K shell fluorescence yields
 
 end

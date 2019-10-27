@@ -2,17 +2,17 @@
 using FFAST # for mass absorption coefficienct
 using BoteSalvatICX # For ionization crosssections
 
-const shellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
+const subshellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
     "N1", "N2", "N3", "N4", "N5", "N6", "N7", "O1", "O2", "O3",
     "O4", "O5", "O6", "O7", "O8", "O9", "P1", "P2", "P3", "P4", "P5",
     "P6", "P7", "P8", "P9", "P10", "P11" )
 """
-    shellIndex(shell::AbstractString)
+    subshellindex(ss::AbstractString)
 
-Maps shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, etc).
+Maps sub-shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, etc).
 """
-shellIndex(shell::AbstractString) =
-    findfirst(name->shell==name, shellnames)
+subshellindex(ssname::AbstractString) =
+    findfirst(name->ssname==name, subshellnames)
 
 """
     massAbsorptionCoefficient(z::Int, energy::Float64)::Float64
@@ -23,12 +23,12 @@ massAbsorptionCoefficient(z::Int, energy::Float64)::Float64 =
     ffastMACpe(z,energy)
 
 """
-    shellEnergy(z::Int, sh::Int)::Float64
+    shellEnergy(z::Int, ss::Int)::Float64
 
-The minimum energy (in eV) necessary to ionize the specified shell in the specified atom.
+The minimum energy (in eV) necessary to ionize the specified sub-shell in the specified atom.
 """
-shellEnergy(z::Int, sh::Int)::Float64 =
-    ffastEdgeEnergy(z,sh)
+shellEnergy(z::Int, ss::Int)::Float64 =
+    ffastEdgeEnergy(z,ss)
 
 """
     elementRange() = 1:92
@@ -39,17 +39,17 @@ elementRange() =
     ffastElementRange()
 
 """
-    shellindexes(z::Int)
+    subshellsindexes(z::Int)
 
 The shells occupied in a neutral, ground state atom of the specified atomic number.
 """
-shellindexes(z::Int) =
+subshellsindexes(z::Int) =
     ffastEdges(z)
 
 """
     characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64
 
-The energy (in eV) of the transition by specified inner and outer shell index.
+The energy (in eV) of the transition by specified inner and outer sub-shell index.
 """
 characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64 =
     ffastEdgeEnergy(z,inner)-ffastEdgeEnergy(z,outer)
@@ -61,18 +61,18 @@ characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64 =
 Computes the absolute ionization crosssection (in cm2) for the specified element, shell and
 electon energy (in eV).
 """
-ionizationCrossSection(z::Int, shell::Int, energy::AbstractFloat) =
-    boteSalvatAvailable(z, shell) ? boteSalvatICX(z, shell, energy, shellEnergy(z,shell)) : 0.0
+ionizationCrossSection(z::Int, ss::Int, energy::AbstractFloat) =
+    boteSalvatAvailable(z, ss) ? boteSalvatICX(z, ss, energy, shellEnergy(z,ss)) : 0.0
 
-jumpRatio(z::Int, shell::Int) =
-    ffastJumpRatio(z,shell)
+jumpRatio(z::Int, ss::Int) =
+    ffastJumpRatio(z,ss)
 
 include("strength.jl")
 
 """
     characteristicXRayFraction(z::Int, inner::Int, outer::Int)::Float64
 
-The fraction of <code>inner</code> shell ionizations that relax via a characteristic X-ray resulting from an electronic
+The fraction of <code>inner</code> sub-shell ionizations that relax via a characteristic X-ray resulting from an electronic
 transition from <code>outer</code> to <code>inner</code>.
 """
 characteristicXRayFraction(z::Int, inner::Int, outer::Int)::Float64 =
@@ -85,15 +85,3 @@ Is the weight associated with this transition greater than zero.
 """
 charactericXRayAvailable(z::Int, inner::Int, outer::Int)::Bool =
     nexlIsAvailable(z,inner,outer)
-
-
-"""
-    approxKShellFluorescenceYield(z::Int)
-
-An approximate expression for the K-shell fluorescence yield due to
-E.H.S Burhop, J. Phys. Radium, 16, 625 (1965)
-"""
-function approxKShellFluorescenceYield(z::Int)
-    d = -0.044 + 0.0346z - 1.35e-6z^3
-    return d^4/(1.0+d^4)
-end

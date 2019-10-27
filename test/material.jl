@@ -3,7 +3,7 @@ using NeXLCore
 
 @testset "Materials" begin
 
-        k411 = NeXL.Material("K411", Dict( z(n"O")=>0.423667, z(n"Mg")=>0.0884654, z(n"Si")=>0.253817, z(n"Ca")=>0.110563, z(n"Fe")=>0.112087 ), 3.5)
+        k411 = NeXLCore.Material("K411", Dict( z(n"O")=>0.423667, z(n"Mg")=>0.0884654, z(n"Si")=>0.253817, z(n"Ca")=>0.110563, z(n"Fe")=>0.112087 ), 3.5)
 
         k411_2 = material("K411", Dict(n"O"=>0.423667, n"Mg"=>0.0884654, n"Si"=>0.253817, n"Ca"=>0.110563, n"Fe"=>0.112087 ), 3.5, Dict( n"Ca"=>41.0, n"O"=>16.1) )
 

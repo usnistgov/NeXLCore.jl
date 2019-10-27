@@ -63,14 +63,14 @@ function plotXrayWeights(transitions::AbstractArray{Transition})
         Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop))
 end
 
-function plotEdgeEnergies(shells::AbstractArray{Shell})
+function plotEdgeEnergies(sss::AbstractArray{SubShell})
     layers, names, colors = [], [], []
-    for sh in shells
+    for sh in sss
         x, y = [], []
         for elm in element.(elementRange())
             if has(elm, sh)
                 push!(x,z(elm))
-                push!(y,energy(atomicshell(elm,sh)))
+                push!(y,energy(atomicsubshell(elm,sh)))
             end
             if !isempty(x)
                 push!(names, repr(tr))
@@ -81,7 +81,7 @@ function plotEdgeEnergies(shells::AbstractArray{Shell})
         end
     end
     Gadfly.plot(layers...,
-        Gadfly.Guide.title("Atomic Shell Energies"),
+        Gadfly.Guide.title("Atomic Sub-Shell Energies"),
         Gadfly.Guide.manual_color_key("Type", name = names, colors = colors),
         Gadfly.Guide.xlabel("Atomic Number"), Guide.ylabel("Edge Energy (eV)"),
         Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop))

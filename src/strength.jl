@@ -24,7 +24,7 @@ Returns a tuple containing the inner and outer shell indexes
 """
 function innerOuter(trName::AbstractString)
     shells = split(trName,"-")
-    return ( shellIndex(shells[1]), shellIndex(shells[2]) )
+    return ( subshellindex(shells[1]), subshellindex(shells[2]) )
 end
 
 const transitionShellIdx = Dict( ( innerOuter(transitionnames[i]), i ) for i in eachindex(transitionnames))
@@ -47,7 +47,7 @@ function loadAltWeights()
                 costerkronigweights[ ( row.Z, row.S2+1, row. S3+1 ) ] = row.W
             else
                 inner, outer = row.S2+1, row.S3+1
-                if (row.Z in elementRange()) && (outer in shellindexes(row.Z)) # make sure that their is an edge energy asssociated with the shell
+                if (row.Z in elementRange()) && (outer in subshellsindexes(row.Z)) # make sure that their is an edge energy asssociated with the shell
                     # @assert(!isnothing(transitionIndex(inner,outer)),"Unexpected transition: $(inner)-$(outer)")
                     xrayweights[ ( row.Z, inner, outer ) ] = row.W
                     if !haskey(xraytransitions,(row.Z,inner))

@@ -43,23 +43,23 @@ using NeXLCore
         end
 
         @testset "Shells" begin
-                @test length(kshells)==1
-                @test length(lshells)==3
-                @test length(mshells)==5
-                @test length(nshells)==7
-                @test length(oshells)==9
+                @test length(ksubshells)==1
+                @test length(lsubshells)==3
+                @test length(msubshells)==5
+                @test length(nsubshells)==7
+                @test length(osubshells)==9
 
-                @test kshells == map(Shell, ( "K", ))
-                @test lshells == map(Shell, ( "L1", "L2", "L3" ))
-                @test mshells == map(Shell, ( "M1", "M2", "M3", "M4", "M5" ))
-                @test nshells == map(Shell, ( "N1", "N2", "N3", "N4", "N5", "N6", "N7" ))
-                @test oshells == map(Shell, ( "O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9", ))
+                @test ksubshells == map(SubShell, ( "K", ))
+                @test lsubshells == map(SubShell, ( "L1", "L2", "L3" ))
+                @test msubshells == map(SubShell, ( "M1", "M2", "M3", "M4", "M5" ))
+                @test nsubshells == map(SubShell, ( "N1", "N2", "N3", "N4", "N5", "N6", "N7" ))
+                @test osubshells == map(SubShell, ( "O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9", ))
 
-                @test family(Shell("K"))=='K'
-                @test family(Shell("L2"))=='L'
-                @test family(Shell("M4"))=='M'
-                @test family(Shell("N7"))=='N'
-                @test family(Shell("O1"))=='O'
+                @test shell(SubShell("K"))=='K'
+                @test shell(SubShell("L2"))=='L'
+                @test shell(SubShell("M4"))=='M'
+                @test shell(SubShell("N7"))=='N'
+                @test shell(SubShell("O1"))=='O'
 
                 @test capacity(n"K1")==2
                 @test capacity(n"L2")==2
@@ -67,7 +67,7 @@ using NeXLCore
                 @test capacity(n"N6")==6
                 @test capacity(n"O9")==10
 
-                as1, as2, as3 = AtomicShell(e1.number, shell("L3")), AtomicShell(e2.number, shell("M5")), AtomicShell(e3.number, shell("K"))
+                as1, as2, as3 = AtomicSubShell(e1.number, subshell("L3")), AtomicSubShell(e2.number, subshell("M5")), AtomicSubShell(e3.number, subshell("K"))
 
                 @test repr(as1)=="Ca L3"
                 @test repr(as2)=="Po M5"
@@ -77,9 +77,9 @@ using NeXLCore
                 @test as2==n"Po M5"
                 @test as3==n"U K"
 
-                @test family(as1)=='L'
-                @test family(as2)=='M'
-                @test family(as3)=='K'
+                @test shell(as1)=='L'
+                @test shell(as2)=='M'
+                @test shell(as3)=='K'
 
                 @test n"Ca K" < n"Ca L1"
                 @test n"Ca K" < n"Ti K"
@@ -97,14 +97,14 @@ using NeXLCore
                 #@test_throws ArgumentError n"M5-L3"
                 #@test_throws ArgumentError n"K-N7"
 
-                @test family(n"K-L3")=='K'
-                @test family(n"L3-M5")=='L'
-                @test family(n"M5-N7")=='M'
+                @test shell(n"K-L3")=='K'
+                @test shell(n"L3-M5")=='L'
+                @test shell(n"M5-N7")=='M'
 
-                @test all(tr->family(tr)=='K',ktransitions)
-                @test all(tr->family(tr)=='L',ltransitions)
-                @test all(tr->family(tr)=='M',mtransitions)
-                @test all(tr->family(tr)=='N',ntransitions)
+                @test all(tr->shell(tr)=='K',ktransitions)
+                @test all(tr->shell(tr)=='L',ltransitions)
+                @test all(tr->shell(tr)=='M',mtransitions)
+                @test all(tr->shell(tr)=='N',ntransitions)
 
                 @test length(alltransitions)==sum(length,(ktransitions,ltransitions,mtransitions,ntransitions, otransitions))
 
@@ -128,10 +128,11 @@ using NeXLCore
                 @test has(n"U",n"L3-M5")
                 @test has(n"U",n"M5-N7")
 
-                @test all(tr->family(tr)=='L',characteristic(n"Fe",ltransitions))
-                @test all(tr->family(tr)=='K',characteristic(n"Fe",ktransitions))
+                @test all(tr->shell(tr)=='L',characteristic(n"Fe",ltransitions))
+                @test all(tr->shell(tr)=='K',characteristic(n"Fe",ktransitions))
 
-                @test length(characteristic(n"Fe",ltransitions,0.1))==5
-                @test length(characteristic(n"Fe",ltransitions,0.01))==9
+                @test length(characteristic(n"Fe",ltransitions,0.0))==12
+                @test length(characteristic(n"Fe",ltransitions,0.1))==3
+                @test length(characteristic(n"Fe",ltransitions,0.01))==7
         end
 end

@@ -20,7 +20,7 @@ Examples:
 
     n"Fe" == element(26)
     n"L3" == shell("L3")
-    n"Fe L3" == atomicshell(n"Fe",shell("L3"))
+    n"Fe L3" == atomicsubshell(n"Fe",shell("L3"))
     n"L3-M5" == transition(shell("L3"),shell("M5"))
     n"Fe L3-M5" == CharXRay(26, transition(shell("L3"),shell("M5")))
 

@@ -11,19 +11,19 @@ a characteristic X-ray.
 
 Data items:
 
-    innerShell::Shell
-    outerShell::Shell
+    innerShell::SubShell
+    outerShell::SubShell
 
 Example:
 
     tr1 = Transition(n"K",n"L3")
-    tr2   = Transition(Shell(1),Shell(4))
+    tr2   = Transition(SubShell(1),SubShell(4))
     @assert(tr1==tr2)
 """
 struct Transition
-    innershell::Shell
-    outershell::Shell
-    function Transition(inner::Shell, outer::Shell)
+    innershell::SubShell
+    outershell::SubShell
+    function Transition(inner::SubShell, outer::SubShell)
         if !("$(inner)-$(outer)" in transitionnames)
             error("$(inner)-$(outer) does not represent a known Transition.")
         end
@@ -32,79 +32,79 @@ struct Transition
 end
 
 """
-    family(tr::Transition)
+    shell(tr::Transition)
 
-Returns the family ('K', 'L',...) associated with the transition's inner shell.
+Returns the shell ('K', 'L',...) associated with the transition's inner shell.
 
 Example:
 
-    @assert(family(n"K-L3")=='K')
-    @assert(family(n"M5-N7")=='M')
+    @assert(shell(n"K-L3")=='K')
+    @assert(shell(n"M5-N7")=='M')
 """
-family(tr::Transition) =
-    family(tr.innershell)
+shell(tr::Transition) =
+    shell(tr.innershell)
 
 """
     alltransitions
 
 A complete list of all the transitions present in one or more elements.
 """
-const alltransitions = map(name -> Transition(Shell.(split(name,"-"))...), transitionnames)
+const alltransitions = map(name -> Transition(SubShell.(split(name,"-"))...), transitionnames)
 
 """
     ktransitions
 
 A complete list of all the K-shell transitions.
 """
-const ktransitions = tuple(filter(tr -> family(tr) == 'K', collect(alltransitions))...)
+const ktransitions = tuple(filter(tr -> shell(tr) == 'K', collect(alltransitions))...)
 
 """
     kalpha
 
 A list of K-L? transitions.
 """
-const kalpha = tuple(filter(tr -> family(tr.outershell) == 'L',collect(ktransitions))...)
+const kalpha = tuple(filter(tr -> shell(tr.outershell) == 'L',collect(ktransitions))...)
 
 """
     kbeta
 
 A list of K-M? transitions.
 """
-const kbeta = tuple(filter(tr -> family(tr.outershell) == 'M',collect(ktransitions))...)
+const kbeta = tuple(filter(tr -> shell(tr.outershell) == 'M',collect(ktransitions))...)
 
 """
     kother
 
 A list of K-!L? transitions.
 """
-const kother = tuple(filter(tr -> family(tr.outershell) ≠ 'L',collect(ktransitions))...)
+const kother = tuple(filter(tr -> shell(tr.outershell) ≠ 'L',collect(ktransitions))...)
 
 """
     ltransitions
 
 A complete list of all the L-shell transitions.
 """
-const ltransitions = tuple(filter(tr -> family(tr) == 'L',collect(alltransitions))...)
+const ltransitions = tuple(filter(tr -> shell(tr) == 'L',collect(alltransitions))...)
 
 """
     mtransitions
 
 A complete list of all the M-shell transitions.
 """
-const mtransitions = tuple(filter(tr -> family(tr) == 'M',collect(alltransitions))...)
+const mtransitions = tuple(filter(tr -> shell(tr) == 'M',collect(alltransitions))...)
 
 """
     ntransitions
 
 A complete list of all the N-shell transitions.
 """
-const ntransitions = tuple(filter(tr -> family(tr) == 'N',collect(alltransitions))...)
+const ntransitions = tuple(filter(tr -> shell(tr) == 'N',collect(alltransitions))...)
 
 """
     otransitions
 A complete list of all the O-shell transitions.
 """
-const otransitions = tuple(filter(tr -> family(tr) == 'O',collect(alltransitions))...)
+const otransitions = tuple(filter(tr -> shell(tr) == 'O',collect(alltransitions))...)
 
 
 """
@@ -129,7 +129,7 @@ const transitionsbygroup = Dict(
 """
     transitionsbyfamily
 
-A Dict{Char,Tuple{Transition}} mapping family name into a list of transitions.
+A Dict{Char,Tuple{Transition}} mapping shell name into a list of transitions.
 Keys are 'K','L',..., 'O'.
 """
 const transitionsbyfamily = Dict(
@@ -149,12 +149,12 @@ function Base.isless(tr1::Transition, tr2::Transition)
 end
 
 """
-    transition(inner::Shell, outer::Shell)::Transition
+    transition(inner::SubShell, outer::SubShell)::Transition
 
 Returns a Transition structure from an inner and outer shell. This function tests
 to ensure that the Transition is a known transition.
 """
-function transition(inner::Shell, outer::Shell)::Transition
+function transition(inner::SubShell, outer::SubShell)::Transition
     ff = findfirst(tr -> (tr.innershell==inner) && (tr.outershell==outer), alltransitions)
     @assert(!isnothing(ff),"$(inner)-$(outer) does not represent a known Transition.")
     alltransitions[ff]
@@ -193,19 +193,19 @@ Base.show(io::IO, cxr::CharXRay) =
 """
     inner(cxr::CharXRay)
 
-Returns the inner AtomicShell associated with the specified CharXRay.
+Returns the inner AtomicSubShell associated with the specified CharXRay.
 """
 inner(cxr::CharXRay) =
-    AtomicShell(cxr.z, cxr.transition.innershell)
+    AtomicSubShell(cxr.z, cxr.transition.innershell)
 
 
 """
     outer(cxr::CharXRay)
 
-Returns the outer AtomicShell associated with the specified CharXRay.
+Returns the outer AtomicSubShell associated with the specified CharXRay.
 """
 outer(cxr::CharXRay) =
-    AtomicShell(cxr.z, cxr.transition.outershell)
+    AtomicSubShell(cxr.z, cxr.transition.outershell)
 
 """
     transition(cxr::CharXRay)
@@ -216,12 +216,12 @@ transition(cxr::CharXRay) =
     cxr.transition
 
 """
-    family(cxr::CharXRay)
+    shell(cxr::CharXRay)
 
-Returns the family, 'K', 'L', ... associated with the inner shell.
+Returns the shell, 'K', 'L', ... associated with the inner shell.
 """
-family(cxr::CharXRay) =
-    family(cxr.transition)
+shell(cxr::CharXRay) =
+    shell(cxr.transition)
 
 """
     element(cxr::CharXRay)
@@ -234,9 +234,9 @@ element(cxr::CharXRay) =
 
 function ionizationFraction(z::Int, sh::Int, over=4.0)
     function relativeTo(z, sh)
-        # Find the largest available shell in family
+        # Find the largest available shell in shell
         relTo = ( 1, 4, 4, 4, 9, 9, 9, 9, 9, 16, 16, 16, 16, 16, 16, 16, 25, 25, 25, 25, 25, 25, 25, 25, 25 )
-        avail = shellindexes(z)
+        avail = subshellsindexes(z)
         return findlast(i->(relTo[i] in avail) && (relTo[i]==relTo[sh]), 1:relTo[sh])
     end
     ee, rel = over*shellEnergy(z,sh), relativeTo(z,sh)
@@ -252,26 +252,16 @@ Returns the nominal line strenth for the specified transition in the specified e
 The strength differs from the weight by the fluorescence yield.
 """
 strength(elm::Element, tr::Transition)::Float64 =
-    ionizationFraction(z(elm), tr.innershell) * characteristicXRayFraction(z(elm),tr.innershell,tr.outershell)
+    ionizationFraction(z(elm), tr.innershell.index) * characteristicXRayFraction(z(elm),tr.innershell.index,tr.outershell.index)
 
 """
     normWeight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
 
 Returns the nominal line strength for the specified transition in the specified element.
-The strength differs from the weight in that the weight is normalized to the most intense line in the family.
+The strength differs from the weight in that the weight is normalized to the most intense line in the shell.
 """
 normWeight(elm::Element, tr::Transition, overvoltage = 4.0) =
     nexlIsAvailable(z(elm), tr.innershell.index, tr.outershell.index) ? normWeight(characteristic(elm,tr),overvoltage) : 0.0
-
-
-"""
-    fluorescenceyield(ashell::AtomicShell)::Float64
-
-The fraction of relaxations from the specified shell that decay via radiative transition
-rather than electronic (Auger) transition.
-"""
-fluorescenceyield(ashell::AtomicShell)::Float64 =
-    mapreduce(tr -> tr.innershell == ashell.shell ? strength(element(ashell.z), tr) : 0.0, +, transitionsbyfamily[family(ashell)])
 
 """
     energy(cxr::CharXRay)
@@ -281,16 +271,25 @@ The energy in eV for the specified CharXRay (characteristic X-ray)
 energy(cxr::CharXRay)::Float64 =
     characteristicXRayEnergy(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index)
 
+
+"""
+    energy(elm::Element, tr::Transition)
+
+The energy in eV for the specified characteristic X-ray represented by an element and transition.
+"""
+energy(elm::Element, tr::Transition)::Float64 =
+    characteristicXRayEnergy(z(elm), tr.innershell.index, tr.outershell.index)
+
 """
     weight(cxr::CharXRay)
 
 The line weight of the specified characteristic X-ray relative to the other lines from the same element in the
-same family.  The most intense line is normalized to unity.
+same shell.  The most intense line is normalized to unity.
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    ss(cxr2) = strength(cxr2) * ionizationFraction(z(element(cxr2)), inner(cxr2).shell.index, overvoltage)
+    ss(cxr2) = strength(cxr2) * ionizationFraction(z(element(cxr2)), inner(cxr2).subshell.index, overvoltage)
     safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
-    return ss(cxr) / maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
+    return ss(cxr) / maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[shell(cxr)])
 end
 
 """
@@ -303,13 +302,13 @@ function normWeight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0 = overvoltage * energy(inner(cxr))
     ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
     safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
-    return ss(cxr) / sum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[family(cxr)])
+    return ss(cxr) / sum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[shell(cxr)])
 end
 
 """
-    brightest(elm::Element, family)
+    brightest(elm::Element, shell)
 
-Returns the brightest transition among the family of transitions for the
+Returns the brightest transition among the shell of transitions for the
 specified element.  (group="K"|"Ka"|"Kb"|"L" etc)
 """
 brightest(elm::Element, transitions) =
@@ -359,10 +358,10 @@ end
     splitbyshell(cxrs)
 
 Splits a collection of CharXRay into a dictionary where the key is the inner
-AtomicShell and the values are a vector of CharXRay for that inner shell.
+AtomicSubShell and the values are a vector of CharXRay for that inner shell.
 """
 function splitbyshell(cxrs)
-    res=Dict{AtomicShell,Vector{CharXRay}}()
+    res=Dict{AtomicSubShell,Vector{CharXRay}}()
     for cxr in cxrs
         shell=inner(cxr)
         if haskey(res, shell)
@@ -386,9 +385,9 @@ function NeXLCore.name(cxrs::AbstractVector{CharXRay})::String
     res = []
     elms = Set{Element}(element.(cxrs))
     for elm in elms
-        fams = Set{Char}(family.(filter(cxr->element(cxr)==elm,cxrs)))
+        fams = Set{Char}(shell.(filter(cxr->element(cxr)==elm,cxrs)))
         for fam in fams
-            fc = filter(cxr->(element(cxr)==elm) && (family(cxr)==fam),cxrs)
+            fc = filter(cxr->(element(cxr)==elm) && (shell(cxr)==fam),cxrs)
             br, cx = brightest(fc), length(fc)
             other = cx>2 ? "others" : "other"
             push!(res,cx > 1 ? "$(br) + $(cx-1) $(other)" : "$(br)")

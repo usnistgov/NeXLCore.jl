@@ -304,7 +304,7 @@ The line weight of the specified characteristic X-ray with the sum of the
 weights equal to unity.
 """
 function normWeight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    e0 = overvoltage * energy(inner(cxr))
+    e0, elm = overvoltage * energy(inner(cxr)), element(cxr)
     safeSS(z, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
     return strength(cxr) / sum( safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
 end

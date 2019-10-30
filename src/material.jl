@@ -22,6 +22,9 @@ struct Material
         a::Dict{Int,V} = Dict{Int,Float64}(),
         description::Union{AbstractString,Missing} = missing,
     ) where {U<:AbstractFloat,V<:AbstractFloat}
+        if sum(values(massfrac))>10.0
+            @warn "The sum mass fraction is $(sum(values(massfrac))) which is much larger than unity."
+        end
         props = Dict{Symbol,Any}()
         if !ismissing(density)
             props[:Density] = density
@@ -388,7 +391,6 @@ function tabulate(mat::Material)
     return res
 end
 
-
 """
     tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
 
@@ -398,7 +400,7 @@ for each element in any of the materials.
     mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
 """
 function tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
-    elms = convert(Array{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
+    elms = convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
     cols = ( Symbol("Material"), Symbol.(symbol.(elms))...) # Column names
     empty = NamedTuple{cols}( map(c->c==:Material ? Vector{String}() : Vector{AbstractFloat}(), cols) )
     res = DataFrame(empty) # Emtpy data frame with necessary columns

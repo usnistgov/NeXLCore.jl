@@ -40,12 +40,12 @@ export has # Element has a specific Transition, a Material has an element
 export dtsamac # Calculates the MAC using Heinrich's formula
 export mac # Calculates the MAC using the default algorithm
 export shell # The shell ('K','L','M',...) for an AtomicSubShell, Transition, CharXRay etc.
-export transitionsbyfamily # Dictionary mapping transition families to lists of Transition(s)
+export transitionsbyshell # Dictionary mapping transition families to lists of Transition(s)
 export atomicsubshells # Gets an iterator of AtomicSubShell for the specified element
 export brightest # Returns the brightest characteristic X-ray from a set of transitions for an element
 export splitbyshell # Creates a Dict{AtomicSubShell,CharXRay} from a collection of CharXRay and the associated inner AtomicSubShell.
-export relativeIonizationCrossSection # Computes a number proportional to the ionization crosssection
-export ionizationCrossSection # Computes the absolute ionization crosssection
+export relativeionizationcrosssection # Computes a number proportional to the ionization crosssection
+export ionizationcrosssection # Computes the absolute ionization crosssection
 export @n_str
 
 export dtsamac

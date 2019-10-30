@@ -1,91 +1,89 @@
 using CSV
 
-# The weights data determines which transitions are available in this library
-
-const transitionnames = ( #
-  "K-L1", "K-L2", "K-L3", "K-M2", "K-M3", "K-M4", "K-M5", "K-N2", "K-N3", "K-N4",
-  "K-N5", "K-O2", "K-O3", "K-O4", "K-O5", "K-P2", "K-P3", "L1-M2", "L1-M3", "L1-M4",
-  "L1-M5", "L1-N2", "L1-N3", "L1-N4", "L1-N5", "L1-O2", "L1-O3", "L1-O4", "L1-O5",
-  "L1-P2", "L1-P3", "L2-M1", "L2-M3", "L2-M4", "L2-N1", "L2-N3", "L2-N4", "L2-N6",
-  "L2-O1", "L2-O3", "L2-O4", "L2-P1", "L2-P3", "L3-M1", "L3-M2", "L3-M3", "L3-M4",
-  "L3-M5", "L3-N1", "L3-N2", "L3-N3", "L3-N4", "L3-N5", "L3-N6", "L3-N7", "L3-O1",
-  "L3-O2", "L3-O3", "L3-O4", "L3-O5", "L3-P1", "L3-P2", "L3-P3", "M1-N2", "M1-N3",
-  "M1-O2", "M1-O3", "M1-P2", "M1-P3", "M2-N1", "M2-N4", "M2-O1", "M2-O4", "M2-P1",
-  "M3-N1", "M3-N4", "M3-N5", "M3-O1", "M3-O4", "M3-O5", "M3-P1", "M4-N2", "M4-N3",
-  "M4-N6", "M4-O2", "M4-O3", "M4-P2", "M4-P3", "M5-N3", "M5-N6", "M5-N7", "M5-O3",
-  "M5-P3", "N1-O2", "N1-O3", "N1-P2", "N1-P3", "N2-O1", "N2-O4", "N2-P1", "N3-O1",
-  "N3-O4", "N3-O5", "N3-P1", "N4-O2", "N4-O3", "N4-P2", "N4-P3", "N5-O3", "N5-P3",
-  "N6-O4", "N6-O5", "N7-O5", "O1-P2", "O1-P3", "O2-P1", "O3-P1" )
-
-"""
-    innerOuter(trName::AbstractString)::Tuple{Int, Int}
-
-Returns a tuple containing the inner and outer shell indexes
-"""
-function innerOuter(trName::AbstractString)
-    shells = split(trName,"-")
-    return ( subshellindex(shells[1]), subshellindex(shells[2]) )
-end
-
-const transitionShellIdx = Dict( ( innerOuter(transitionnames[i]), i ) for i in eachindex(transitionnames))
-
-transitionIndex(inner::Int, outer::Int) =
-    get(transitionShellIdx, (inner, outer), nothing)
-
-const transitionNameIdx = Dict( ( transitionnames[i], i ) for i in eachindex(transitionnames))
-
-transitionIndex(trName::AbstractString) =
-    get(transitionNameIdx, trName, nothing)
+# This file implements using Cullen's Evaluated Atomic Data Library 1997 for emission probabilities.
+# The file relax.csv contains five columns, the atomic number, 3 sub-shell indices and a probability.
+# The first two columns indicate the atom and the sub-shell ionized.  The third and fourth columns
+# contain the inner and outer sub-shells involved in the X-ray transition and the fifth contains
+# the probability of an ionization in column 2 producing an X-ray in columns 3 and 4.  This is what
+# Perkins would call the Total yield - An ionization in column 2 will initiate a cascade of transitions.
+# When the atom finally returns to the ground state, it could have emitted zero or more x-rays and
+# zero or more Augers.  A K shell vacancy could relax via L3 which could relax via M5 and so on.
 
 function loadAltWeights()
-    fam(ss) = ss < 1 ? 'K' : (ss < 4 ? 'L' : ( ss<9 ? 'M' : (ss < 16 ? 'N' : (ss < 25 ? 'N' : (ss < 36 ? 'O' : 'P')))))
-    isck(s1, s2,s3) = (s1==0) && (fam(s2) == fam(s3))
     path = dirname(pathof(@__MODULE__))
+    #path = "C:\\Users\\nicho\\.julia\\dev\\NeXLCore\\src"
+    xrw = Dict{Tuple{Int, Int},Vector{Tuple{Int, Int, Float64}}}()
+    nn = ( 1, # Shell index
+           2, 2, 2,
+           3, 3, 3, 3, 3,
+           4, 4, 4, 4, 4, 4, 4,
+           5, 5, 5, 5, 5, 5, 5, 5, 5,
+           6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+           7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 )
     for row in CSV.File("$(path)\\..\\data\\relax.csv")
-        if row.S1==0
-            if isck(row.S1, row.S2, row.S3)
-                costerkronigweights[ ( row.Z, row.S2+1, row. S3+1 ) ] = row.W
-            else
-                inner, outer = row.S2+1, row.S3+1
-                if (row.Z in elementRange()) && (outer in subshellsindexes(row.Z)) # make sure that their is an edge energy asssociated with the shell
-                    # @assert(!isnothing(transitionIndex(inner,outer)),"Unexpected transition: $(inner)-$(outer)")
-                    xrayweights[ ( row.Z, inner, outer ) ] = row.W
-                    if !haskey(xraytransitions,(row.Z,inner))
-                        xraytransitions[(row.Z, inner)] = Vector{Tuple{Int,Int}}()
-                    end
-                    push!(xraytransitions[(row.Z,inner)],(inner,outer))
+        z, ionized, inner, outer, weight  = row[1], row[2], row[3], row[4], row[5]
+        if (z<=92) && ffastEdgeAvailable(z, inner) && ffastEdgeAvailable(z, outer) && (nn[inner]!=nn[outer])
+            if !haskey(xrw,(z, ionized))
+                xrw[(z,ionized)] = []
+            end
+            # There seems to be a problem with the L2-M1 and L3-M1 weights which I resolve with this ad-hoc fix.
+            if (outer==5) && ((inner==4)||(inner==3))
+                if z>=29
+                    weight *= max(0.1, 0.1 + ((0.9 * (z - 29.0)) / (79.0 - 29.0)))
+                else
+                    weight *= max(0.1, 0.2 - ((0.1 * (z - 22.0)) / (29.0 - 22.0)));
                 end
             end
-        else
-            augerweights[ ( row.Z, row.S1+1, row.S2+1, row.S3+1 ) ] = row.W
+            push!(xrw[(z,ionized)], (inner, outer, weight))
+            if !haskey(transitions,(inner,outer))
+                transitions[(inner,outer)]=1
+            else
+                transitions[(inner,outer)]+=1
+            end
         end
+    end
+    for (key, val) in xrw
+        xrayweights[key]=tuple(val...)
     end
 end
 
-const xrayweights = Dict{Tuple{Int,Int,Int},Float64}()
-const costerkronigweights = Dict{Tuple{Int,Int,Int},Float64}()
-const augerweights = Dict{Tuple{Int,Int,Int,Int},Float64}()
-const xraytransitions = Dict{Tuple{Int,Int}, Vector{Tuple{Int,Int}}}()
+
+"""
+    xrayweights[ (z, ionized) ] = ( (inner1, outer1, weight1), ...., (innerN, outerN, weightN) )
+"""
+const xrayweights = Dict{Tuple{Int, Int},Tuple{Vararg{Tuple{Int, Int, Float64}}}}()
+
+"""
+    transitions[ (inner, outer) ] = N( (inner,outer) ) in xrayweights
+"""
+const transitions = Dict{Tuple{Int,Int},Int}()
 
 loadAltWeights()
 
-nexlWeights(z::Int,inner::Int,outer::Int) =
-    get(xrayweights, (z, inner, outer), 0.0)
+"""
+   nexlDirectWeight(z::Int, ionized::Int, inner::Int, outer::Int)
+
+The line weight for the transition <code>(inner,outer)</code> which results from an ionization of <code>ionized</code>.
+"""
+function nexlTotalWeight(z::Int, ionized::Int, inner::Int, outer::Int)
+    trs = get(xrayweights, (z, ionized), nothing)
+    if !isnothing(trs)
+        i=findfirst(tr->((tr[1]==inner)&&(tr[2]==outer)),trs)
+        if !isnothing(i)
+            return trs[i][3]
+        end
+    end
+    return 0.0
+end
+
+"""
+    nexlAllTotalWeights(z::Int, ionized::Int)
+
+Returns a Vector containing tuples <code>(inner, outer, weight)</code> for each transition which could
+result when the specified shell is ionized.
+"""
+nexlAllTotalWeights(z::Int, ionized::Int)::Vector{Tuple{Int,Int,Float64}} =
+    return get(xrayweights, (z, ionized), Vector{Tuple{Int,Int,Float64}}())
 
 nexlIsAvailable(z::Int,inner::Int,outer::Int) =
-    get(xrayweights, (z, inner, outer), -1.0) > 0.0
-
-nexlGetTransitions(z::Int, inner::Int) =
-    get(xraytransitions, (z, inner), Vector{Tuple{Int,Int}}())
-
-nexlGetTransitions(z::Int) =
-    mapreduce(inner->nexlGetTransitions(z, inner), append!, 1:37)
-
-nexlAuger(z::Int,s1::Int,s2::Int,s3::Int) =
-    get(augerweights, (z, s1, s2, s3), 0.0)
-
-nexlIsAuger(z::Int, s1::Int,s2::Int,s3::Int) =
-    get(augerweights, (z, s1, s2, s3), -1.0) > 0.0
-
-nexlCosterKronig(z::Int, inner::Int, outer::Int) =
-    get(consterkronigweights, (z, inner, outer), 0.0)
+    nexlTotalWeight(z, inner, inner, outer) > 0.0

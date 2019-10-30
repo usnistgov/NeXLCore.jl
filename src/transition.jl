@@ -24,7 +24,7 @@ struct Transition
     innershell::SubShell
     outershell::SubShell
     function Transition(inner::SubShell, outer::SubShell)
-        if !("$(inner)-$(outer)" in transitionnames)
+        if !(haskey(transitions, (inner.index,outer.index)))
             error("$(inner)-$(outer) does not represent a known Transition.")
         end
         return new(inner, outer)
@@ -44,12 +44,18 @@ Example:
 shell(tr::Transition) =
     shell(tr.innershell)
 
+
+function everytransition(trs)
+    lttr(tr1,tr2) = (tr1[1]==tr2[1] ? isless(tr1[2],tr2[2]) : isless(tr1[1], tr2[1]))
+    return map(tr -> Transition(SubShell(tr[1]),SubShell(tr[2])), sort([keys(trs)...], lt=lttr))
+end
+
 """
     alltransitions
 
 A complete list of all the transitions present in one or more elements.
 """
-const alltransitions = map(name -> Transition(SubShell.(split(name,"-"))...), transitionnames)
+const alltransitions = tuple(filter(tr->shell(tr) in ('K','L','M'), everytransition(transitions))...)
 
 """
     ktransitions
@@ -127,12 +133,12 @@ const transitionsbygroup = Dict(
 
 
 """
-    transitionsbyfamily
+    transitionsbyshell
 
 A Dict{Char,Tuple{Transition}} mapping shell name into a list of transitions.
 Keys are 'K','L',..., 'O'.
 """
-const transitionsbyfamily = Dict(
+const transitionsbyshell = Dict(
     'K'=>ktransitions,
     'L'=>ltransitions,
     'M'=>mtransitions,
@@ -232,27 +238,27 @@ element(cxr::CharXRay) =
     element(cxr.z)
 
 
-function ionizationFraction(z::Int, sh::Int, over=4.0)
+function ionizationfraction(z::Int, sh::Int, over=4.0)
+    @assert (sh>=1) && (sh<=16) "Shell index out of 1:16 in ionizationfraction."
     function relativeTo(z, sh)
+        nn = ( 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4 )
         # Find the largest available shell in shell
-        relTo = ( 1, 4, 4, 4, 9, 9, 9, 9, 9, 16, 16, 16, 16, 16, 16, 16, 25, 25, 25, 25, 25, 25, 25, 25, 25 )
-        avail = subshellsindexes(z)
-        return findlast(i->(relTo[i] in avail) && (relTo[i]==relTo[sh]), 1:relTo[sh])
+        return findlast(ss->(nn[ss]==nn[sh]) && ffastEdgeAvailable(z, ss), eachindex(nn))
     end
-    ee, rel = over*shellEnergy(z,sh), relativeTo(z,sh)
-    return rel == sh ? 1.0 : ionizationCrossSection(z, sh, ee) / ionizationCrossSection(z, rel, ee)
+    rel = relativeTo(z,sh)
+    @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
+    ee = over*shellEnergy(z, rel)
+    return rel == sh ? 1.0 : ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
 end
-
-
 
 """
     strength(elm::Element, tr::Transition)::Float64
 
 Returns the nominal line strenth for the specified transition in the specified element.
-The strength differs from the weight by the fluorescence yield.
+The strength differs from the weight by the fluorescence yield.  Assumes an overvoltage of 4.0
 """
 strength(elm::Element, tr::Transition)::Float64 =
-    ionizationFraction(z(elm), tr.innershell.index) * characteristicXRayFraction(z(elm),tr.innershell.index,tr.outershell.index)
+    ionizationfraction(z(elm), tr.innershell.index, 4.0) * characteristicyield(z(elm),tr.innershell.index,tr.outershell.index)
 
 """
     normWeight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
@@ -261,7 +267,7 @@ Returns the nominal line strength for the specified transition in the specified 
 The strength differs from the weight in that the weight is normalized to the most intense line in the shell.
 """
 normWeight(elm::Element, tr::Transition, overvoltage = 4.0) =
-    nexlIsAvailable(z(elm), tr.innershell.index, tr.outershell.index) ? normWeight(characteristic(elm,tr),overvoltage) : 0.0
+    has(elm, tr) ? normWeight(characteristic(elm,tr),overvoltage) : 0.0
 
 """
     energy(cxr::CharXRay)
@@ -287,9 +293,8 @@ The line weight of the specified characteristic X-ray relative to the other line
 same shell.  The most intense line is normalized to unity.
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    ss(cxr2) = strength(cxr2) * ionizationFraction(z(element(cxr2)), inner(cxr2).subshell.index, overvoltage)
-    safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
-    return ss(cxr) / maximum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[shell(cxr)])
+    safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
+    return strength(cxr) / maximum( safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
 end
 
 """
@@ -300,9 +305,8 @@ weights equal to unity.
 """
 function normWeight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0 = overvoltage * energy(inner(cxr))
-    ss(cxr2) = strength(cxr2) * relativeIonizationCrossSection(inner(cxr2), e0)
-    safeSS(z, tr) = (has(element(cxr), tr) ? ss(CharXRay(cxr.z, tr)) : 0.0)
-    return ss(cxr) / sum( safeSS(cxr.z, tr2) for tr2 in transitionsbyfamily[shell(cxr)])
+    safeSS(z, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
+    return strength(cxr) / sum( safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
 end
 
 """
@@ -322,8 +326,7 @@ from an electronic transition from <code>outer(cxr)</code> to <code>inner(cxr)</
 
 See also <code>weight(cxr)</code>.
 """
-strength(cxr::CharXRay)::Float64 =
-    characteristicXRayFraction(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index)
+strength(cxr::CharXRay)::Float64 = strength(element(cxr), cxr.transition)
 
 """
     has(elm::Element, tr::Transition)::Bool

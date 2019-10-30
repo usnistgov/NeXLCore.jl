@@ -46,7 +46,7 @@ function plotXrayWeights(transitions::AbstractArray{Transition})
         for elm in element.(elementRange())
             if has(elm, tr)
                 push!(x,z(elm))
-                push!(y, strength(characteristic(elm,tr)))
+                push!(y, strength(elm,tr))
             end
             if !isempty(x)
                 push!(names, repr(tr))

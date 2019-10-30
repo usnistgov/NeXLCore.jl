@@ -83,6 +83,8 @@ end
 Base.parse(::Type{AtomicSubShell}, str::AbstractString)::AtomicSubShell =
      atomicsubshell(str)
 
+const transitionnames = tuple(map(tr->"$(tr.innershell)-$(tr.outershell)", alltransitions)...)
+
 """
     transition(str::AbstractString)::Transition
 

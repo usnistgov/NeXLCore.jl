@@ -48,12 +48,16 @@ Example:
 shell(sh::SubShell) =
     subshellnames[sh.index][1]
 
+
+
 """
     allsubshells
 
 A tuple containing all K, L, M, N and O sub-shells
 """
 const allsubshells = SubShell.(subshellnames)
+
+subshell(idx::Int) = allsubshells[idx]
 
 """
     ksubshells
@@ -91,6 +95,8 @@ All O sub-shells  ( O1, O2,.., O9 )
 """
 const osubshells = tuple(filter(sh -> shell(sh) == 'O', collect(allsubshells))...)
 
+const shelltosubshells = Dict{Char,Tuple{Vararg{SubShell}}}(
+    'K'=>ksubshells, 'L'=>lsubshells, 'M'=>msubshells, 'N'=>nsubshells, 'O'=>osubshells)
 
 """
     capacity(ss::SubShell)
@@ -273,23 +279,23 @@ Example:
  z(ass::AtomicSubShell) = ass.z
 
  """
-     ionizationCrossSection(ass::AtomicSubShell, energy::AbstractFloat)
+     ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat)
 
  Computes the absolute ionization crosssection (in cm2) for the specified AtomicSubShell and
  electon energy (in eV) using the default algorithm.
 
  Example:
 
-     julia> (/)(map(e->NeXLCore.ionizationCrossSection(n"Fe K",e),[10.0e3,20.0e3])...)
+     julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
      0.5672910174711278
  """
- ionizationCrossSection(ass::AtomicSubShell, energy::AbstractFloat) =
-     ionizationCrossSection(ass.z, ass.subshell.index, energy)
+ ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat) =
+     ionizationcrosssection(ass.z, ass.subshell.index, energy)
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
 
 """
-    relativeIonizationCrossSection(z::Int, ss::Int, ev::AbstractFloat)
+    relativeionizationcrosssection(z::Int, ss::Int, ev::AbstractFloat)
 
 
 An approximate expression based of Pouchou and Pouchoir's 1991 (Green Book) expression
@@ -297,10 +303,10 @@ for the ionization crosssection plus an additional factor for sub-shell capacity
 
 Example:
 
-    > (/)(map(e->NeXLCore.relativeIonizationCrossSection(n"Fe K",e),[10.0e3,20.0e3])...)
+    > (/)(map(e->NeXLCore.relativeionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
     0.5982578301818324
 """
-function relativeIonizationCrossSection(ass::AtomicSubShell, ev::AbstractFloat)
+function relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat)
      u = ev / energy(ass)
      ss = ass.subshell.index
      m = ss==1 ? 0.86 + 0.12*exp(-(0.2*ass.z)^2) : (ss <= 4 ? 0.82 : 0.78)
@@ -422,4 +428,4 @@ The fraction of relaxations from the specified shell that decay via radiative tr
 rather than electronic (Auger) transition.
 """
 fluorescenceyield(ass::AtomicSubShell)::Float64 =
-    sum(map(s->characteristicXRayFraction(ass.z, ass.subshell.index, s), ass.subshell.index+1:length(allsubshells)))
+    sum(map(s->characteristicyield(ass.z, ass.subshell.index, s), ass.subshell.index+1:length(allsubshells)))

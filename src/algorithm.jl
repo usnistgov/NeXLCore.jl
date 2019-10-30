@@ -5,7 +5,7 @@ using BoteSalvatICX # For ionization crosssections
 const subshellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
     "N1", "N2", "N3", "N4", "N5", "N6", "N7", "O1", "O2", "O3",
     "O4", "O5", "O6", "O7", "O8", "O9", "P1", "P2", "P3", "P4", "P5",
-    "P6", "P7", "P8", "P9", "P10", "P11" )
+    "P6", "P7", "P8", "P9", "P10", "P11", "Q1", "Q2", "Q3" )
 """
     subshellindex(ss::AbstractString)
 
@@ -56,12 +56,12 @@ characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64 =
 
 
 """
-    ionizationCrossSection(z::Int, shell::Int, energy::AbstractFloat)
+    ionizationcrosssection(z::Int, shell::Int, energy::AbstractFloat)
 
 Computes the absolute ionization crosssection (in cm2) for the specified element, shell and
 electon energy (in eV).
 """
-ionizationCrossSection(z::Int, ss::Int, energy::AbstractFloat) =
+ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
     boteSalvatAvailable(z, ss) ? boteSalvatICX(z, ss, energy, shellEnergy(z,ss)) : 0.0
 
 jumpRatio(z::Int, ss::Int) =
@@ -70,13 +70,23 @@ jumpRatio(z::Int, ss::Int) =
 include("strength.jl")
 
 """
-    characteristicXRayFraction(z::Int, inner::Int, outer::Int)::Float64
+    characteristicyield(z::Int, inner::Int, outer::Int)::Float64
 
-The fraction of <code>inner</code> sub-shell ionizations that relax via a characteristic X-ray resulting from an electronic
-transition from <code>outer</code> to <code>inner</code>.
+The fraction of <code>inner</code> sub-shell ionizations that relax via a characteristic X-ray resulting from an
+electronic transition from <code>outer</code> to <code>inner</code>.
 """
-characteristicXRayFraction(z::Int, inner::Int, outer::Int)::Float64 =
-    nexlWeights(z,inner,outer)
+characteristicyield(z::Int, inner::Int, outer::Int)::Float64 =
+    nexlTotalWeight(z, inner, inner, outer)
+
+"""
+    characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int)::Float64
+
+The fraction of <code>ionized</code> sub-shell ionizations that relax via a characteristic X-ray resulting from an
+electronic transition from <code>outer</code> to <code>inner</code>.
+"""
+characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int)::Float64 =
+    nexlTotalWeight(z, ionized, inner, outer)
+
 
 """
     characteristicXRayAvailable(z::Int, inner::Int, outer::Int)::Float64

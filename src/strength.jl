@@ -21,7 +21,7 @@ function loadAltWeights()
            6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 )
     for row in CSV.File("$(path)\\..\\data\\relax.csv")
-        z, ionized, inner, outer, weight  = row[1], row[2], row[3], row[4], row[5]
+        z, ionized, inner, outer, weight  = row.ZZ, row.II, row.NN, row.OO, row.PP
         if (z<=92) && ffastEdgeAvailable(z, inner) && ffastEdgeAvailable(z, outer) && (nn[inner]!=nn[outer])
             if !haskey(xrw,(z, ionized))
                 xrw[(z,ionized)] = []

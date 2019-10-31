@@ -64,7 +64,7 @@ electon energy (in eV).
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
     boteSalvatAvailable(z, ss) ? boteSalvatICX(z, ss, energy, shellEnergy(z,ss)) : 0.0
 
-jumpRatio(z::Int, ss::Int) =
+jumpratio(z::Int, ss::Int) =
     ffastJumpRatio(z,ss)
 
 include("strength.jl")

@@ -158,8 +158,8 @@ j(ss::SubShell) =
         AtomicSubShell(z(elm),ss)
  end
 
- jumpRatio(ass::AtomicSubShell) =
-    jumpRatio(ass.z, ass.subshell.index)
+ jumpratio(ass::AtomicSubShell) =
+    jumpratio(ass.z, ass.subshell.index)
 
  """
      element(ass::AtomicSubShell)
@@ -315,11 +315,11 @@ function relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat)
 
 
 """
-    meanFluorescenceYield(ass::AtomicSubShell)
+    meanfluorescenceyield(ass::AtomicSubShell)
 
 Mean fluorescence yields from Bambynek in Reviews of Modern Physics 44(4), 1972
 """
-function meanFluorescenceYield(ass::AtomicSubShell)
+function meanfluorescenceyield(ass::AtomicSubShell)
     fluorYields = (
         (0, 0, 0),
         (0, 0, 0),

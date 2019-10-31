@@ -413,6 +413,36 @@ function tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
     end
     return res
 end
+"""
+    compare(unk::Material, known::Material)::DataFrame
+
+Compares two compositions in a DataFrame.
+
+"""
+function compare(unk::Material, known::Material)::DataFrame
+    um, km, z, kmf, rmf, dmf =
+        Vector{String}(), Vector{String}(), Vector{String}(), Vector{Float64}(), Vector{Float64}(), Vector{Float64}()
+    fmf, kaf, raf, daf, faf =
+        Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), Vector{Float64}()
+    afk, afr = atomicfraction(known), atomicfraction(unk)
+    for elm in union(keys(known),keys(unk))
+        push!(um, name(unk))
+        push!(km, name(known))
+        push!(z,elm.symbol)
+        push!(kmf,known[elm])
+        push!(rmf,unk[elm])
+        push!(dmf,known[elm]-unk[elm])
+        push!(fmf,100.0*(known[elm]-unk[elm])/known[elm])
+        push!(kaf,get(afk, elm, 0.0))
+        push!(raf,get(afr, elm, 0.0))
+        push!(daf,get(afk, elm, 0.0)-get(afr, elm, 0.0))
+        push!(faf,100.0*(get(afk, elm, 0.0)-get(afr, elm, 0.0))/get(afk, elm, 0.0))
+    end
+    return DataFrame(Unkown=um, Known=km, Elm=z, Cknown=kmf, Cresult=rmf, ΔC=dmf, ΔCoC=fmf, Aknown=kaf, Aresult=raf, ΔA=daf, ΔAoA=faf)
+end
+
+compare(unks::AbstractVector{Material}, known::Material) =
+    mapreduce(unk->compare(unk, known), append!, unks)
 
 
 """

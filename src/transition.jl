@@ -287,6 +287,13 @@ energy(elm::Element, tr::Transition)::Float64 =
     characteristicXRayEnergy(z(elm), tr.innershell.index, tr.outershell.index)
 
 """
+    edgeenergy(cxr::CharXRay)
+
+Ionization edge energy for the specified X-ray.
+"""
+edgeenergy(cxr::CharXRay) = shellEnergy(cxr.z, cxr.transition.innershell.index)
+
+"""
     weight(cxr::CharXRay)
 
 The line weight of the specified characteristic X-ray relative to the other lines from the same element in the
@@ -342,20 +349,32 @@ has(elm::Element, tr::Transition)::Bool =
     charactericXRayAvailable(z(elm),tr.innershell.index,tr.outershell.index)
 
 """
-    characteristic(elm::Element, iter, minweight=0.0, maxE=1.0e6)
+    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
 
 The collection of available CharXRay for the specified element.
-maxE is compared to the edge energy.
-minWeight is compared to the weight
+  * <code> maxE</code> is compared to the edge energy.
+  * <code>minWeight</code> is compared to the weight
 
 Example:
 
     characteristic(n"Fe",ltransitions,0.01)
 """
-function characteristic(elm::Element, iter, minweight=0.0, maxE=1.0e6)
-    avail = map(tr->characteristic(elm,tr), filter(tr->has(elm,tr), collect(iter)))
-    return filter(cxr -> (weight(cxr)>minweight) && (energy(inner(cxr))<=maxE), avail)
-end
+characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6) =
+    characteristic(elm, iter, cxr -> (weight(cxr)>minweight) && (energy(inner(cxr))<=maxE))
+
+"""
+    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)
+
+The collection of available CharXRay for the specified element.  <code>filterfunc(...)</code>
+is a function taking a single CharXRay argument.
+
+Example:
+
+    characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
+"""
+characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function) =
+    map(tr->characteristic(elm,tr), filter(tr->has(elm,tr) && filterfunc(characteristic(elm,tr)), collect(iter)))
+
 
 """
     splitbyshell(cxrs)

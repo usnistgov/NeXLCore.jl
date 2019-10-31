@@ -17,8 +17,8 @@ export subshell # Construct SubShell structs from a string
 export AtomicSubShell # A shell in an Element
 export atomicsubshell # Construct AtomicSubShell structs from a string
 export capacity # The total shell capacity
-export jumpRatio # The jump ratio for the specified shell
-export meanFluorescenceYield # The mean shell-based fluorescence yield
+export jumpratio # The jump ratio for the specified shell
+export meanfluorescenceyield # The mean shell-based fluorescence yield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
 export transition # Constructs Transition from SubShell objects or a string
@@ -33,6 +33,7 @@ export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name
 export density # Returns Element or Mateial data
 export energy # Returns CharXRay and AtomicSubShell eneries
+export edgeenergy # Ionization edge energy for an X-ray
 export weight # Returns CharXRay weights with the most intense in a shell = 1
 export normWeight # Returns CharXRay weights normalized by shell to a sum of one.
 export strength #
@@ -64,6 +65,7 @@ export name # Material name
 export tabulate # One or more Materials as a DataFrame
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
+export compare # Compare compositions as a DataFrame
 
 include("stoichiometry.jl")
 export asoxide # Compute the standard oxide

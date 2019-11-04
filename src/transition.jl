@@ -418,6 +418,10 @@ function NeXLCore.name(cxrs::AbstractVector{CharXRay})::String
     return join(res, ", ")
 end
 
+function Base.show(io::IO, cxrs::AbstractVector{CharXRay})
+    print(io,name(cxrs))
+end
+
 """
     mac(elm::Element, cxr::CharXRay)::Float64
 

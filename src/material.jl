@@ -119,19 +119,21 @@ Example:
     > pure(n"Fe")
 """
 pure(elm::Element) =
-    material("Pure "*symbol(elm), Dict{}(elm=>1.0), density(elm))
+    material("Pure $(symbol(elm))", Dict{}(elm=>1.0), density(elm))
 
 function Base.show(io::IO, mat::Material)
-    print(io, name(mat)," = (")
+    res="$(name(mat)) = ("
     comma=""
     for (z, mf) in mat.massfraction
-        print(io, @sprintf("%s%s = %0.4f", comma, element(z).symbol, mf))
+        res*=@sprintf("%s%s = %0.4f", comma, element(z).symbol, mf)
         comma=", "
     end
     if !ismissing(density(mat))
-        print(io, @sprintf(", %0.2f g/cc", density(mat)))
+        res*=@sprintf(", %0.2f g/cc)", density(mat))
+    else
+        res*=")"
     end
-    print(io,")")
+    print(io, res)
 end
 
 function convert(::Type{Material}, str::AbstractString)
@@ -483,3 +485,18 @@ transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
 
 material(film::Film) = film.material
 thickness(film::Film) = film.thickness
+
+
+function compositionlibrary()::Dict{String, Material}
+    result = Dict{String, Material}()
+    path = dirname(pathof(@__MODULE__))
+    df = CSV.File("$(path)\\..\\data\\composition.csv") |> DataFrame
+    for row in eachrow(df)
+        name, density = row[1], row[2]
+        elmc = collect(zip(element.(1:94), row[3:96])) # (i->getindex(row,i)).(3:96)))
+        data=Dict{Element,Float64}(filter(a->(!ismissing(a[2]))&&(a[2]>0.0), elmc))
+        m = material(name, data, density)
+        result[name] = m
+    end
+    return result
+end

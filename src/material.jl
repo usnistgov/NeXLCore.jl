@@ -172,6 +172,9 @@ Base.getindex(mat::Material, elm::Element) =
 Base.getindex(mat::Material, sym::Symbol) =
     property(mat, sym)
 
+Base.setindex!(mat::Material, val, sym::Symbol) =
+    mat.properties[sym] = val
+
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
 
@@ -371,9 +374,6 @@ function Base.parse(
     return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr), density, atomicweights)
 end
 
-
-
-
 """
     tabulate(mat::Material)
 
@@ -486,6 +486,38 @@ transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
 material(film::Film) = film.material
 thickness(film::Film) = film.thickness
 
+
+
+function parsedtsa2comp(value::AbstractString)::Material
+	try
+		sp=split(value,",")
+		name=sp[1]
+		mf = Dict{Element,Float64}()
+		den = missing
+		for item in sp[2:end]
+			if item[1]=='(' && item[end]==')'
+				sp2=split(item[2:end-1],":")
+				mf[element(sp2[1])]=0.01*parse(Float64,sp2[2])
+			else
+				den = parse(Float64,item)
+			end
+		end
+		return material(name, mf, den)
+	catch err
+		warn("Error parsing composition $(value) - $(err)")
+	end
+end
+
+function todtsa2comp(mat::Material)::String
+    res=replace(name(mat),','=>'_')
+    for (elm, qty) in mat.massfraction
+        res*=",($(element(elm).symbol):$(100.0*qty))"
+    end
+    if haskey(mat.properties,:Density)
+        res*=",$(mat.properties[:Density])"
+    end
+    return res
+end
 
 function compositionlibrary()::Dict{String, Material}
     result = Dict{String, Material}()

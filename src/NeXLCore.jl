@@ -67,6 +67,10 @@ export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 export compare # Compare compositions as a DataFrame
 
+# For DTSA-II interop
+export todtsa2comp    # Write a mass fraction (+opt density) to a string parsable by parsedtsa2comp
+export parsedtsa2comp # Parse a mass fraction (+opt density) as written by todtsa2comp
+
 include("stoichiometry.jl")
 export asoxide # Compute the standard oxide
 export valence # a table of elemental valences (valence[z(n"O")] = -2)

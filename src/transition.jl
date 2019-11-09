@@ -18,7 +18,7 @@ Example:
 
     tr1 = Transition(n"K",n"L3")
     tr2   = Transition(SubShell(1),SubShell(4))
-    @assert(tr1==tr2)
+    @assert tr1==tr2
 """
 struct Transition
     innershell::SubShell
@@ -38,8 +38,8 @@ Returns the shell ('K', 'L',...) associated with the transition's inner shell.
 
 Example:
 
-    @assert(shell(n"K-L3")=='K')
-    @assert(shell(n"M5-N7")=='M')
+    @assert shell(n"K-L3")=='K'
+    @assert shell(n"M5-N7")=='M'
 """
 shell(tr::Transition) =
     shell(tr.innershell)
@@ -162,7 +162,7 @@ to ensure that the Transition is a known transition.
 """
 function transition(inner::SubShell, outer::SubShell)::Transition
     ff = findfirst(tr -> (tr.innershell==inner) && (tr.outershell==outer), alltransitions)
-    @assert(!isnothing(ff),"$(inner)-$(outer) does not represent a known Transition.")
+    @assert !isnothing(ff) "$(inner)-$(outer) does not represent a known Transition."
     alltransitions[ff]
 end
 
@@ -179,7 +179,8 @@ struct CharXRay
     z::Int
     transition::Transition
     function CharXRay(z::Int, transition::Transition)
-        @assert(charactericXRayAvailable(z,transition.innershell.index,transition.outershell.index),"$(symbol(element(z))) $(transition) does not occur.")
+        @assert charactericXRayAvailable(z,transition.innershell.index,transition.outershell.index)
+            "$(symbol(element(z))) $(transition) does not occur."
         return new(z,transition)
     end
 end
@@ -342,8 +343,8 @@ Is the specified Transition available for the specified element.
 
 Example:
 
-    @assert(has(n"Fe L3-M5))
-    @assert(!has(n"Fe N7-O9))
+    @assert has(n"Fe L3-M5)
+    @assert !has(n"Fe N7-O9)
 """
 has(elm::Element, tr::Transition)::Bool =
     charactericXRayAvailable(z(elm),tr.innershell.index,tr.outershell.index)

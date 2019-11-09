@@ -58,7 +58,7 @@ Returns a SubShell structure from a string of the form "K", "L1", ...., "O11"
 """
 function subshell(name::AbstractString)::SubShell
     ff = findfirst(sh -> subshellnames[sh.index]==name, allsubshells)
-    @assert(!isnothing(ff), "$(name) is not one of the known shells - K, L1, L2...,P11.")
+    @assert !isnothing(ff) "$(name) is not one of the known shells - K, L1, L2...,P11."
     return allsubshells[ff]
 end
 

@@ -62,6 +62,7 @@ export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
+export rename # Copy a material and give the new material a new name.
 export tabulate # One or more Materials as a DataFrame
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film

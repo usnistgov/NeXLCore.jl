@@ -13,13 +13,13 @@ standard (unless otherwise mentioned.)
   * Mixed units are in combinations of these units (MACs are in cm²/g etc.)
 
 The special macro n"..." has been defined to make constructing objects representing
-elements, shells, atomic shells, transitions and characteristic x-rays quick and
+elements, subshells, atomic shells, transitions and characteristic x-rays quick and
 easy.
 
 Examples:
 
     n"Fe" == element(26)
-    n"L3" == shell("L3")
+    n"L3" == subshell("L3")
     n"Fe L3" == atomicsubshell(n"Fe",shell("L3"))
     n"L3-M5" == transition(shell("L3"),shell("M5"))
     n"Fe L3-M5" == CharXRay(26, transition(shell("L3"),shell("M5")))

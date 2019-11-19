@@ -411,7 +411,8 @@ for each element in any of the materials.
     mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
 """
 function tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
-    elms = Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
+    elms = length(mats)==1 ? collect(keys(mats[1])) :
+            Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
     cols = ( Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
     empty = NamedTuple{cols}( map(c->c==:Material ? Vector{String}() : Vector{AbstractFloat}(), cols) )
     res = DataFrame(empty) # Emtpy data frame with necessary columns

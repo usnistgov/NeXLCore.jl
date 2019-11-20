@@ -375,13 +375,13 @@ function Base.parse(
 end
 
 """
-    tabulate(mat::Material)
+    convert(::Type{DataFrame}, mat::Material)
 
-tabulate the composition of this Material as a DataFrame.  Columns for
+Tabulate the composition of this Material as a DataFrame.  Columns for
 material name, element abbreviation, atomic number, atomic weight, mass fraction,
 normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
-function tabulate(mat::Material)
+function Base.convert(::Type{DataFrame}, mat::Material)
     res = DataFrame( Material = Vector{String}(), Element = Vector{String}(),
                 AtomicNumber = Vector{Int}(), AtomicWeight = Vector{AbstractFloat}(),
                 MassFraction = Vector{AbstractFloat}(), NormalizedMassFraction = Vector{AbstractFloat}(),
@@ -394,14 +394,14 @@ function tabulate(mat::Material)
 end
 
 """
-    tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
+    convert(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
 
-tabulate the composition of a list of materials in a DataFrame.  One column
+Tabulate the composition of a list of materials in a DataFrame.  One column
 for each element in any of the materials.
 
     mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
 """
-function tabulate(mats::AbstractArray{Material}, mode=:MassFraction)
+function Base.convert(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
     elms = convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
     cols = ( Symbol("Material"), Symbol.(symbol.(elms))...) # Column names
     empty = NamedTuple{cols}( map(c->c==:Material ? Vector{String}() : Vector{AbstractFloat}(), cols) )

@@ -14,14 +14,13 @@ Compute the oxidized form of the specified element using the valences provided i
 function asoxide(elm::Element, val = valence)
     function buildoxidefraction(elm::Element, val=valence)
         den = gcd(val[z(elm)], -val[z(n"O")])
-        Dict{Element, Int}( n"O"=>Base.convert(Int, val[z(elm)] // den),
-                             elm=> Base.convert(Int, -val[z(n"O")]//den))
+        Dict{Element, Int}( n"O"=> val[z(elm)] ÷ den,
+                             elm=> -val[z(n"O")] ÷ den)
     end
     function buildoxidename(elm::Element, val=valence)::String
         nn(n) = n>1 ? "$(n)" : ""
         den = gcd(val[z(elm)], -val[z(n"O")])
-        ne = Base.convert(Int,-val[z(n"O")]//den)
-        no = Base.convert(Int,val[z(elm)] //den)
+        ne, no = -val[z(n"O")] ÷ den, val[z(elm)] ÷ den
         return "$(symbol(elm))$(nn(ne))O$(nn(no))"
     end
     atomicfraction(buildoxidename(elm, val), buildoxidefraction(elm, val))

@@ -47,6 +47,7 @@ export brightest # Returns the brightest characteristic X-ray from a set of tran
 export splitbyshell # Creates a Dict{AtomicSubShell,CharXRay} from a collection of CharXRay and the associated inner AtomicSubShell.
 export relativeionizationcrosssection # Computes a number proportional to the ionization crosssection
 export ionizationcrosssection # Computes the absolute ionization crosssection
+export comptonShift # Computes the fractional compton shift
 export @n_str
 
 export dtsamac
@@ -62,7 +63,6 @@ export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
-export tabulate # One or more Materials as a DataFrame
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 export compare # Compare compositions as a DataFrame

@@ -400,11 +400,11 @@ brightest(cxrs::Vector{CharXRay}) =
     last(sort(cxrs, lt = (a,b)->isless(weight(a),weight(b))))
 
 """
-    NeXLCore.name(cxrs::Vector{CharXRay})
+    name(cxrs::AbstractVector{CharXRay})
 
 An abbeviated name for a collection of CharXRay.
 """
-function NeXLCore.name(cxrs::AbstractVector{CharXRay})::String
+function name(cxrs::AbstractVector{CharXRay})::String
     res = []
     elms = Set{Element}(element.(cxrs))
     for elm in elms
@@ -440,3 +440,12 @@ specified element.
 """
 mac(elm::Element, energy::Float64)::Float64 =
     massAbsorptionCoefficient(z(elm), energy)
+
+
+"""
+    comptonShift(θ::AbstractFloat, energy::AbstractFloat)
+
+Calculates the fractional shift of an x-ray of the specified energy scattered at the specified angle.
+"""
+comptonShift(θ::AbstractFloat, energy::AbstractFloat) =
+       1.0 / (1.0 + ((energy / 0.511e6) * (1.0 - cos(θ))))

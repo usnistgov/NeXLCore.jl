@@ -36,6 +36,15 @@ struct Material
     end
 end
 
+"""
+    rename(mat::Material, name::AbstractString)
+
+Create a copy of the specified Material but with a different name.
+"""
+rename(mat::Material, name::AbstractString) =
+    Material(name, mat.massfraction, get(mat.properties,:Density,missing),
+                mat.a, get(mat.properties,:Description,missing))
+
 import Base.*
 
 function *(k::AbstractFloat, mat::Material)::Material
@@ -402,15 +411,15 @@ for each element in any of the materials.
     mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
 """
 function Base.convert(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
-    elms = convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
-    cols = ( Symbol("Material"), Symbol.(symbol.(elms))...) # Column names
+    elms = Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
+    cols = ( Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
     empty = NamedTuple{cols}( map(c->c==:Material ? Vector{String}() : Vector{AbstractFloat}(), cols) )
     res = DataFrame(empty) # Emtpy data frame with necessary columns
     for mat in mats
         vals = ( mode==:AtomicFraction ? atomicfraction(mat) :
                 ( mode==:NormalizedMassFraction ? normalizedmassfraction(mat) :
                     massfraction(mat)))
-        tmp = [ name(mat), (get(vals, elm, 0.0) for elm in elms)... ]
+        tmp = [ name(mat), (get(vals, elm, 0.0) for elm in elms)..., analyticaltotal(mat) ]
         push!(res, tmp)
     end
     return res

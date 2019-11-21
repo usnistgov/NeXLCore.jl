@@ -67,6 +67,7 @@ export rename # Copy a material and give the new material a new name.
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 export compare # Compare compositions as a DataFrame
+export asa # For soft converting (not perfect) to other representations (like DataFrame)
 
 # For DTSA-II interop
 export todtsa2comp    # Write a mass fraction (+opt density) to a string parsable by parsedtsa2comp

@@ -3,6 +3,7 @@ using Unitful
 using PeriodicTable
 using Printf
 using DataFrames
+using NeXLUncertainties
 
 """
     Material
@@ -384,13 +385,13 @@ function Base.parse(
 end
 
 """
-    asa(::Type{DataFrame}, mat::Material)
+    NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
 
 Tabulate the composition of this Material as a DataFrame.  Columns for
 material name, element abbreviation, atomic number, atomic weight, mass fraction,
 normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
-function asa(::Type{DataFrame}, mat::Material)
+function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
     res = DataFrame( Material = Vector{String}(), Element = Vector{String}(),
                 AtomicNumber = Vector{Int}(), AtomicWeight = Vector{AbstractFloat}(),
                 MassFraction = Vector{AbstractFloat}(), NormalizedMassFraction = Vector{AbstractFloat}(),
@@ -403,14 +404,14 @@ function asa(::Type{DataFrame}, mat::Material)
 end
 
 """
-    asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
+    NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
 
 Tabulate the composition of a list of materials in a DataFrame.  One column
 for each element in any of the materials.
 
     mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
 """
-function asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
+function NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
     elms = length(mats)==1 ? collect(keys(mats[1])) :
             Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
     cols = ( Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names

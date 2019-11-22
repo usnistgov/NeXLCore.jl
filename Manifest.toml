@@ -169,6 +169,14 @@ version = "0.4.3"
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
+[[NeXLUncertainties]]
+deps = ["DataFrames", "LinearAlgebra", "Printf", "SparseArrays"]
+git-tree-sha1 = "344eb25f48ee374fbbe586335116e651a64a6bd9"
+repo-rev = "master"
+repo-url = "https://github.com/NicholasWMRitchie/NeXLUncertainties.jl.git"
+uuid = "7127f3d6-1721-46bc-bb38-8fc703dd438e"
+version = "0.0.2"
+
 [[OrderedCollections]]
 deps = ["Random", "Serialization", "Test"]
 git-tree-sha1 = "c4c13474d23c60d20a67b217f1d7f22a40edf8f1"
@@ -177,9 +185,9 @@ version = "1.1.0"
 
 [[Parsers]]
 deps = ["Dates", "Test"]
-git-tree-sha1 = "a23968e107c0544aca91bfab6f7dd34de1206a54"
+git-tree-sha1 = "0139ba59ce9bc680e2925aec5b7db79065d60556"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "0.3.9"
+version = "0.3.10"
 
 [[PeriodicTable]]
 deps = ["Compat", "Unitful"]

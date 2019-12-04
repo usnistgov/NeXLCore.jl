@@ -2,9 +2,9 @@
 
 [[ArrayLayouts]]
 deps = ["FillArrays", "LinearAlgebra"]
-git-tree-sha1 = "d9215d1294a89571977eda8fdec5830646b27a7e"
+git-tree-sha1 = "bc779df8d73be70e4e05a63727d3a4dfb4c52b1f"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
-version = "0.1.4"
+version = "0.1.5"
 
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
@@ -25,9 +25,9 @@ version = "0.5.18"
 
 [[CategoricalArrays]]
 deps = ["Compat", "DataAPI", "Future", "JSON", "Missings", "Printf", "Reexport", "Unicode"]
-git-tree-sha1 = "2473560b9c7cb18f98c3c926af0dc7bedccfc7ab"
+git-tree-sha1 = "4d85a015093760ff23b20f3e25fa195b4cb76794"
 uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
-version = "0.7.2"
+version = "0.7.3"
 
 [[ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -47,6 +47,11 @@ git-tree-sha1 = "ed2c4abadf84c53d9e58510b5fc48912c2336fbb"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "2.2.0"
 
+[[ConstructionBase]]
+git-tree-sha1 = "a2a6a5fea4d6f730ec4c18a76d27ec10e8ec1c50"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.0.0"
+
 [[DataAPI]]
 git-tree-sha1 = "674b67f344687a88310213ddfa8a2b3c76cc4252"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
@@ -60,9 +65,9 @@ version = "0.19.4"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "1fe8fad5fc84686dcbc674aa255bc867a64f8132"
+git-tree-sha1 = "a1b652fb77ae8ca7ea328fa7ba5aa151036e5c10"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.17.5"
+version = "0.17.6"
 
 [[DataValueInterfaces]]
 git-tree-sha1 = "bfc1187b79289637fa0ef6d4436ebdfe6905cbd6"
@@ -83,7 +88,7 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[FFAST]]
 deps = ["CSV", "DataFrames", "Requires"]
-git-tree-sha1 = "4e79997e9d64cd15bf636249c1bea1eeb70e1b7c"
+git-tree-sha1 = "68786a7a68068bc38fa4ada4b52d3cb11cb030fd"
 repo-rev = "master"
 repo-url = "https://github.com/usnistgov/FFAST.jl"
 uuid = "10506e09-08cd-5f0b-aee5-631de1bcc925"
@@ -133,9 +138,9 @@ version = "0.21.0"
 
 [[LazyArrays]]
 deps = ["ArrayLayouts", "FillArrays", "LinearAlgebra", "MacroTools", "StaticArrays"]
-git-tree-sha1 = "9b12c5346242923c8d51f99f3dfa2cd0c156090f"
+git-tree-sha1 = "f787fc888b28b83ae32863f2ae54f47e8ca40eaf"
 uuid = "5078a376-72f3-5289-bfd5-ec5146d43c02"
-version = "0.14.7"
+version = "0.14.10"
 
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
@@ -171,7 +176,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
 [[NeXLUncertainties]]
 deps = ["DataFrames", "LinearAlgebra", "Printf", "SparseArrays"]
-git-tree-sha1 = "344eb25f48ee374fbbe586335116e651a64a6bd9"
+git-tree-sha1 = "22f53925b8ca46f002e16c4f584547f240b97174"
 repo-rev = "master"
 repo-url = "https://github.com/NicholasWMRitchie/NeXLUncertainties.jl.git"
 uuid = "7127f3d6-1721-46bc-bb38-8fc703dd438e"
@@ -196,7 +201,7 @@ uuid = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
 version = "0.1.2"
 
 [[Pkg]]
-deps = ["Dates", "LibGit2", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
+deps = ["Dates", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
 [[PooledArrays]]
@@ -285,10 +290,10 @@ uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [[Unitful]]
-deps = ["LinearAlgebra", "Random"]
-git-tree-sha1 = "92bdf0ccfa9612b167d0adaadef832a09971ceb0"
+deps = ["ConstructionBase", "LinearAlgebra", "Random"]
+git-tree-sha1 = "c1ba76e3ca74a838e221e69b0ff8429226c5826a"
 uuid = "1986cc42-f94f-5a68-af5c-568840ba703d"
-version = "0.17.0"
+version = "0.18.0"
 
 [[WeakRefStrings]]
 deps = ["Random", "Test"]

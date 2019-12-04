@@ -196,6 +196,20 @@ function normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
 end
 
 """
+    asnormalized(mat::Material)::Material
+
+Converts a Material to the equivalent normalized Material with Σ C = 1
+"""
+function asnormalized(mat::Material)::Material
+    n = sum(values(mat.massfraction))
+    if startswith(name(mat),"N[") && isapprox(n, 1.0, atol=1.0e-8)
+        return mat # Already normalized
+    end
+    return Material("N[$(mat.name)]", Dict( (z, mf/n) for (z, mf) in mat.massfraction ), #
+        get(mat.properties, :Density, missing), copy(mat.a), get(mat.properties, :Description, missing))
+end
+
+"""
     massfraction(mat::Material)::Dict{Element, AbstractFloat}
 
 The mass fraction as a Dict{Element, AbstractFloat}

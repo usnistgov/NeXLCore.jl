@@ -58,6 +58,7 @@ export pure # Construct a pure element material
 export massfraction # Returns the composition as mass fraction
 export atomicfraction # Returns the composition as atom fraction
 export normalizedmassfraction # Returns the composition as normalized mass fraction
+export asnormalized # Returns a normalized copy of a Material
 export analyticaltotal # Returns the analytical total
 export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct

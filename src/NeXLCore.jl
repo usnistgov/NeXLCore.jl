@@ -1,6 +1,10 @@
 module NeXLCore
 
 using Requires
+using Reexport
+
+@reexport using PeriodicTable
+@reexport using NeXLUncertainties
 
 # using Base.isless, Base.isequal, Base.show
 

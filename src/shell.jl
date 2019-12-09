@@ -1,6 +1,4 @@
 
-using PeriodicTable
-
 # import Base.isequal, Base.show, Base.isless, Base.parse
 
 # Implements code related to atomic shells and subshells

@@ -1,9 +1,7 @@
 # Defines the Material struct and functions on it.
 using Unitful
-using PeriodicTable
 using Printf
 using DataFrames
-using NeXLUncertainties
 
 """
     Material

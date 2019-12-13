@@ -5,6 +5,7 @@ using Reexport
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
+@reexport using PhysicalConstants
 
 # using Base.isless, Base.isequal, Base.show
 

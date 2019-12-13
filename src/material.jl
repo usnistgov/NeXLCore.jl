@@ -35,6 +35,8 @@ struct Material
     end
 end
 
+elms(mat::Material) = (element(z) for z in keys(mat.massfraction))
+
 """
     rename(mat::Material, name::AbstractString)
 

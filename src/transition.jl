@@ -324,7 +324,7 @@ Returns the brightest transition among the shell of transitions for the
 specified element.  (group="K"|"Ka"|"Kb"|"L" etc)
 """
 brightest(elm::Element, transitions) =
-    last(sort(characteristic(elm, transitions), lt = (a,b)->isless(weight(a),weight(b))))
+    brightest(characteristic(elm, transitions))
 
 """
     strength(cxr::CharXRay)::Float64
@@ -396,8 +396,8 @@ function splitbyshell(cxrs)
     return res
 end
 
-brightest(cxrs::Vector{CharXRay}) =
-    last(sort(cxrs, lt = (a,b)->isless(weight(a),weight(b))))
+brightest(cxrs::Vector{CharXRay})::CharXRay =
+    cxrs[findmax(weight.(cxrs))[2]]
 
 """
     name(cxrs::AbstractVector{CharXRay})

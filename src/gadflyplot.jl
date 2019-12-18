@@ -14,15 +14,15 @@ const NeXLColorblind = distinguishable_colors(
 )[3:end]
 
 """
-    Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energies, palette=NeXLPalette)
+    Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energy|:Weight, palette=NeXLPalette)
 
 Plot either the :Energies or :Weights associated with the specified transitions over the range of supported elements.
 """
-function Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energies, palette=NeXLPalette)
-    if mode==:Energies
-        plotXrayEnergies(transitions::AbstractVector{Transition}; palette=palette)
-    elif mode==:Weights
-        plotXrayWeights(transitions::AbstractVector{Transition}; palette=palette)
+function Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energy, palette=NeXLPalette)
+    if mode==:Energy
+        plotXrayEnergies(transitions::AbstractVector{Transition}, palette=palette)
+    elseif mode==:Weight
+        plotXrayWeights(transitions::AbstractVector{Transition}, palette=palette)
     end
 end
 

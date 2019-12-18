@@ -14,14 +14,32 @@ NeXLCore is part of the NeXL collection of Julia language packages.
 NeXLCore remains under rapid development but is starting to stablize.
 
 ### Standards in NeXL
+
+To reduce ambiguity, the following X-ray microanalysis-standard units are used by all packages even when there are more common or accessible units for a quantity.  Thus stage position is in cm (not mm), coating thicknesses are in cm (not nm), etc.  This means you never need to consult the documentation to know what units a function expects.
+
+  - Mass is measured in grams (g)
+  - Length is measured in centimeters (cm)
+  - Time is measured in seconds (s)
+  - Energy is measured in electron-volts (eV)
+  
 NeXLCore implements a `@n_str` macro to parse Element, SubShell and Transition objects at compile time.  The `n"???"` notation is used throughout NeXL.
 ```julia
 n"Fe" # constructs an Element representing iron
 n"L3" # constructs a SubShell object representing an L3 shell (not element specific)
+      # Note: The ambiguiuty between potassium K and shell K is handled by calling the shell n"K1"
 n"Fe L3" # constructs an AtomicSubShell representing the iron L3 sub-shell.
 n"L3-M5" # constructs a Transition representing the L3-M5 transition (not element specific)
 n"Fe L3-M5 # Constructs a CharXRay representing the L3-M5 transition in iron.
 ```
+
+To access the characteristic energies associated with these items, use the function `energy(...)` which returns eV.
+```julia
+energy(n"Fe K") # 
+energy(n"Fe K-L3")
+```
+
+NeXL uses https://github.com/JuliaPhysics/PeriodicTable.jl for elemental data.
+
 NeXL uses FileIO to implement file reading and writing.  Various different X-ray microanalysis related file types are recognise by a combination of file extension and file content and can be read using code like
 ```julia
 using FileIO
@@ -29,7 +47,7 @@ using NeXLSpectrum
 spec = load("~/home/data/spectrum.msa") # To read an EMSA spectrum
 ```
 
-NeXL uses Gadfly to plot many different data items.  However, the Gadfly support is not loaded unless/until the user `uses Gadfly` elsewhere in their code.  This the Gadfly support is lightweight and doesn't hinder those who don't want to use it.  NeXL implements different specializations of the `plot(...)` method to handle NeXL-related data types.
+NeXL uses Gadfly (https://github.com/GiovineItalia/Gadfly.jl) to plot data items.  However, the Gadfly support is not loaded unless/until the user `uses Gadfly` elsewhere in their code.  This the Gadfly support is lightweight and doesn't hinder those who don't want to use it.  NeXL implements different specializations of the `plot(...)` method to handle NeXL-related data types.
 
 ```julia
 using Gadfly

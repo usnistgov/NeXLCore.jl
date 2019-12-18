@@ -88,11 +88,11 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[FFAST]]
 deps = ["CSV", "DataFrames", "Requires"]
-git-tree-sha1 = "1d191a388144103d3b19bb42b236067a00e06e28"
+git-tree-sha1 = "706aa577e16c8dc50e3150bae43aa64e0c02bd6b"
 repo-rev = "master"
 repo-url = "https://github.com/usnistgov/FFAST.jl"
 uuid = "10506e09-08cd-5f0b-aee5-631de1bcc925"
-version = "0.0.2"
+version = "0.0.3-dev"
 
 [[FilePathsBase]]
 deps = ["Dates", "LinearAlgebra", "Printf", "Test", "UUIDs"]

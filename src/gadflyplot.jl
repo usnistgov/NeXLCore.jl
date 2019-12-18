@@ -2,10 +2,31 @@ using .Gadfly
 
 using Colors
 
-const NeXLPalette = distinguishable_colors(65, Color[ RGB(0,0,0), colorant"DodgerBlue4" ])[2:end]
-const NeXLColorblind =  distinguishable_colors(65, Color[ RGB(0,0,0), colorant"DodgerBlue4" ], transform=deuteranopic)[2:end]
 
-function plotXrayEnergies(transitions::AbstractArray{Transition}; palette=NeXLPalette)
+const NeXLPalette = distinguishable_colors(
+    66,
+    Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
+)[3:end]
+const NeXLColorblind = distinguishable_colors(
+    66,
+    Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
+    transform = deuteranopic,
+)[3:end]
+
+"""
+    Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energies, palette=NeXLPalette)
+
+Plot either the :Energies or :Weights associated with the specified transitions over the range of supported elements.
+"""
+function Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energies, palette=NeXLPalette)
+    if mode==:Energies
+        plotXrayEnergies(transitions::AbstractVector{Transition}; palette=palette)
+    elif mode==:Weights
+        plotXrayWeights(transitions::AbstractVector{Transition}; palette=palette)
+    end
+end
+
+function plotXrayEnergies(transitions::AbstractVector{Transition}; palette=NeXLPalette)
     layers, names, colors = [], [], []
     for tr in transitions
         x, y = [], []
@@ -30,7 +51,7 @@ function plotXrayEnergies(transitions::AbstractArray{Transition}; palette=NeXLPa
         Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop))
 end
 
-function plotXrayWeights(transitions::AbstractArray{Transition}; palette=NeXLPalette)
+function plotXrayWeights(transitions::AbstractVector{Transition}; palette=NeXLPalette)
     layers, names, colors = [], [], []
     for tr in transitions
         x, y = [], []
@@ -54,7 +75,17 @@ function plotXrayWeights(transitions::AbstractArray{Transition}; palette=NeXLPal
         Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop))
 end
 
-function plotEdgeEnergies(sss::AbstractArray{SubShell}; palette=NeXLPalette)
+"""
+    Gadfly.plot(sss::AbstractVector{SubShell}; palette=NeXLPalette)
+
+Plot the edge energies associated with the specified vector of SubShell objects.
+"""
+function Gadfly.plot(sss::AbstractVector{SubShell}; palette=NeXLPalette)
+    plotEdgeEnergies(sss,palette=palette)
+end
+
+
+function plotEdgeEnergies(sss::AbstractVector{SubShell}; palette=NeXLPalette)
     layers, names, colors = [], [], []
     for sh in sss
         x, y = [], []
@@ -78,7 +109,11 @@ function plotEdgeEnergies(sss::AbstractArray{SubShell}; palette=NeXLPalette)
         Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop))
 end
 
+"""
+    compareMACs(elm::Element; palette=NeXLPalette)
 
+Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element.
+"""
 function compareMACs(elm::Element; palette=NeXLPalette)
     l1 = layer(ev->log10(mac(elm,ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color=palette[1]))
     l2 = layer(ev->log10(dtsamac(elm,ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color=palette[2]))

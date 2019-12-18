@@ -86,6 +86,7 @@ export obystoichiometry # computes the mass fraction of O using valence rules.
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
+    export NeXLPalette
 end
 
 export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions

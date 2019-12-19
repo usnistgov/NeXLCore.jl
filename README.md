@@ -3,15 +3,18 @@
 
 NeXLCore is part of the NeXL collection of Julia language packages.
 
-  - NeXLUncertainties - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
-  - NeXLCore - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
-  - NeXLSpectrum - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
-  - NeXLMatrixCorrection - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
-  - NeXLParticle - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
-  - NeXLDatabase - A core database for handling NeXL library datatypes
-  - NeXLNotebooks - Jupyter notebooks with examples of applying the NeXL packages
+#### Under rapid development but functional (pre-&alpha;)
 
-NeXLCore remains under rapid development but is starting to stablize.
+  - [NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
+  - [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
+  - [NeXLSpectrum](https://github.com/NicholasWMRitchie/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
+  - [NeXLMatrixCorrection](https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
+  - [NeXLParticle](https://github.com/NicholasWMRitchie/NeXLParticle.jl) - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
+  - [NeXLNotebooks](https://github.com/NicholasWMRitchie/NeXLNotebooks) - Jupyter notebooks with examples of applying the NeXL packages
+
+#### In early stages of development
+
+- [NeXLDatabase](https://github.com/NicholasWMRitchie/NeXLDatabase.jl) - A database for handling NeXL library datatypes
 
 ### Standards in NeXL
 

@@ -24,7 +24,8 @@ To reduce ambiguity, the following X-ray microanalysis-standard units are used b
   - Length is measured in centimeters (cm)
   - Time is measured in seconds (s)
   - Energy is measured in electron-volts (eV)
-  
+  - Mixed units are expressed in combinations of these units (MACS are in cm<sup>2</sup>/g)
+
 NeXLCore implements a `@n_str` macro to parse Element, SubShell and Transition objects at compile time.  The `n"???"` notation is used throughout NeXL.
 ```julia
 n"Fe" # constructs an Element representing iron
@@ -37,8 +38,8 @@ n"Fe L3-M5 # Constructs a CharXRay representing the L3-M5 transition in iron.
 
 To access the characteristic energies associated with these items, use the function `energy(...)` which returns eV.
 ```julia
-energy(n"Fe K") # 
-energy(n"Fe K-L3")
+energy(n"Fe K") # 7112.0
+energy(n"Fe K-L3") # 6403.9
 ```
 
 NeXL uses https://github.com/JuliaPhysics/PeriodicTable.jl for elemental data.
@@ -64,4 +65,3 @@ plot([spec1,spec2,spec3],klms=[n"Fe",n"Si",n"O",n"Al"] #  To plot a list of spec
 ```
 
 NeXL uses `DataFrames` to tabulate data.  To convert an object or list of objects to a `DataFrame` use `asa(DataFrame,item)`.
-

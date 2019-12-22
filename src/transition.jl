@@ -236,7 +236,7 @@ shell(cxr::CharXRay) =
 Returns the element for this CharXRay.
 """
 element(cxr::CharXRay) =
-    element(cxr.z)
+    PeriodicTable.elements[cxr.z]
 
 
 function ionizationfraction(z::Int, sh::Int, over=4.0)

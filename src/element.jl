@@ -1,5 +1,6 @@
 # PeriodicTable.Elemen
 using Unitful
+using Pkg
 
  """
      configuration(elm::Element)

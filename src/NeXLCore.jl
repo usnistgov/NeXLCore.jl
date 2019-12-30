@@ -99,4 +99,17 @@ export pwhjumpratios # Poehn, Wernisch, Hanke (1985) jump ratios
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
 export burhopfluorescenceyield # K shell fluorescence yields
 
+include("matu.jl")
+export MassFractionLabel
+export NormMassFractionLabel
+export AtomicFractionLabel
+export AtomicWeightLabel
+export MeanZ
+export MeanAz
+export MFtoAF
+export MFtoNMF
+export AFtoMF
+export MatStats
+export mf2comp
+
 end

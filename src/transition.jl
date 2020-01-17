@@ -373,7 +373,7 @@ Example:
 
     characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
 """
-characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function) =
+characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)::Vector{CharXRay} =
     map(tr->characteristic(elm,tr), filter(tr->has(elm,tr) && filterfunc(characteristic(elm,tr)), collect(iter)))
 
 

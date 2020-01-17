@@ -290,7 +290,7 @@ function Base.parse(
     atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
 )::Material where {V<:AbstractFloat}
     # Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
-    function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element,Int}
+    function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
         parseSymbol(expr::AbstractString) =
             findfirst(z -> isequal(elements[z].symbol, expr), 1:length(elements))
         res = Dict{PeriodicTable.Element,Int}()
@@ -331,10 +331,9 @@ function Base.parse(
     # Parses expressions like 'Ca5(PO4)3⋅(OH)'
     function parseCompH2(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
         # println("Parsing: $(expr)")
-        tmp = split(expr, c->(c=='⋅') || (c=='.'))
-        if length(tmp)>1
-            println(tmp)
-            return mapreduce(parseCompH2, merge, tmp)
+        splt = split(expr, c->(c=='⋅') || (c=='.'))
+        if length(splt)>1
+            return mapreduce(parseCompH2, (a,b)->merge(+,a,b), splt)
         end
         cx, start, stop = 0, -1, -1
         for i in eachindex(expr)
@@ -353,7 +352,7 @@ function Base.parse(
             end
         end
         if (start>0) && (stop>start)
-            tmp, q = parseCompH2(expr[start+1:stop-1]), 1
+            res, q = parseCompH2(expr[start+1:stop-1]), 1
             if (stop+1 > length(expr)) || isdigit(expr[stop+1])
                 for i in stop:length(expr)
                     if (i+1>length(expr)) || (!isdigit(expr[i+1]))
@@ -363,27 +362,27 @@ function Base.parse(
                     end
                 end
             end
-            for elm in keys(tmp) tmp[elm] *= q end
+            for elm in keys(res) res[elm] *= q end
             if start>1
-                merge!(tmp,parseCompH2(expr[1:start-1]))
+                res=merge(+, res, parseCompH2(expr[1:start-1]))
             end
             if stop<length(expr)
-                merge!(tmp,parseCompH2(expr[stop+1:end]))
+                res = merge(+, res,parseCompH2(expr[stop+1:end]))
             end
         else
-            tmp = parseCompH1(expr)
+            res = parseCompH1(expr)
         end
-        # println("Parsing: $(expr) to $(tmp)")
-        return tmp
+        # println("Parsing: $(expr) to $(res)")
+        return res
     end
 
     # First split sums of Materials
-    tmp = split(expr, c -> c == '+')
-    if length(tmp) > 1
+    splt = split(expr, c -> c == '+')
+    if length(splt) > 1
         return mapreduce(
             t -> parse(Material, strip(t)),
             (a, b) -> sum(a, b, name, density, atomicweights),
-            tmp,
+            splt,
         )
     end
     # Second handle N*Material where N is a number

@@ -183,7 +183,7 @@ end
 struct MeanZ <: Label
     material::String
 end
-Base.show(io::IO, mz::MeanZ) = print(io, "MeanZ[",mz.material),"]")
+Base.show(io::IO, mz::MeanZ) = print(io, "MeanZ[",mz.material,"]")
 
 struct MeanAz <: Label
     material::String

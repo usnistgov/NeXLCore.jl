@@ -32,8 +32,10 @@ end
 Compute a mixture of the oxidized forms of the specified elements using the valences provided in <code>val</code>.
 By default, <code>val = NeXLCore.valences</code>, a typical set of valences.
 """
-asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence) =
-    mapreduce(x->x[2]*asoxide(x[1], val),+,elms)
+function asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence)
+    name(es, vs) = join(map(elm->"$(elms[elm]) of $(elm.symbol) as $(asoxide(elm,vs).name)", collect(keys(es))),", ")
+    return material(name(elms,val), merge(elms, Dict(n"O"=>obystoichiometry(elms,val))))
+end
 
 """
     obystoichiometry(elms::Dict{Element, <:AbstractFloat}, val = valence)

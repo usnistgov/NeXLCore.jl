@@ -24,6 +24,7 @@ export atomicsubshell # Construct AtomicSubShell structs from a string
 export capacity # The total shell capacity
 export jumpratio # The jump ratio for the specified shell
 export meanfluorescenceyield # The mean shell-based fluorescence yield
+export fluorescenceyield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
 export transition # Constructs Transition from SubShell objects or a string

@@ -33,7 +33,7 @@ n"L3" # constructs a SubShell object representing an L3 shell (not element speci
       # Note: The ambiguiuty between potassium K and shell K is handled by calling the shell n"K1"
 n"Fe L3" # constructs an AtomicSubShell representing the iron L3 sub-shell.
 n"L3-M5" # constructs a Transition representing the L3-M5 transition (not element specific)
-n"Fe L3-M5 # Constructs a CharXRay representing the L3-M5 transition in iron.
+n"Fe L3-M5" # Constructs a CharXRay representing the L3-M5 transition in iron.
 ```
 
 To access the characteristic energies associated with these items, use the function `energy(...)` which returns eV.
@@ -51,7 +51,7 @@ using NeXLSpectrum
 spec = load("~/home/data/spectrum.msa") # To read an EMSA spectrum
 ```
 
-NeXL uses Gadfly (https://github.com/GiovineItalia/Gadfly.jl) to plot data items.  However, the Gadfly support is not loaded unless/until the user `uses Gadfly` elsewhere in their code.  This the Gadfly support is lightweight and doesn't hinder those who don't want to use it.  NeXL implements different specializations of the `plot(...)` method to handle NeXL-related data types.
+NeXL uses Gadfly (https://github.com/GiovineItalia/Gadfly.jl) to plot data items.  However, the Gadfly support is not loaded unless/until the user `uses Gadfly` elsewhere in their code.  Thus Gadfly support is lightweight and doesn't hinder those who don't want to use it.  However, NeXL implements different specializations of the `Gadfly.plot(...)` method to handle NeXL-related data types.
 
 ```julia
 using Gadfly

@@ -11,7 +11,7 @@ const valence = (  1, 0, 1, 2, 3, 4, 5, -2, 1, 0, 1, 2, 3, 4, 5, 6, 5, 0, 1, 2, 
 Compute the oxidized form of the specified element using the valences provided in <code>val</code>.  By default,
 <code>val = NeXLCore.valences</code>, a typical set of valences.
 """
-function asoxide(elm::Element, val = valence)
+function asoxide(elm::Element, val = valence, name=missing)
     function buildoxidefraction(elm::Element, val=valence)
         den = gcd(val[z(elm)], -val[z(n"O")])
         Dict{Element, Int}( n"O"=> val[z(elm)] ÷ den,
@@ -23,7 +23,8 @@ function asoxide(elm::Element, val = valence)
         ne, no = -val[z(n"O")] ÷ den, val[z(elm)] ÷ den
         return "$(symbol(elm))$(nn(ne))O$(nn(no))"
     end
-    atomicfraction(buildoxidename(elm, val), buildoxidefraction(elm, val))
+    name = ismissing(name) ? buildoxidename(elm, val) : name
+    atomicfraction(name, buildoxidefraction(elm, val))
 end
 
 """

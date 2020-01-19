@@ -70,7 +70,6 @@ export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
-export rename # Copy a material and give the new material a new name.
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 export compare # Compare compositions as a DataFrame
@@ -85,11 +84,11 @@ export asoxide # Compute the standard oxide
 export valence # a table of elemental valences (valence[z(n"O")] = -2)
 export obystoichiometry # computes the mass fraction of O using valence rules.
 
-export NeXLPalette
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
 end
 
+export NeXLPalette
 export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions
 export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies

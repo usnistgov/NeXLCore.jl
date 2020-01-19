@@ -37,15 +37,6 @@ end
 
 elms(mat::Material) = (element(z) for z in keys(mat.massfraction))
 
-"""
-    rename(mat::Material, name::AbstractString)
-
-Create a copy of the specified Material but with a different name.
-"""
-rename(mat::Material, name::AbstractString) =
-    Material(name, mat.massfraction, get(mat.properties,:Density,missing),
-                mat.a, get(mat.properties,:Description,missing))
-
 import Base.*
 
 function *(k::AbstractFloat, mat::Material)::Material

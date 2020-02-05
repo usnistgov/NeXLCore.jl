@@ -223,7 +223,7 @@ of common representations including normalized mass fraction, atomic fraction, m
 mean atomic number.
 """
 function mf2comp(material::String, mfs::UncertainValues)::UncertainValues
-    pmm = ParallelMeasurementModel([MaintainInputs(mfs), MFtoAF(material), MFtoNMF(material), MatStats(material)], false)
+    pmm = ParallelMeasurementModel([AllInputs(), MFtoAF(material), MFtoNMF(material), MatStats(material)], false)
     return propagate(pmm, mfs)
 end
 

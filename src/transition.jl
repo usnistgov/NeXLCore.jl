@@ -287,6 +287,26 @@ The energy in eV for the specified characteristic X-ray represented by an elemen
 energy(elm::Element, tr::Transition)::Float64 =
     characteristicXRayEnergy(z(elm), tr.innershell.index, tr.outershell.index)
 
+const plancksConstant = 4.135667696e-15 # eV s
+const hc = 1.23984193e-4 # eV cm (plancks⋅speed-of-light)
+
+ν(cxr::CharXRay) = energy(cxr) / plancksConstant
+ω(cxr::CharXRay) = 2π*ν(cxr)
+
+"""
+    λ(cxr::CharXRay)
+
+X-ray wavelength in cm.
+"""
+λ(cxr::CharXRay) = hc / energy(cxr)
+
+"""
+    wavenumber(cxr::CharXRay)
+
+X-ray wavenumber in cm¯¹.
+"""
+wavenumber(cxr::CharXRay) = 1.0/λ(cxr)
+
 """
     edgeenergy(cxr::CharXRay)
 

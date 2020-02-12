@@ -119,6 +119,10 @@ using NeXLCore
                 @test energy(n"Fe",n"L3-M5")==energy(n"Fe L3-M5")
                 @test isapprox(energy(n"C K-L2"),277.4,atol=1.0)
 
+                # from https://www.physics.nist.gov/cgi-bin/XrayTrans/search.pl?element=Fe&trans=KL3&lower=&upper=&units=A
+                @test isapprox(λ(n"Fe K-L3"), 1.936e-8, atol = 1e-11) #
+                @test isapprox(λ(n"Cu L3-M5"), 13.336e-8, atol=1e-11
+
                 @test isapprox(energy(n"Fe L3"),708.0,atol=1.0)
                 @test energy(n"Fe L3")==energy(n"Fe",n"L3")
 

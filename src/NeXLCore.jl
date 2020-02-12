@@ -39,6 +39,7 @@ export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name
 export density # Returns Element or Mateial data
 export energy # Returns CharXRay and AtomicSubShell eneries
+export λ, ν, ω, wavenumber # wavelength, frequency, angular frequency and wavenumber of X-ray
 export edgeenergy # Ionization edge energy for an X-ray
 export weight # Returns CharXRay weights with the most intense in a shell = 1
 export normWeight # Returns CharXRay weights normalized by shell to a sum of one.

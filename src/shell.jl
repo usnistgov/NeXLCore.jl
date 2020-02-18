@@ -103,7 +103,7 @@ Electron capacity for the specified sub-shell.  This is the total number of elec
 that the sub-shell can hold, not the actual number a specific ground-state element may
 have in that sub-shell.
 """
-capacity(ss::SubShell) = Base.convert(Int, 2 * j(ss)) + 1
+capacity(ss::SubShell) = convert(Int, 2 * j(ss)) + 1
 
 n(ss::SubShell) =
     ( 1,

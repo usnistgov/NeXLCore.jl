@@ -137,7 +137,7 @@ function Base.show(io::IO, mat::Material)
     print(io, res)
 end
 
-function convert(::Type{Material}, str::AbstractString)
+function Base.convert(::Type{Material}, str::AbstractString)
     tmp = Dict{Element,Float64}()
     items = split(str,',')
     density = missing
@@ -176,29 +176,34 @@ Base.getindex(mat::Material, sym::Symbol) =
 Base.setindex!(mat::Material, val, sym::Symbol) =
     mat.properties[sym] = val
 
+nonneg(mat::Material, elm::Element) =
+    max(zero(eltype(values(mat.massfraction))), mat[elm])
+
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
 
-The normalized mass fraction as a Dict{Element, AbstractFloat}
+The normalized mass fraction as a Dict{Element, AbstractFloat}.  Negative values
+are set to zero.
 """
 function normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
-    n = sum(values(mat.massfraction))
-    return Dict( (element(z), mf/n) for (z, mf) in mat.massfraction )
+    n = sum(nonneg(mat,elm) for elm in keys(mat))
+    return Dict( (elm, nonneg(mat,elm)) for elm in keys(mat))
 end
 
 """
     asnormalized(mat::Material, n=1.0)::Material
 
-Convert the Material to a normalized Material form.
+Convert the Material to a normalized Material form.  Negative mass fractions
+are set to zero before normalization.
 """
 function asnormalized(mat::Material, n=1.0)
     at = analyticaltotal(mat)
-    if isapprox(at, n, rtol=1.0e-12) && startswith(name(mat),"N[")
+    if isapprox(at, n, rtol=1.0e-8) && startswith(name(mat),"N[")
         return mat
     else
         return Material(
             "N[$(name(mat)),$(n)]",
-            Dict( (z, n*(mf/at)) for (z, mf) in mat.massfraction ),
+            Dict( (z(elm), n*nonneg(mat,elm)/at) for elm in keys(mat) ),
             mat[:Density],
             mat.a,
             mat[:Description]
@@ -242,10 +247,10 @@ end
 """
     analyticaltotal(mat::Material)
 
-The sum of the mass fractions.
+The sum of the positive mass fractions.
 """
 analyticaltotal(mat::Material) =
-    sum(values(mat.massfraction))
+    sum(nonneg(mat,elm) for elm in keys(mat))
 
 """
     has(mat::Material, elm::Element)

@@ -7,7 +7,7 @@ using Reexport
 @reexport using NeXLUncertainties
 @reexport using PhysicalConstants
 
-# using Base.isless, Base.isequal, Base.show
+# using Base.isless, Base.isequal, Base.show, Base.convert
 
 include("algorithm.jl")
 include("element.jl")
@@ -111,5 +111,10 @@ export MFtoNMF
 export AFtoMF
 export MatStats
 export mf2comp
+
+include("kratio.jl")
+export KRatio # Represents a measured intensity ratio
+export nonnegk # Returns the k-ratio value truncated to non-negative.
+export elms  # Returns a list of the elements in a `List{KRatio}`
 
 end

@@ -2,6 +2,10 @@
 using FFAST # for mass absorption coefficienct
 using BoteSalvatICX # For ionization crosssections
 
+const plancksConstant = 4.135667696e-15 # eV s
+const hc = 1.23984193e-4 # eV cm (plancks⋅speed-of-light)
+const speedOfLight = 2.99792458e10 # cm/s
+
 const subshellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
     "N1", "N2", "N3", "N4", "N5", "N6", "N7", "O1", "O2", "O3",
     "O4", "O5", "O6", "O7", "O8", "O9", "P1", "P2", "P3", "P4", "P5",

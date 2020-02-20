@@ -109,8 +109,7 @@ using NeXLCore
                 @test all(tr -> shell(tr) == 'N', ntransitions)
 
                 @test length(alltransitions) == sum(
-                        length,
-                        (ktransitions, ltransitions, mtransitions, ntransitions, otransitions),
+                        length.( ( ktransitions, ltransitions, mtransitions, ntransitions, otransitions) )
                 )
 
                 @test n"K-L3" == n"K-L3"

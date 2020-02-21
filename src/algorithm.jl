@@ -26,6 +26,18 @@ The mass absorption coefficient for the specified energy X-ray (in eV) in the sp
 massAbsorptionCoefficient(z::Int, energy::Float64)::Float64 =
     ffastMACpe(z,energy)
 
+
+"""
+    massAbsorptionCoefficientU(z::Int, energy::Float64)::UncertainValue
+
+The mass absorption coefficient (with estimate of uncertainty) for the specified energy X-ray (in eV) in the specified
+element (z=> atomic number).
+"""
+function massAbsorptionCoefficientU(z::Int, energy::Float64)::UncertainValue
+    mac = ffastMACpe(z,energy)
+    return uv(mac, min(ffastUncertaintiesSolidLiquid(z,energy)[1],0.9)*mac)
+end
+
 """
     shellEnergy(z::Int, ss::Int)::Float64
 

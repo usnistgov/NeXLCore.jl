@@ -47,6 +47,7 @@ export strength #
 export has # Element has a specific Transition, a Material has an element
 export dtsamac # Calculates the MAC using Heinrich's formula
 export mac # Calculates the MAC using the default algorithm
+export macU # Calculates the MAC using the default algorithm
 export shell # The shell ('K','L','M',...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition families to lists of Transition(s)
 export atomicsubshells # Gets an iterator of AtomicSubShell for the specified element
@@ -101,17 +102,22 @@ export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 19
 export burhopfluorescenceyield # K shell fluorescence yields
 
 include("matu.jl")
+export MaterialLabel
 export MassFractionLabel
 export NormMassFractionLabel
 export AtomicFractionLabel
 export AtomicWeightLabel
-export MeanZ
-export MeanAz
-export MFtoAF
-export MFtoNMF
-export AFtoMF
-export MatStats
+export μoρElementLabel
+export μoρLabel
+export μoρMaterial # MeasurementModel
+export MeanZ # MeasurementModel
+export MeanAz # MeasurementModel
+export MFtoAF # MeasurementModel
+export MFtoNMF # MeasurementModel
+export AFtoMF # MeasurementModel
+export MatStats # MeasurementModel
 export mf2comp
+export materiallabels
 
 include("kratio.jl")
 export KRatio # Represents a measured intensity ratio

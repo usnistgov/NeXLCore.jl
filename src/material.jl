@@ -187,7 +187,7 @@ are set to zero.
 """
 function normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
     n = sum(nonneg(mat,elm) for elm in keys(mat))
-    return Dict( (elm, nonneg(mat,elm)) for elm in keys(mat))
+    return Dict( (elm, nonneg(mat,elm)/n) for elm in keys(mat))
 end
 
 """

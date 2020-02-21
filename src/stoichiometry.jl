@@ -34,8 +34,9 @@ Compute a mixture of the oxidized forms of the specified elements using the vale
 By default, <code>val = NeXLCore.valences</code>, a typical set of valences.
 """
 function asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence)
-    name(es, vs) = join(map(elm->"$(elms[elm]) of $(elm.symbol) as $(asoxide(elm,vs).name)", collect(keys(es))),", ")
-    return material(name(elms,val), merge(elms, Dict(n"O"=>obystoichiometry(elms,val))))
+    name(es, vs) = join(map(elm->"$(elms[elm])⋅$(asoxide(elm,vs).name)", collect(keys(es))),"+")
+    mats = ( massfraction(qty*asoxide(elm, val)) for (elm, qty) in elms )
+    return material(name(elms,val), merge(+,mats...))
 end
 
 """

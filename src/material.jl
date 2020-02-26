@@ -126,7 +126,7 @@ function Base.show(io::IO, mat::Material)
     res="$(name(mat)) = ("
     comma=""
     for (z, mf) in mat.massfraction
-        res*=@sprintf("%s%s = %0.4f", comma, element(z).symbol, mf)
+        res*=@sprintf("%s%s = %0.4f", comma, element(z).symbol, value(mf))
         comma=", "
     end
     if !ismissing(density(mat))
@@ -172,6 +172,10 @@ Base.getindex(mat::Material, elm::Element) =
 
 Base.getindex(mat::Material, sym::Symbol) =
     property(mat, sym)
+
+Base.get(mat::Material, sym::Symbol, def) =
+    get(mat.properties, sym, def)
+
 
 Base.setindex!(mat::Material, val, sym::Symbol) =
     mat.properties[sym] = val

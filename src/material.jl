@@ -25,7 +25,7 @@ struct Material
             @warn "The sum mass fraction is $(sum(values(massfrac))) which is much larger than unity."
         end
         props = Dict{Symbol,Any}()
-        if !ismissing(density)
+        if (!ismissing(density)) && (density>0.0)
             props[:Density] = density
         end
         if !ismissing(description)

@@ -215,6 +215,15 @@ function asnormalized(mat::Material, n=1.0)
     end
 end
 
+function Base.isapprox(mat1::Material, mat2::Material; atol=0.0, rtol=1.0e-4)
+    for elm in union(keys(mat1),keys(mat2))
+        if !isapprox(value(mat1[elm]), value(mat2[elm]), atol=atol, rtol=rtol)
+            return false
+        end
+    end
+    return true
+end
+
 """
     massfraction(mat::Material)::Dict{Element, AbstractFloat}
 

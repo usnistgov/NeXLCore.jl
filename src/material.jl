@@ -21,7 +21,7 @@ struct Material
         a::Dict{Int,V} = Dict{Int,Float64}(),
         description::Union{AbstractString,Missing} = missing,
     ) where {U<:AbstractFloat,V<:AbstractFloat}
-        if sum(values(massfrac))>10.0
+        if sum(value.(values(massfrac)))>10.0
             @warn "The sum mass fraction is $(sum(values(massfrac))) which is much larger than unity."
         end
         props = Dict{Symbol,Any}()

@@ -536,7 +536,7 @@ function parsedtsa2comp(value::AbstractString)::Material
 		for item in sp[2:end]
 			if item[1]=='(' && item[end]==')'
 				sp2=split(item[2:end-1],":")
-				mf[element(sp2[1])]=0.01*parse(Float64,sp2[2])
+				mf[parse(Element, sp2[1])]=0.01*parse(Float64,sp2[2])
 			else
 				den = parse(Float64,item)
 			end

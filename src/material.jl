@@ -412,6 +412,10 @@ function Base.parse(
     return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr), density, atomicweights)
 end
 
+macro mat_str(str)
+    parse(Material,str)
+end
+
 """
     NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
 

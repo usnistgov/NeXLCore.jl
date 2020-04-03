@@ -61,7 +61,7 @@ struct MaterialFractionLabel <: Label
     constituent::String
 end
 
-Base.show(io::IO, mf::MaterialFractionLabel) = print("f[",mf.material,",",mf.constituent,"]")
+Base.show(io::IO, mf::MaterialFractionLabel) = print(io, "f[",mf.material,",",mf.constituent,"]")
 
 struct MFtoAF <: MeasurementModel
     material::String
@@ -226,26 +226,21 @@ Converts a material composition expressed in the `mfs` UncertainValues struct in
 of common representations including normalized mass fraction, atomic fraction, mean Z and
 mean atomic number.
 """
-function mf2comp(material::String, mfs::UncertainValues)::UncertainValues
-    pmm = ParallelMeasurementModel([AllInputs(), MFtoAF(material), MFtoNMF(material), MatStats(material)], false)
-    return propagate(pmm, mfs)
-end
+mf2comp(material::String, mfs::UncertainValues)::UncertainValues =
+    propagate(AllInputs() | MFtoAF(material) | MFtoNMF(material) | MatStats(material), mfs)
 
-function af2comp(material::String, afs::UncertainValues)::UncertainValues
-    smm = ComposedMeasurementModel( [ AFtoNMF(material), MatStats(material) ], true)
-    return propagate(smm, afs)
-end
+af2comp(material::String, afs::UncertainValues)::UncertainValues =
+    propagate((MatStats(material) | AllInputs()) ∘ (AFtoNMF(material) | AllInputs()), afs)
 
 function af2comp(material::String, stoic::Dict{Element,Int})::UncertainValues
-    lbls, vals, sn = Vector{Label}(), Vector{Float64}(), 0.0
+    lbls, vals = Vector{Label}(), Vector{Float64}()
     for (elm, n) in stoic
         push!(lbls, AtomicFractionLabel(material, elm))
-        push!(vals, n)
-        sn += n # To normalize vals to atomic fraction
+        push!(vals, convert(Float64,n))
         push!(lbls, AtomicWeightLabel(material, elm))
         push!(vals, a(elm))
     end
-    vals[1:2:end] /= sn
+    vals[1:2:end] /= sum(vals[1:2:end])
     return af2comp(material, uvs(lbls, vals, zeros(length(vals))))
 end
 
@@ -320,7 +315,7 @@ struct MaterialMixture <: MeasurementModel
 end
 
 function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, withJac::Bool)::MMResult
-    isconstitmf(mat, lbl) = (lbl isa MassFraction) && isequal(mat, lbl.material)
+    isconstitmf(mat, lbl) = (lbl isa MassFractionLabel) && isequal(mat, lbl.material)
     isconstitmf(mat, lbl, elm) = isconstitmf(mat, lbl) && (lbl.element == elm)
     isconstit(mat, lbl) = (lbl isa MaterialFractionLabel) && isequal(mat, lbl.material)
     # Extract the material names for which there is material-fraction data associated with mm.material
@@ -330,17 +325,18 @@ function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, w
         # How much of this constituent???
         f = inputs[constitlbl]
         # Convert this into element mass fractions
-        for mfl in filter(lbl->isconstitmf(constitlbl.constituent, lbl), keys(inputs))
-            resmf[mfl.element] = get(resmf, mfl.element, 0.0) + f * resmf[mfl]
+        for mfl in filter(lbl->isconstitmf(constitlbl.constituent, lbl), labels(inputs))
+            @assert mfl isa MassFractionLabel
+            resmf[mfl.element] = get(resmf, mfl.element, 0.0) + f * inputs[mfl]
             awl = AtomicWeightLabel(constitlbl.constituent, mfl.element)
-            den[mfl.element] = get(den, mfl.element) + f * resmf / inputs[awl]
+            den[mfl.element] = get(den, mfl.element, 0.0) + f * inputs[mfl] / inputs[awl]
         end
     end
-    elms = sort(collect(keys(allelms))) # Put them in z order for convenience...
+    elms = sort(collect(keys(resmf))) # Put them in z order for convenience...
     # Construct `outputs` and `results`
-    outputs, results = Array{MassFractionLabel}(undef, 2*length(elms)), zeros(Float64, 2*length(elms))
+    outputs, results = Array{Label}(undef, 2*length(elms)), zeros(Float64, 2*length(elms))
     jac = withJac ? zeros(Float64, 2*length(elms), length(inputs)) : missing
-    for (i, elm) in elms
+    for (i, elm) in enumerate(elms)
         mfi, awi = 2i-1, 2i
         outputs[mfi] = MassFractionLabel(mm.material, elm)
         results[mfi] = resmf[elm]
@@ -350,14 +346,14 @@ function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, w
             for constitlbl in constitlbls
                 Mjz = inputs[constitlbl]
                 mf = MassFractionLabel(constitlbl.constituent, elm)
-                if haskey(mf, inputs) # Does this constituent have this element?
-                    awl = AtomicWeight(mf.material, elm)
+                if haskey(inputs, mf) # Does this constituent have this element?
+                    awl = AtomicWeightLabel(mf.material, elm)
                     cjz, ajz, cMz = inputs[mf], inputs[awl], resmf[elm]
-                    jac[mfi, indexin(mf, inputs)] = Mjz
-                    jac[mfi, indexin(constitlbl, inputs)] = cjz
+                    jac[mfi, indexin(mf, inputs)] = Mjz # Ok
+                    jac[mfi, indexin(constitlbl, inputs)] = cjz # Ok
                     jac[awi, indexin(constitlbl, inputs)] = (cjz / cMz)*(aMz-aMz^2/ajz) # 23.1
                     jac[awi, indexin(mf, inputs)] = (Mjz/cMz)*(aMz-aMz^2/ajz)
-                    jac[awi, indexin(awl, inputs)] = (cMz*aMz^2)/ajz
+                    jac[awi, indexin(awl, inputs)] = (cMz*(aMz^2))/ajz
                 end
             end
         end
@@ -370,13 +366,13 @@ function mixture(
     mix::Pair{UncertainValues, UncertainValue}...,
 )
     function nameofmat(uvs)
-        lbl = findfirst(lbl->lbl isa MassFractionLabel, keys(uvs))
-        @assert all(l->l.material==lbl.material, keys(uvs))
+        lbls = labels(uvs)
+        lbl = lbls[findfirst(lbl->lbl isa MassFractionLabel, labels(uvs))]
+        @assert all(l->l.material==lbl.material, lbls)
         return lbl.material
     end
-    mixes = Dict( MaterialFractionLabel(mat, nameofmat(uvs))=>uv for (uvs, uv) in mix)
-    inp = cat(uvs(mixes), values(mats)...)
-    return propagate(MaterialMix(mat),inp)
+    mixes = uvs(Dict( MaterialFractionLabel(mat, nameofmat(uvs))=>uv for (uvs, uv) in mix))
+    return propagate(MaterialMixture(mat), cat(mixes, (uvs for (uvs,uv) in mix)...))
 end
 
 struct μoρElementLabel <: Label

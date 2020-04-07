@@ -123,7 +123,7 @@ pure(elm::Element) =
     material("Pure $(symbol(elm))", Dict{}(elm=>1.0), density(elm))
 
 function Base.show(io::IO, mat::Material)
-    res="$(name(mat)) = ("
+    res="$(name(mat))["
     comma=""
     for (z, mf) in mat.massfraction
         res*=@sprintf("%s%s = %0.4f", comma, element(z).symbol, value(mf))
@@ -132,7 +132,7 @@ function Base.show(io::IO, mat::Material)
     if !ismissing(density(mat))
         res*=@sprintf(", %0.2f g/cc)", density(mat))
     else
-        res*=")"
+        res*="]"
     end
     print(io, res)
 end
@@ -181,7 +181,7 @@ Base.setindex!(mat::Material, val, sym::Symbol) =
     mat.properties[sym] = val
 
 nonneg(mat::Material, elm::Element) =
-    max(zero(eltype(values(mat.massfraction))), mat[elm])
+    max(0.0, value(mat[elm]))
 
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}

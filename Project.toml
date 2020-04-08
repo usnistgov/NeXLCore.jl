@@ -1,6 +1,8 @@
 name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
-version = "0.0.3-dev"
+authors = ["Nicholas W.M. Ritchie <nicholas.wm.ritchie@gmail.com>"]
+repo-url = "https://github.com/NicholasWMRitchie/NeXLCore.jl"
+version = "0.1.0"
 
 [deps]
 BoteSalvatICX = "fe54227b-96c7-489b-9963-dd1ce2905f30"
@@ -13,14 +15,19 @@ PeriodicTable = "7b2266bf-644c-5ea3-82d8-af4bbd25a884"
 PhysicalConstants = "5ad8b20f-a522-5ce9-bfc9-ddf1d5bda6ab"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
+BoteSalvatICX = "0.1"
+FFAST = "0.1"
+NeXLUncertainties = "0.1"
 julia = "1"
 
 [extras]
+Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]

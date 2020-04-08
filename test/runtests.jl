@@ -1,4 +1,5 @@
 using Test
+using Random
 using NeXLCore
 
 include("xray.jl")

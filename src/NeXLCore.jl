@@ -44,7 +44,7 @@ export edgeenergy # Ionization edge energy for an X-ray
 export weight # Returns CharXRay weights with the most intense in a shell = 1
 export normWeight # Returns CharXRay weights normalized by shell to a sum of one.
 export strength #
-export has # Element has a specific Transition, a Material has an element
+export has # Element has a specific Transition
 export dtsamac # Calculates the MAC using Heinrich's formula
 export mac # Calculates the MAC using the default algorithm
 export macU # Calculates the MAC using the default algorithm
@@ -75,7 +75,8 @@ export name # Material name
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 export compare # Compare compositions as a DataFrame
-export elms
+export elms # Use elms instead of elements since elements taken by PeriodicTable
+export nonneg # Returns the mass fraction as a Float64 >= 0.0
 export @mat_str
 
 # For DTSA-II interop

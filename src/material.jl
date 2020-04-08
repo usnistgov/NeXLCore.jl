@@ -266,11 +266,11 @@ analyticaltotal(mat::Material) =
     sum(nonneg(mat,elm) for elm in keys(mat))
 
 """
-    has(mat::Material, elm::Element)
+    haskey(mat::Material, elm::Element)
 
 Does this material contain this element?
 """
-has(mat::Material, elm::Element) =
+Base.haskey(mat::Material, elm::Element) =
     haskey(mat.massfraction, z(elm))
 
 

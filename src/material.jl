@@ -35,7 +35,7 @@ struct Material
     end
 end
 
-elms(mat::Material) = (element(z) for z in keys(mat.massfraction))
+elms(mat::Material) = Set(element(z) for z in keys(mat.massfraction))
 
 import Base.*
 

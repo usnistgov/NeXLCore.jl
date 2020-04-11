@@ -1,7 +1,7 @@
 using Pkg
 # Base system
 Pkg.activate()
-Pkg.gc()
+#Pkg.gc()
 Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl.git"))
 Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl.git"))
 Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl.git"))

@@ -28,7 +28,7 @@ struct KRatio
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,
-        kratio::AbstractFloat
+        kratio::AbstractFloat,
     )
         if length(lines) < 1
             error("Must specify at least one characteristic X-ray.")
@@ -37,7 +37,7 @@ struct KRatio
         if !all(element(l) == elm for l in lines)
             error("The characteristic X-rays must all be from the same element.")
         end
-        if standard[elm] <= 1.0e-4
+        if value(standard[elm]) <= 1.0e-4
             error("The standard must contain the element $(elm).  $(standard[elm])")
         end
         return new(elm, lines, unkProps, stdProps, standard, convert(UncertainValue, kratio))
@@ -50,9 +50,9 @@ nonnegk(kr::KRatio) = max(zero(typeof(kr.kratio)), kr.kratio)
 Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(kr.kratio)")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    elms, zs, lines, e0u = Vector{String}(), Vector{Int}(), Vector{Vector{CharXRay}}(), Vector{Float64}()
-    e0s, toau, toas, mat = Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), Vector{String}()
-    celm, krv = Vector{Float64}(), Vector{Float64}()
+    elms, zs, lines, e0u = String[], Int[], Vector{CharXRay}[], Float64[]
+    e0s, toau, toas, mat = Float64[], Float64[], Float64[], String[]
+    celm, dcelm, krv, dkrv = Float64[], Float64[], Float64[], Float64[]
     for kr in krs
         push!(elms, kr.element.symbol)
         push!(zs, z(kr.element))
@@ -62,8 +62,10 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))
         push!(toas, get(kr.stdProps, :TakeOffAngle, -1.0))
         push!(mat, name(kr.standard))
-        push!(celm, kr.standard[kr.element])
+        push!(celm, value(kr.standard[kr.element]))
+        push!(dcelm, σ(kr.standard[kr.element]))
         push!(krv, value(kr.kratio))
+        push!(dkrv, σ(kr.kratio))
     end
     return DataFrame(
         Element = elms,
@@ -75,21 +77,21 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         θstd = toas,
         Standard = mat,
         Cstd = celm,
-        KRatio = krv
+        ΔCstd = dcelm,
+        K = krv,
+        ΔK = dkrv,
     )
 end
 
 """
-    elms(krs::Vector{KRatio})::Vector{Element}
+    elms(krs::Vector{KRatio})::Set{Element}
 
-Returns a vector containing the elements present in krs (no duplicate elements).
+Returns a set containing the elements present in krs.
 """
-function NeXLCore.elms(krs::Vector{KRatio})::Vector{Element}
-    res=Vector{Element}()
+function NeXLCore.elms(krs::Vector{KRatio})::Set{Element}
+    res = Set{Element}()
     for kr in krs
-        if !(kr.element in res)
-            push!(res, kr.element)
-        end
+        push!(res, kr.element)
     end
     return res
 end

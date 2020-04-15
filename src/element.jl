@@ -53,6 +53,8 @@ Nominal density for the element.
 """
 density(elm::Element) = elm.density / 1.0u"g/cm^3"
 
+Base.print(io::IO, elm::Element) = print(io, elm.symbol)
+
 if Pkg.installed()["PeriodicTable"] <= v"0.1.2"
     """
         isless(elm1::Element, elm2::Element)

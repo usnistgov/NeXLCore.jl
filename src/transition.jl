@@ -44,6 +44,8 @@ Example:
 shell(tr::Transition) =
     shell(tr.innershell)
 
+inner(tr::Transition) = tr.innershell
+outer(tr::Transition) = tr.outershell
 
 function everytransition(trs)
     lttr(tr1,tr2) = (tr1[1]==tr2[1] ? isless(tr1[2],tr2[2]) : isless(tr1[1], tr2[1]))

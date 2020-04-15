@@ -285,7 +285,7 @@ function atomicfraction(
     density::Union{Missing,AbstractFloat} = missing,
     atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
 )::Material where {U<:Number,V<:AbstractFloat}
-    aw(elm) = get(atomicweights, elm.number, a(elm))
+    aw(elm) = get(atomicweights, elm, a(elm))
     norm = sum(af * aw(elm) for (elm, af) in atomfracs)
     massfracs = Dict((elm, af * aw(elm) / norm) for (elm, af) in atomfracs)
     return material(name, massfracs, density, atomicweights)
@@ -430,7 +430,7 @@ function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
                 AtomicFraction = Vector{AbstractFloat}() )
     af, tot = atomicfraction(mat), analyticaltotal(mat)
     for elm in sort(collect(keys(mat)))
-        push!(res, ( name(mat), symbol(elm), z(elm), a(elm), mat[elm], mat[elm]/tot, af[elm]) )
+        push!(res, ( name(mat), symbol(elm), z(elm), a(elm, mat), mat[elm], mat[elm]/tot, af[elm]) )
     end
     return res
 end
@@ -477,7 +477,7 @@ function compare(unk::Material, known::Material)::DataFrame
         push!(kmf,known[elm])
         push!(rmf,unk[elm])
         push!(dmf,known[elm]-unk[elm])
-        push!(fmf,100.0*(known[elm]-unk[elm])/known[elm])
+        push!(fmf,(known[elm]-unk[elm])/known[elm])
         push!(kaf,get(afk, elm, 0.0))
         push!(raf,get(afr, elm, 0.0))
         push!(daf,get(afk, elm, 0.0)-get(afr, elm, 0.0))

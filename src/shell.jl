@@ -217,6 +217,8 @@ Example:
 """
 shell(ass::AtomicSubShell) = shell(ass.subshell)
 
+subshell(ass::AtomicSubShell) = ass.subshell
+
  """
      atomicsubshell(elm::Element, ss::SubShell)::AtomicSubShell
 
@@ -432,11 +434,12 @@ function meanfluorescenceyield(ass::AtomicSubShell)
     return fluorYields[ass.z][shell(ass)=='K' ? 1 : (shell(ass)=='L' ? 2 : 3)]
 end
 
+struct FFASTFluorYield <: FluorescenceYield end
 """
     fluorescenceyield(ass::AtomicSubShell)::Float64
 
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.
 """
-fluorescenceyield(ass::AtomicSubShell)::Float64 =
+fluorescenceyield(::Type{FFASTFluorYield}, ass::AtomicSubShell)::Float64 =
     sum(map(s->characteristicyield(ass.z, ass.subshell.index, s), ass.subshell.index+1:length(allsubshells)))

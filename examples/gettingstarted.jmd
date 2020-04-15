@@ -1,0 +1,288 @@
+# Getting Started With NeXLCore
+Nicholas W. M. Ritchie, 15-Apr-2020
+
+[NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
+
+Primarily `NeXLCore` provides:
+
+  - Definitions of data types relevant to X-ray microanalysis
+    - `Element` : Borrowed from the third-party [`PeriodicTable`](https://github.com/JuliaPhysics/PeriodicTable.jl) library
+    - `Material` : Combinations of `Element`s
+    - `SubShell` : Representing `K`, `L1`, `L2`, `L3`, `M1`,... sub-shells
+    - `AtomicSubShell` : Representing a `SubShell` in a specific `Element`
+    - `Transition` : Representing a non-forbidden X-ray transition between `SubShell`s - like "K-L3"
+    - `CharXRay` : Representing a `Transition` in a specific `Element`
+    - `KRatio` : A ratio of X-ray intensities
+  - Algorithms to work on these data structures, including (but not limited to)
+    - `energy(xx)` where `xx` may be an `AtomicSubShell` or a `CharXRay` (Always in eV!!!)
+    - `mac(xx, yy)` where `xx` may be an `Element` or `Material` and `yy` may be a `CharXRay` or a `Float64`
+  - `NeXLCore` defines two useful macros. Learn them, love them, use them...
+    - `n"???"` which creates `Element`s, `SubShell`s, `AtomicSubShell`s, `Transition`s and `CharXRay`s from `AbstractString`s
+    - `mat"???"` which creates `Material`s from `AbstractString`s like `mat"AlNaSi3O8"`
+  - Throughout `NeXL`, units are always electron-volt (energy), centimeter (length), second (time), gram (mass) and angles are in radians even when it seems a little odd.
+    - A foolish consistency? I think not...
+  - `NeXL` uses [Gadfly](https://github.com/GiovineItalia/Gadfly.jl) for plotting.
+    - Many things you'd want to plot can be plotted using `using Gadfly; plot(x)`
+    - However, to minimize overhead, plotting support is not loaded (thanks to [Requires](https://github.com/JuliaPackaging/Requires.jl)) until Gadfly is explicitly loaded by the user.
+  - `NeXL` uses [DataFrames](https://github.com/JuliaData/DataFrames.jl) for tabular data.
+
+**Let's get this party started...**
+
+Load the library
+```julia
+using NeXLCore
+```
+
+#### Element
+Constructing `Element` objects
+```julia; term=true
+e1, e2, e3 = n"Ca", elements[20], parse(Element, "Pu")
+es = parse.(Element, ["Ca", "21", "Ti", "Vanadium"  ])
+```
+Note the use of `n"??"`.  We'll see a lot of this.  (Yes, `n"K"` is potassium.)
+
+Elements come with lots of useful information...
+```julia
+e3
+```
+
+As you can see, each element comes with many different properties which can be accessed by the field names.
+`PeriodicTable` uses [`Unitful`](https://github.com/PainterQubits/Unitful.jl) to provide physical units for quantities.
+```julia; term=true
+fieldnames(Element)
+e1.name, name(e1)
+e1.symbol, symbol(e1)
+e1.atomic_mass, a(e1)
+e1.number, z(e1)
+e1.boil
+e1.density, density(e1)
+e1.el_config
+```
+
+#### Material
+The `Material` structure carries composition information as mass fractions of the elements. This object also carries name,
+atomic weight, and other properties like density.  A simple way to create `Material` objects is the `mat"??"` macro.
+To get the mass fraction's out index the object with an element.  All the `Element`s in a `Material` are accessed
+via `keys(...)`.
+```julia; term=true;
+albite = mat"AlNaSi3O8"
+albite[n"Al"], albite[n"Na"], albite[n"Tc"]
+keys(albite) # keys(...) for consistency with other Julia objects
+collect(keys(albite)) # Now maybe this is a little more clear
+a(n"Na", albite)
+```
+There are more sophisticated ways to create materials with additional properties.  For example, I could have
+created a richer definition of albite.
+```julia; term=true;
+albite = parse(Material, "AlNaSi3O8", name="Albite", density=2.60, atomicweights=Dict(n"Na"=>23.0))
+a(n"Na", albite),  a(n"O", albite)
+```
+
+Alternatively, I could have built albite in terms of atom fractions.  Note that the mass fractions are different
+because the assumed atomic weight of sodium is different.
+```julia; term=true;
+albite2 = atomicfraction("Albite",Dict(n"Al"=>1, n"Na"=>1, n"Si"=>3, n"O"=>8), 2.6, Dict(n"Na"=>22.0))
+```
+```julia
+using DataFrames
+asa(DataFrame, albite2)
+```
+
+There are many methods for transforming representation of the composition.
+```julia; term=true;
+ss = parse(Material,"0.78*Fe+0.15*Ni+0.04*Cr",name="Stainless")
+analyticaltotal(ss)
+atomicfraction(ss)
+normalizedmassfraction(ss)
+asnormalized(ss)
+```
+```julia
+compare(ss, asnormalized(ss))
+```
+
+It is also possible to define materials using `NeXLUncertainties.UncertainValue`s.  However, it is better to use the
+full uncertainty calculation to perform transforms since this handles correlated quantities correctly.
+```julia; term=true;
+ss=material("Stainless",Dict(n"Fe"=>uv(0.79,0.01),n"Ni"=>uv(0.15,0.003),n"Cr"=>uv(0.04,0.002)))
+ss[n"Fe"]
+atomicfraction(ss)[n"Fe"]
+```
+
+#### SubShell
+`SubShell` objects are not often used directly but are occasionally returned by other methods so I'll just mention them
+in passing.  `SubShell` represent the notion of a sub-shell independent of which element it is associated with.  There
+are properties of sub-shells that don't depend on the element like the angular momentum quantum numbers.
+````julia; term=true
+ss = n"L3"
+shell(ss) # Shells are identified by a Char
+NeXLCore.n(ss), NeXLCore.l(ss), NeXLCore.j(ss)
+allsubshells
+ksubshells, lsubshells, msubshells, nsubshells
+```
+There is one gotcha with `SubShell`s and the `n"??"` notation.  What is `n"K"`? Potassium or the K-subshell?  The answer
+for `NeXL` is potassium.  The K-subshell is 'n"K1"' like the first L-subshell is `n"L1"`.
+```julia; term=true;
+n"K1", n"K"
+```
+
+#### AtomicSubShell
+`AtomicSubShell` joins an `Element` to a `SubShell`.  You'll only be permitted to create `AtomicSubShell` objects
+for sub-shells which exist for the ground state of the element.
+(X-ray microanalysis only deals with ground state atoms.  Astronomers and plasma physicists not so much...)
+
+```julia; term=true
+ass = n"Fe L3"
+shell(ass), ass.subshell
+jumpratio(ass)
+has(n"C",n"L3"), has(n"C",n"L2")  # Carbon Kα1 is K-L2!!!
+n"C L2" # works while n"C L3" throws an exception
+energy(ass), energy(n"Ca K")
+kk=n"K K"
+element(kk), shell(kk), kk.subshell # This works as you'd expect. (Relevant to the earlier gotcha notice...)
+```
+
+#### Transition
+Transitions are the analog to `SubShell`.  They represent the non-element related information associated with optical
+(in the broad sense) transitions.  You can only create `Transition`s for transitions with a non-negligible transition
+rate in some element.
+
+```julia; term=true
+trs = n"K-L3", n"L3-M5", n"M5-N7"
+alltransitions
+ktransitions
+kalpha, kbeta, kother
+ltransitions
+mtransitions
+shell.( trs )
+inner.( trs )
+outer.( trs )
+```
+The lists of transitions will be useful in just a minute...
+
+#### CharXRay
+Finally! What we came here for... `CharXRay` represent a specific `Transition` in a specific `Element`.  Again you
+can only create `CharXRay` objects for characteristic X-rays with non-negligible transition rates. (i.e. Ones that
+you might see in a X-ray spectrum or wavescan.)
+
+First, let's create some characteristic X-rays using `n"??"` notation or `characteristic(...)`
+```julia; term=true;
+feka1, fela = n"Fe K-L3", n"Fe L3-M5"
+feka = characteristic(n"Fe",kalpha) # Filters kalpha to produce only those CharXRay that exist for Fe
+fekb = characteristic(n"Fe",kbeta)
+```
+```julia; term=true;
+inner.(feka)
+outer.(feka)
+transition.(feka)
+all(s->s=='K', shell.(feka))
+all(e->e==n"Fe", element.(feka))
+```
+
+Let's extract some energy properties from these objects.  Of course, it is in eV.
+```julia; term=true;
+energy.(feka) # The x-ray energy
+edgeenergy.(feka) # ionization edge energy
+```
+
+Often we want to know the relative lineweights of the transitions.
+```julia; term=true;
+normWeight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
+strength.(characteristic(n"Fe", ktransitions)) # Not normalized
+brightest(characteristic(n"Fe", ltransitions))
+```
+
+Some other X-ray related properties...
+```julia; term=true;
+λ.(feka)  # this is \lambda (wavelength in cm)
+ν.(feka)  # this is \nu (frequency in 1/s)
+ω.(feka)  # this is \omega (angular frequency in radian/s)
+wavenumber.(feka) # In 1/cm
+```
+
+Finally, mass absorption coefficients.  MACs quantify the degree to which X-rays are absorbed as they travel through
+material. MACs are available for `Element` or for `Material`.
+```julia; term=true;
+mac( n"Ni", n"Fe K-L3") # In cm²/g
+Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
+mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
+mac( mat"AlNaSi3O8", n"O K-L3") # O K-L3 in Albite (interpreted as a chemical formular)
+mac( mat"AlNaSi3O8", n"O K-L3", FFASTMAC), mac( mat"AlNaSi3O8", n"O K-L3", DTSAMAC) # Compare and contrast...
+```
+
+#### KRatio
+k-ratios are the core quantity for X-ray microanalysis.  We measure intensities but k-ratios make the intensities
+meaningful.
+```julia
+kr = KRatio(
+      [n"Fe K-L3", n"Fe K-L2" ],
+      Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Unknown properties
+      Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Standard properties
+      mat"Fe2O3", # Standard composition
+      uv(0.343563,0.0123105)) # The k-ratio value
+```
+
+Combine k-ratios together in `Vector`.
+```julia
+props =  ( Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)),
+           Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)))
+krs = [
+  KRatio(characteristic(n"O", ktransitions), props..., mat"SiO2", uv(0.984390, 0.00233)),
+  KRatio(characteristic(n"Na", ktransitions), props..., mat"NaCl", uv(0.155406, 0.00093)),
+  KRatio(characteristic(n"Al", ktransitions), props..., mat"Al", uv(0.068536, 0.000733)),
+  KRatio(characteristic(n"Si", ktransitions), props..., mat"Si", uv(0.219054, 0.00023)),
+  KRatio(characteristic(n"Th", mtransitions), props..., mat"Th", uv(-0.00023, 0.00046)),
+]
+```
+
+```julia; term=true;
+nonnegk.(krs)
+elms(krs)
+```
+
+There is more but this should get you started.  As always, the code is the ultimate resource and you have it in your
+hands.  Please report any bugs you find at [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl).
+
+#### Appendix: Plotting with Gadfly
+There are a number of helpful plotting methods to take an overhead look at various NeXLCore attributes.
+
+Plot the X-ray energy for all transitions in all elements
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+using Gadfly
+display(plot(collect(ktransitions), mode = :Energy))
+display(plot(collect(ltransitions), mode = :Energy))
+display(plot(collect(mtransitions), mode = :Energy))
+```
+
+Plot the X-ray line weight for all transitions
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+display(plot(collect(ktransitions), mode = :Weight))
+display(plot(collect(ltransitions), mode = :Weight))
+display(plot(collect(mtransitions), mode = :Weight))
+```
+
+Plot the edge energy for all subshells in all elements.
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+display(plot(collect(ksubshells)))
+display(plot(collect(lsubshells)))
+display(plot(collect(msubshells)))
+```
+
+Finally, to compare MAC algorithms...
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+display(NeXLCore.compareMACs(n"C"))
+display(NeXLCore.compareMACs(n"U"))
+```
+Or MAC algorithms one at a time...
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+display(plot(FFASTMAC, n"Ag"))
+display(plot(DTSAMAC, n"Au"))
+```
+Or many elements at once...
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+plot(FFASTMAC, collect(keys(albite)),xmax=5.0e3)
+```
+
+Or a Material MAC...
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+plot(FFASTMAC, Union{Element,Material}[keys(albite)..., albite], xmax=5.0e3)
+```

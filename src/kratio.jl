@@ -24,7 +24,7 @@ struct KRatio
     kratio::UncertainValue
 
     function KRatio(
-        lines::Vector{CharXRay},
+        lines::AbstractVector{CharXRay},
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,
@@ -40,14 +40,14 @@ struct KRatio
         if value(standard[elm]) <= 1.0e-4
             error("The standard must contain the element $(elm).  $(standard[elm])")
         end
-        return new(elm, lines, unkProps, stdProps, standard, convert(UncertainValue, kratio))
+        return new(elm, convert(Vector{CharXRay},lines), copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
     end
 end
 
 NeXLCore.element(kr::KRatio) = kr.element
-nonnegk(kr::KRatio) = max(zero(typeof(kr.kratio)), kr.kratio)
+nonnegk(kr::KRatio) = value(kr.kratio)<0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
 
-Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(kr.kratio)")
+Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
     elms, zs, lines, e0u = String[], Int[], Vector{CharXRay}[], Float64[]

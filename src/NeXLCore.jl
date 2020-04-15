@@ -9,7 +9,11 @@ using Reexport
 
 # using Base.isless, Base.isequal, Base.show, Base.convert
 
+# Abstract model types
 abstract type MACAlgorithm end # FFAST or DTSAMAC
+abstract type JumpRatio end
+abstract type BremmstrahlungModel end
+abstract type FluorescenceYield end
 
 include("algorithm.jl")
 include("element.jl")
@@ -99,10 +103,16 @@ export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
 
 include("misc.jl")
-export castellanobremsstrahlung # Castellano-2004 Bremsstrahlung model
-export pwhjumpratios # Poehn, Wernisch, Hanke (1985) jump ratios
+export BremmstrahlungModel
+export Castellano2004 # A BremmstrahlungModel
+export bremsstrahlung # Bremsstrahlung model
+export JumpRatio
+export Poehn1985 # A JumpRatio model
+export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
-export burhopfluorescenceyield # K shell fluorescence yields
+export FluorescenceYield
+export Burhop1965 # A FluorescenceYield model
+export fluorescenceyield # fluorescence yield models
 
 include("matu.jl")
 export MaterialLabel

@@ -163,7 +163,7 @@ end
 
 Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element or Material.
 """
-function Gadfly.plot(alg::Type{<:MACAlgorithm}, elms::AbstractVector{Union{Material,Element}}; palette = NeXLPalette, xmin=100.0, xmax=20.0e3)
+function Gadfly.plot(alg::Type{<:MACAlgorithm}, elms::AbstractVector; palette = NeXLPalette, xmin=100.0, xmax=20.0e3)
     layers, colors, names = Layer[], Color[], String[]
     for (i,elm) in enumerate(elms)
         append!(layers, layer(ev -> log10(mac(elm, ev, alg)), xmin, xmax, Geom.line, Gadfly.Theme(default_color = palette[i])))

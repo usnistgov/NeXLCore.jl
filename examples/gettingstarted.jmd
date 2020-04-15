@@ -284,5 +284,5 @@ plot(FFASTMAC, collect(keys(albite)),xmax=5.0e3)
 
 Or a Material MAC...
 ```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
-plot(FFASTMAC, Union{Element,Material}[keys(albite)..., albite], xmax=5.0e3)
+plot(FFASTMAC, [keys(albite)..., albite], xmax=5.0e3)
 ```

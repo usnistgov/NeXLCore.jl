@@ -121,8 +121,8 @@ end
 Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element.
 """
 function compareMACs(elm::Element; palette = NeXLPalette)
-    l1 = layer(ev -> log10(mac(elm, ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[1]))
-    l2 = layer(ev -> log10(dtsamac(elm, ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[2]))
+    l1 = layer(ev -> log10(mac(FFASTMAC, elm, ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[1]))
+    l2 = layer(ev -> log10(mac(DTSAMAC, elm, ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[2]))
     Gadfly.plot(
         l1,
         l2,

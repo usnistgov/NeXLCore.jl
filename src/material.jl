@@ -491,12 +491,12 @@ compare(unks::AbstractVector{Material}, known::Material) =
 
 
 """
-    mac(mat::Material, xray::Union{Float64,CharXRay})::Float64
+    mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:MACAlgorithm}=FFASTMAC)::Float64
 
 Compute the material MAC using the standard mass fraction weighted formula.
 """
-mac(mat::Material, xray::Union{Float64,CharXRay}) =
-    mapreduce(elm->mac(elm, xray)*massfraction(elm,mat),+,keys(mat))
+mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:MACAlgorithm}=FFASTMAC) =
+    mapreduce(elm->mac(elm, xray, alg)*massfraction(elm,mat),+,keys(mat))
 
 
 """
@@ -511,12 +511,12 @@ Base.show(io::IO, flm::Film) =
     print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material))
 
 """
-    transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat) =
+    transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:MACAlgorithm}=FFASTMAC) =
 
 Transmission fraction of an X-ray at the specified angle through a Film.
 """
-transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat) =
-    exp(-mac(flm.material, xrayE) * csc(θ) * flm.thickness)
+transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:MACAlgorithm}=FFASTMAC) =
+    exp(-mac(flm.material, xrayE, alg) * csc(θ) * flm.thickness)
 
 """
     transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =

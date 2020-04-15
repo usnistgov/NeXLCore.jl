@@ -9,6 +9,8 @@ using Reexport
 
 # using Base.isless, Base.isequal, Base.show, Base.convert
 
+abstract type MACAlgorithm end # FFAST or DTSAMAC
+
 include("algorithm.jl")
 include("element.jl")
 include("shell.jl")
@@ -45,9 +47,10 @@ export weight # Returns CharXRay weights with the most intense in a shell = 1
 export normWeight # Returns CharXRay weights normalized by shell to a sum of one.
 export strength #
 export has # Element has a specific Transition
-export dtsamac # Calculates the MAC using Heinrich's formula
-export mac # Calculates the MAC using the default algorithm
-export macU # Calculates the MAC using the default algorithm
+export FFASTMAC # Chantler's FFAST database
+export DTSAMAC  # Heinrich's IXCOM 11 MACs
+export mac # Calculates the MAC using the default or a specified algorithm
+export macU # Calculates the MAC using the default or a specified algorithm
 export shell # The shell ('K','L','M',...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition families to lists of Transition(s)
 export atomicsubshells # Gets an iterator of AtomicSubShell for the specified element
@@ -57,8 +60,6 @@ export relativeionizationcrosssection # Computes a number proportional to the io
 export ionizationcrosssection # Computes the absolute ionization crosssection
 export comptonShift # Computes the fractional compton shift
 export @n_str
-
-export dtsamac
 
 include("material.jl")
 export material # Construct a Material struct

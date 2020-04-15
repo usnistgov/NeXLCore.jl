@@ -18,24 +18,26 @@ Maps sub-shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, 
 subshellindex(ssname::AbstractString) =
     findfirst(name->ssname==name, subshellnames)
 
+struct FFASTMAC <: MACAlgorithm end
+
 """
-    massAbsorptionCoefficient(z::Int, energy::Float64)::Float64
+    mac(::Type{FFASTMAC}, elm::Element, energy::Float64)::Float64
 
 The mass absorption coefficient for the specified energy X-ray (in eV) in the specified element (z=> atomic number).
 """
-massAbsorptionCoefficient(z::Int, energy::Float64)::Float64 =
-    ffastMACpe(z,energy)
+mac(::Type{FFASTMAC}, elm::Element, energy::Float64)::Float64 =
+    ffastMACpe(z(elm),energy)
 
 
 """
-    massAbsorptionCoefficientU(z::Int, energy::Float64)::UncertainValue
+    macU(::Type{FFASTMAC}, elm::Element, energy::Float64)::UncertainValue
 
 The mass absorption coefficient (with estimate of uncertainty) for the specified energy X-ray (in eV) in the specified
 element (z=> atomic number).
 """
-function massAbsorptionCoefficientU(z::Int, energy::Float64)::UncertainValue
-    mac = ffastMACpe(z,energy)
-    return uv(mac, min(ffastUncertaintiesSolidLiquid(z,energy)[1],0.9)*mac)
+function macU(::Type{FFASTMAC}, elm::Element, energy::Float64)::UncertainValue
+    mac = ffastMACpe(z(elm),energy)
+    return uv(mac, min(ffastUncertaintiesSolidLiquid(z(elm),energy)[1],0.9)*mac)
 end
 
 """

@@ -65,7 +65,7 @@ using NeXLSpectrum
 spec = load("~/home/data/spectrum.msa") # To read an EMSA spectrum
 ```
 
-NeXL uses Gadfly (https://github.com/GiovineItalia/Gadfly.jl) to plot data items.  However, the Gadfly support is not loaded unless/until the user `uses Gadfly` elsewhere in their code.  Thus Gadfly support is lightweight and doesn't hinder those who don't want to use it.  However, NeXL implements different specializations of the `Gadfly.plot(...)` method to handle NeXL-related data types.
+NeXL uses Gadfly (https://github.com/GiovineItalia/Gadfly.jl) to plot data items.  However, the Gadfly support is not loaded unless/until the user `using Gadfly` elsewhere in their code.  Thus Gadfly support is lightweight and doesn't hinder those who don't want to use it.  However, NeXL implements different specializations of the `Gadfly.plot(...)` method to handle NeXL-related data types.
 
 ```julia
 using Gadfly
@@ -74,8 +74,8 @@ plot([ n"K-L3", n"L3-M5" ]) # plots the edge-energies associated with these shel
 or (when `using NeXLSpectrum`)
 ```julia
 using Gadfly
-plot(spec,klms=[n"Fe",n"Si",n"O",n"Al"] #  To plot a spectrum with KLM lines.
-plot([spec1,spec2,spec3],klms=[n"Fe",n"Si",n"O",n"Al"] #  To plot a list of spectra with KLM lines.
+plot(spec,klms=[n"Fe",n"Si",n"O",n"Al"])#  To plot a spectrum with KLM lines.
+plot([spec1,spec2,spec3],klms=[n"Fe",n"Si",n"O",n"Al"]) #  To plot a list of spectra with KLM lines.
 ```
 
 NeXL uses `DataFrames` to tabulate data.  To convert an object or list of objects to a `DataFrame` use `asa(DataFrame,item)`.

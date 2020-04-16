@@ -1,20 +1,34 @@
 # NeXLCore.jl
 ## Core X-ray Microanalysis Data and Algorithms
 
+#### Installation
+```julia
+using Pkg
+# We need to first install three dependencies that aren't in the Julia registry (yet...)
+Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
+Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
+Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
+# Now install NeXLCore
+Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
+```
+
 NeXLCore is part of the NeXL collection of Julia language packages.
 
-#### Under rapid development but functional (pre-&alpha;)
-
+#### Stablizing (Nearing release status - &beta;ish)
   - [NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
   - [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
+
+#### Under rapid development but largely functional (pre-&alpha;)
   - [NeXLSpectrum](https://github.com/NicholasWMRitchie/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
   - [NeXLMatrixCorrection](https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
+  - [NeXLDatabase](https://github.com/NicholasWMRitchie/NeXLDatabase.jl) - A database for handling NeXL library datatypes
+
+#### Currently broken
   - [NeXLParticle](https://github.com/NicholasWMRitchie/NeXLParticle.jl) - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
+
+#### Depreciated
+I'll be integrating these examples into the individual libraries
   - [NeXLNotebooks](https://github.com/NicholasWMRitchie/NeXLNotebooks) - Jupyter notebooks with examples of applying the NeXL packages
-
-#### In early stages of development
-
-- [NeXLDatabase](https://github.com/NicholasWMRitchie/NeXLDatabase.jl) - A database for handling NeXL library datatypes
 
 ### Standards in NeXL
 

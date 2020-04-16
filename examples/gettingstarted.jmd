@@ -1,7 +1,21 @@
 # Getting Started With NeXLCore
-Nicholas W. M. Ritchie, 15-Apr-2020
+Nicholas W. M. Ritchie, 16-Apr-2020
 
 [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
+
+NeXLCore and its dependencies [BoteSalvatICX](https://github.com/usnistgov/BoteSalvatICX.jl),
+[FFAST](https://github.com/usnistgov/FFAST.jl) and
+[NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) are not currently available in the
+Julia registry. So you must use the GitHub URL to install NeXLCore.
+```julia; eval=false;
+using Pkg
+# We need to first install three dependencies
+Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
+Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
+Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
+# Now install NeXLCore
+Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
+```
 
 Primarily `NeXLCore` provides:
 
@@ -39,7 +53,7 @@ Constructing `Element` objects
 e1, e2, e3 = n"Ca", elements[20], parse(Element, "Pu")
 es = parse.(Element, ["Ca", "21", "Ti", "Vanadium"  ])
 ```
-Note the use of `n"??"`.  We'll see a lot of this.  (Yes, `n"K"` is potassium.)
+Note the use of `n"??"`.  We'll see a lot of this.
 
 Elements come with lots of useful information...
 ```julia
@@ -71,11 +85,22 @@ keys(albite) # keys(...) for consistency with other Julia objects
 collect(keys(albite)) # Now maybe this is a little more clear
 a(n"Na", albite)
 ```
+You can enter mass fractions in directly using the `mat"??"` syntax.
+```julia
+mat = mat"0.8*Fe+0.15*Ni+0.05*Cr"
+```
+
+
 There are more sophisticated ways to create materials with additional properties.  For example, I could have
 created a richer definition of albite.
 ```julia; term=true;
 albite = parse(Material, "AlNaSi3O8", name="Albite", density=2.60, atomicweights=Dict(n"Na"=>23.0))
+all(e->a(e)==a(e,albite), keys(albite)) # Not all are default
 a(n"Na", albite),  a(n"O", albite)
+
+ss = parse(Material, "0.8*Fe+0.15*Ni+0.05*Cr", name="Stainless", density=7.5)
+ss[n"Fe"], density(ss), name(ss)
+all(e->a(e)==a(e,ss), keys(ss)) # The atomic weights are the default values (from PeriodicTable)
 ```
 
 Alternatively, I could have built albite in terms of atom fractions.  Note that the mass fractions are different
@@ -120,7 +145,8 @@ allsubshells
 ksubshells, lsubshells, msubshells, nsubshells
 ```
 There is one gotcha with `SubShell`s and the `n"??"` notation.  What is `n"K"`? Potassium or the K-subshell?  The answer
-for `NeXL` is potassium.  The K-subshell is 'n"K1"' like the first L-subshell is `n"L1"`.
+for `NeXL` is potassium.  The K-subshell is `n"K1"` like the first L-subshell is `n"L1"`.  (This is rarely ever an
+issue)
 ```julia; term=true;
 n"K1", n"K"
 ```
@@ -157,7 +183,7 @@ shell.( trs )
 inner.( trs )
 outer.( trs )
 ```
-The lists of transitions will be useful in just a minute...
+The lists of transitions will suddenly seem useful in just a minute...
 
 #### CharXRay
 Finally! What we came here for... `CharXRay` represent a specific `Transition` in a specific `Element`.  Again you
@@ -170,6 +196,8 @@ feka1, fela = n"Fe K-L3", n"Fe L3-M5"
 feka = characteristic(n"Fe",kalpha) # Filters kalpha to produce only those CharXRay that exist for Fe
 fekb = characteristic(n"Fe",kbeta)
 ```
+
+Some properties of characteristic X-rays:
 ```julia; term=true;
 inner.(feka)
 outer.(feka)
@@ -178,13 +206,13 @@ all(s->s=='K', shell.(feka))
 all(e->e==n"Fe", element.(feka))
 ```
 
-Let's extract some energy properties from these objects.  Of course, it is in eV.
+Let's extract some energy-related properties from these objects.  Of course, it is in eV.
 ```julia; term=true;
 energy.(feka) # The x-ray energy
 edgeenergy.(feka) # ionization edge energy
 ```
 
-Often we want to know the relative lineweights of the transitions.
+Often we want to know the relative line-weights of the transitions.
 ```julia; term=true;
 normWeight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
 strength.(characteristic(n"Fe", ktransitions)) # Not normalized
@@ -200,7 +228,9 @@ wavenumber.(feka) # In 1/cm
 ```
 
 Finally, mass absorption coefficients.  MACs quantify the degree to which X-rays are absorbed as they travel through
-material. MACs are available for `Element` or for `Material`.
+material. MACs are available for `Element` or for `Material`.  Here we are accepting the default
+([FFAST](https://www.nist.gov/pml/x-ray-form-factor-attenuation-and-scattering-tables)) algorithm
+for the MACs except in the last line.
 ```julia; term=true;
 mac( n"Ni", n"Fe K-L3") # In cm²/g
 Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))

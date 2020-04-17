@@ -110,6 +110,15 @@ function material(name::AbstractString,
     return Material(name, mf, density, aw, description)
 end
 
+material(
+    name::AbstractString,
+    massfrac::Pair{Element,<:AbstractFloat}...;
+    density::Union{Missing,AbstractFloat}=missing,
+    a::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}(),
+    description::Union{Missing,AbstractString}=missing
+) = material(name, Dict(massfrac), density, a, description)
+
+
 """
     pure(elm::Element)
 
@@ -301,27 +310,27 @@ function Base.parse(
     # Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
     function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
         parseSymbol(expr::AbstractString) =
-            findfirst(z -> isequal(elements[z].symbol, expr), 1:length(elements))
+            findfirst(z -> isequal(elements[z].symbol, expr), eachindex(elements))
         res = Dict{PeriodicTable.Element,Int}()
-        start = 1
-        for i in eachindex(expr)
+        start, idx = 1, collect(eachindex(expr))
+        for i in eachindex(idx)
             if i<start
                 continue
             elseif (i==start) || (i==start+1) # Abbreviations are 1 or 2 letters
-                if (i == start) && !isuppercase(expr[i]) # Abbrevs start with cap
-                    error("Element abbreviations must start with a capital letter. $(expr[i])")
+                if (i == start) && !isuppercase(expr[idx[i]]) # Abbrevs start with cap
+                    error("Element abbreviations must start with a capital letter. $(expr[idx[i]])")
                 end
                 next=i+1
-                if (next>length(expr)) || isuppercase(expr[next]) || isdigit(expr[next])
-                    z = parseSymbol(expr[start:i])
+                if (next>length(idx)) || isuppercase(expr[idx[next]]) || isdigit(expr[idx[next]])
+                    z = parseSymbol(expr[idx[start]:idx[i]])
                     if isnothing(z)
                         error("Unrecognized element parsing compound: $(expr[start:i])")
                     end
                     elm, cx = elements[z], 1
-                    if (next<=length(expr)) && isdigit(expr[next])
-                        for stop in next:length(expr)
-                            if (stop == length(expr)) || (!isdigit(expr[stop+1]))
-                                cx = parse(Int, expr[next:stop])
+                    if (next<=length(idx)) && isdigit(expr[idx[next]])
+                        for stop in next:length(idx)
+                            if (stop == length(idx)) || (!isdigit(expr[idx[stop+1]]))
+                                cx = parse(Int, expr[idx[next]:idx[stop]])
                                 start = stop + 1
                                 break
                             end
@@ -332,7 +341,7 @@ function Base.parse(
                     res[elm] = get(res, elm, 0) + cx
                 end
             else
-                error("Can't interpret $(expr[start:i]) as an element.")
+                error("Can't interpret $(expr[idx[start]:idx[i]]) as an element.")
             end
         end
         return res
@@ -361,11 +370,12 @@ function Base.parse(
             end
         end
         if (start>0) && (stop>start)
-            res, q = parseCompH2(expr[start+1:stop-1]), 1
-            if (stop+1 > length(expr)) || isdigit(expr[stop+1])
-                for i in stop:length(expr)
-                    if (i+1>length(expr)) || (!isdigit(expr[i+1]))
-                        q = parse(Int, expr[stop+1:i])
+            res, q = parseCompH2(expr[nextind(expr, start):prevind(expr,stop)]), 1
+            if (nextind(expr,stop) > lastindex(expr)) || isdigit(expr[nextind(expr,stop)])
+                for i in stop:lastindex(expr)
+                    if (nextind(expr,i)>lastindex(expr)) || (!isdigit(expr[nextind(expr,i)]))
+                        nxt = nextind(expr,stop)
+                        q = nxt <= lastindex(expr) ? parse(Int, expr[nxt:i]) : 1
                         stop=i
                         break
                     end
@@ -373,10 +383,10 @@ function Base.parse(
             end
             for elm in keys(res) res[elm] *= q end
             if start>1
-                res=merge(+, res, parseCompH2(expr[1:start-1]))
+                res=merge(+, res, parseCompH2(expr[1:prevind(expr,start)]))
             end
-            if stop<length(expr)
-                res = merge(+, res,parseCompH2(expr[stop+1:end]))
+            if stop<lastindex(expr)
+                res = merge(+, res,parseCompH2(expr[nextind(expr,stop):lastindex(expr)]))
             end
         else
             res = parseCompH1(expr)
@@ -395,18 +405,17 @@ function Base.parse(
         )
     end
     # Second handle N*Material where N is a number
-    p = findfirst(c -> (c == '*') || (c == '×'), expr)
+    p = findfirst(c -> (c == '*') || (c == '×') || (c=='⋅'), expr)
     if !isnothing(p)
-        return parse(Float64, expr[1:p-1]) *
-               parse(Material, expr[p+1:end],
-               name=expr[p+1:end], density=density,
-               atomicweights=atomicweights)
+        return parse(Float64, expr[firstindex(expr):prevind(expr,p)]) *
+               parse(Material, expr[nextind(expr,p):lastindex(expr)],
+               name=expr[nextind(expr,p):lastindex(p)], density=density, atomicweights=atomicweights)
     end
     # Then handle Material/N where N is a number
     p = findfirst(c -> c == '/', expr)
     if !isnothing(p)
-        return (1.0 / parse(Float64, expr[p+1:end])) *
-               parse(Material, expr[1:p-1], name=expr[1:p-1], density=density, atomicweights=atomicweights)
+        return (1.0 / parse(Float64, expr[nextidx(expr,p):lastindex(expr)])) *
+               parse(Material, expr[firstindex(expr):prevind(expr,p)], name=expr[firstindex(expr):previdx(expr,p)], density=density, atomicweights=atomicweights)
     end
     # Finally parse material
     return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr), density, atomicweights)

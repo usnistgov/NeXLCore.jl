@@ -5,48 +5,42 @@
 # The SubShell and AtomicSubShell structures
 
 """
+    Shell
+
+Represents the K, L, M, N etc atomic shell
+"""
+struct Shell
+    n::Int
+    function Shell(n::Int)
+        @assert (n >= 1) && (n <= 10)
+        new(n)
+    end
+end
+
+Base.show(io::IO, sh::Shell) = print(io, "Shell[$('J'+sh.n)]")
+n(sh::Shell) = sh.n
+Base.isequal(sh1::Shell, sh2::Shell) = sh1.n == sh2.n
+Base.isless(sh1::Shell, sh2::Shell) = isless(sh1.n, sh2.n)
+
+"""
     SubShell
 
 Represents one of the various differentsub subshells in an atom.
 Member data items are index::Int where 1=>K, 2=>L1, ..., 36=>P11.
 Construct using SubShell(name::AbstractString) where name = "K", "L1"...,"P11"
-
-Data items:
-
-    index::Int
 """
 struct SubShell
     index::Int
     SubShell(idx::Int) =
-        ((idx>=1) && (idx<=length(subshellnames))) ?
-        new(idx) :
-        error("Unknown sub-shell: Index = $(idx)")
+        ((idx >= 1) && (idx <= length(subshellnames))) ? new(idx) : error("Unknown sub-shell: Index = $(idx)")
     SubShell(name::AbstractString) =
-        name in subshellnames ?
-        new(findfirst(shn -> shn == name, subshellnames)) :
-        error("Unknown sub-shell $(name)")
+        name in subshellnames ? new(findfirst(shn -> shn == name, subshellnames)) : error("Unknown sub-shell $(name)")
 end
 
-Base.show(io::IO, ss::SubShell) =
-    print(io, subshellnames[ss.index])
+Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
 
-Base.isequal(sh1::SubShell, sh2::SubShell) = sh1.index==sh2.index
+Base.isequal(sh1::SubShell, sh2::SubShell) = sh1.index == sh2.index
 Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index < sh2.index
-
-"""
-    shell(sh::SubShell)
-
-Returns on of 'K', 'L', 'M', 'N', or 'O' for the sub-shell shell.
-
-Example:
-
-    julia> shell(n"M5")
-    'M': ASCII/Unicode U+004d (category Lu: Letter, uppercase)
-"""
-shell(sh::SubShell) =
-    subshellnames[sh.index][1]
-
-
 
 """
     allsubshells
@@ -57,44 +51,6 @@ const allsubshells = SubShell.(subshellnames)
 
 subshell(idx::Int) = allsubshells[idx]
 
-"""
-    ksubshells
-
-All K sub-shells ( K )
-"""
-const ksubshells = tuple(filter(sh -> shell(sh) == 'K', collect(allsubshells))...)
-
-"""
-    lsubshells
-
-All L sub-shells ( L1, L2, L3 )
-"""
-const lsubshells = tuple(filter(sh -> shell(sh) == 'L', collect(allsubshells))...)
-
-"""
-    msubshells
-
-All M sub-shells ( M1, M2,.., M5 )
-"""
-const msubshells = tuple(filter(sh -> shell(sh) == 'M', collect(allsubshells))...)
-
-"""
-    nsubshells
-
-All N sub-shells ( N1, N2,.., N7 ) ]
-"""
-const nsubshells = tuple(filter(sh -> shell(sh) == 'N', collect(allsubshells))...)
-
-
-"""
-    osubshells
-
-All O sub-shells  ( O1, O2,.., O9 )
-"""
-const osubshells = tuple(filter(sh -> shell(sh) == 'O', collect(allsubshells))...)
-
-const shelltosubshells = Dict{Char,Tuple{Vararg{SubShell}}}(
-    'K'=>ksubshells, 'L'=>lsubshells, 'M'=>msubshells, 'N'=>nsubshells, 'O'=>osubshells)
 
 """
     capacity(ss::SubShell)
@@ -105,107 +61,232 @@ have in that sub-shell.
 """
 capacity(ss::SubShell) = convert(Int, 2 * j(ss)) + 1
 
-n(ss::SubShell) =
-    ( 1,
-      2, 2, 2,
-      3, 3, 3, 3, 3,
-      4, 4, 4, 4, 4, 4, 4,
-      5, 5, 5, 5, 5, 5, 5, 5, 5,
-      6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-      7, 7, 7 )[ss.index]
+n(ss::SubShell) = (
+    1,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    5,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    6,
+    7,
+    7,
+    7,
+)[ss.index]
 
 """
     l(ss::SubShell)
 
 Orbital angular momentum quantum number
 """
-l(ss::SubShell) =
-    ( 0,
-      0, 1, 1,
-      0, 1, 1, 2, 2,
-      0, 1, 1, 2, 2, 3, 3,
-      0, 1, 1, 2, 2, 3, 3, 4, 4,
-      0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5,
-      0, 1, 1  )[ss.index]
+l(ss::SubShell) = (
+    0,
+    0,
+    1,
+    1,
+    0,
+    1,
+    1,
+    2,
+    2,
+    0,
+    1,
+    1,
+    2,
+    2,
+    3,
+    3,
+    0,
+    1,
+    1,
+    2,
+    2,
+    3,
+    3,
+    4,
+    4,
+    0,
+    1,
+    1,
+    2,
+    2,
+    3,
+    3,
+    4,
+    4,
+    5,
+    5,
+    0,
+    1,
+    1,
+)[ss.index]
 
-  """
-      j(ss::SubShell)
+"""
+     j(ss::SubShell)
 
- Total angular momentum quantum number
- """
-j(ss::SubShell) =
-    ( 1//2,
-      1//2, 1//2, 3//2,
-      1//2, 1//2, 3//2, 3//2, 5//2,
-      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2,
-      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2,
-      1//2, 1//2, 3//2, 3//2, 5//2, 5//2, 7//2, 7//2, 9//2, 9//2, 11//2,
-      1//2, 1//2, 3//2
-    )[ss.index]
+Total angular momentum quantum number
+"""
+j(ss::SubShell) = (
+    1 // 2,
+    1 // 2,
+    1 // 2,
+    3 // 2,
+    1 // 2,
+    1 // 2,
+    3 // 2,
+    3 // 2,
+    5 // 2,
+    1 // 2,
+    1 // 2,
+    3 // 2,
+    3 // 2,
+    5 // 2,
+    5 // 2,
+    7 // 2,
+    1 // 2,
+    1 // 2,
+    3 // 2,
+    3 // 2,
+    5 // 2,
+    5 // 2,
+    7 // 2,
+    7 // 2,
+    9 // 2,
+    1 // 2,
+    1 // 2,
+    3 // 2,
+    3 // 2,
+    5 // 2,
+    5 // 2,
+    7 // 2,
+    7 // 2,
+    9 // 2,
+    9 // 2,
+    11 // 2,
+    1 // 2,
+    1 // 2,
+    3 // 2,
+)[ss.index]
 
+"""
+    shell(sh::SubShell)
 
- # AtomicSubShell functions
-
- """
-     AtomicSubShell
-
- Represents a specific ground-state occupied sub-shell in a specific element.
-
- Data items:
-
-     z::Int
-     subshell::SubShell
- """
- struct AtomicSubShell
-     z::Int
-     subshell::SubShell
-     function AtomicSubShell(z::Int, ss::SubShell)
-         if(!(ss.index in subshellsindexes(z)))
-             error("The sub-shell $(ss) in $(element(z)) is not occupied in the ground state.")
-         end
-         return new(z,ss)
-     end
-     AtomicSubShell(elm::Element, ss::SubShell) =
-        AtomicSubShell(z(elm),ss)
- end
-
- jumpratio(ass::AtomicSubShell) =
-    jumpratio(ass.z, ass.subshell.index, FFASTDB)
-
- """
-     element(ass::AtomicSubShell)
-
-The Element associated with the specified sub-shell.
+Returns the appropriate Shell object.
 
 Example:
 
-    julia> element(n"Fe L3")
-    Iron (Fe), number 26:
-        category: transition metal
-     atomic mass: 55.8452 u
-         density: 7.874 g/cm³
-      molar heat: 25.1 J/mol⋅K
-   melting point: 1811.0 K
-   boiling point: 3134.0 K
-           phase: Solid
-          shells: [2, 8, 14, 2]
-e⁻-configuration: 1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d⁶
-      appearance: lustrous metallic with a grayish tinge
-         summary: Iron is a chemical element with symbol Fe (from Latin:ferrum) and atomic number 26. It is a metal in the first transition series. It is by mass the most common element on Earth, forming much of Earth's outer and inner core.
-   discovered by: 5000 BC
-          source: https://en.wikipedia.org/wiki/Iron
-  spectral image: https://en.wikipedia.org/wiki/File:Iron_Spectrum.jpg
- """
+    julia> shell(n"M5")
+    Shell[M]
+"""
+shell(sh::SubShell)::Shell = Shell(n(sh))
+
+"""
+    ksubshells
+
+All K sub-shells ( K )
+"""
+const ksubshells = tuple(filter(sh -> n(sh) == 1, collect(allsubshells))...)
+
+"""
+    lsubshells
+
+All L sub-shells ( L1, L2, L3 )
+"""
+const lsubshells = tuple(filter(sh -> n(sh) == 2, collect(allsubshells))...)
+
+"""
+    msubshells
+
+All M sub-shells ( M1, M2,.., M5 )
+"""
+const msubshells = tuple(filter(sh -> n(sh) == 3, collect(allsubshells))...)
+
+"""
+    nsubshells
+
+All N sub-shells ( N1, N2,.., N7 ) ]
+"""
+const nsubshells = tuple(filter(sh -> n(sh) == 4, collect(allsubshells))...)
+
+
+"""
+    osubshells
+
+All O sub-shells  ( O1, O2,.., O9 )
+"""
+const osubshells = tuple(filter(sh -> n(sh) == 5, collect(allsubshells))...)
+
+const shelltosubshells = Dict{Shell,Tuple{Vararg{SubShell}}}(
+    Shell(1) => ksubshells,
+    Shell(2) => lsubshells,
+    Shell(3) => msubshells,
+    Shell(4) => nsubshells,
+    Shell(5) => osubshells,
+)
+
+# AtomicSubShell functions
+
+"""
+    AtomicSubShell
+
+Represents a specific ground-state occupied sub-shell in a specific element.
+"""
+struct AtomicSubShell
+    z::Int
+    subshell::SubShell
+    function AtomicSubShell(z::Int, ss::SubShell)
+        if (!(ss.index in subshellsindexes(z)))
+            error("The sub-shell $(ss) in $(element(z)) is not occupied in the ground state.")
+        end
+        return new(z, ss)
+    end
+    AtomicSubShell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
+end
+
+jumpratio(ass::AtomicSubShell) = jumpratio(ass.z, ass.subshell.index, FFASTDB)
+
+"""
+     element(ass::AtomicSubShell)
+
+The Element associated with the specified sub-shell.
+"""
 element(ass::AtomicSubShell) = element(ass.z)
 
-Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) =
-     (ass1.z==ass2.z) && isequal(ass1.subshell,ass2.subshell)
+Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) = (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
 
 Base.isless(ass1::AtomicSubShell, ass2::AtomicSubShell) =
-     return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : ass1.z < ass2.z
+    return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : ass1.z < ass2.z
 
-Base.show(io::IO, ass::AtomicSubShell) =
-     print(io, "$(element(ass.z).symbol) $(ass.subshell)")
+Base.show(io::IO, ass::AtomicSubShell) = print(io, "$(element(ass.z).symbol) $(ass.subshell)")
 
 """
     shell(ass::AtomicSubShell)
@@ -213,19 +294,18 @@ Base.show(io::IO, ass::AtomicSubShell) =
 Example:
 
     julia> shell(n"Fe L3")
-    'L': ASCII/Unicode U+004c (category Lu: Letter, uppercase)
+    Shell(L)
 """
 shell(ass::AtomicSubShell) = shell(ass.subshell)
 
 subshell(ass::AtomicSubShell) = ass.subshell
 
- """
-     atomicsubshell(elm::Element, ss::SubShell)::AtomicSubShell
+"""
+    atomicsubshell(elm::Element, ss::SubShell)::AtomicSubShell
 
- Construct an AtomicSubShell from from an Element and a SubShell.
- """
-atomicsubshell(elm::Element, ss::SubShell) =
-     AtomicSubShell(z(elm),ss)
+Construct an AtomicSubShell from from an Element and a SubShell.
+"""
+atomicsubshell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
 
 """
     has(elm::Element, s::SubShell) =
@@ -233,8 +313,7 @@ atomicsubshell(elm::Element, ss::SubShell) =
 Is the specified sub-shell occupied by one or more electrons in a ground-state
 atom of the specified element?
 """
-has(elm::Element, ss::SubShell) =
-    ss.index in subshellsindexes(z(elm))
+has(elm::Element, ss::SubShell) = ss.index in subshellsindexes(z(elm))
 
 """
      energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -246,7 +325,7 @@ Example:
     julia> energy(n"Fe L3")
     708.0999999999999
  """
-energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 = shellEnergy(ass.z, ass.subshell.index, ty)
+energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = shellEnergy(ass.z, ass.subshell.index, ty)
 
 """
     energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -258,9 +337,9 @@ Example:
    julia> energy(n"Fe", n"L3")
    708.0999999999999
 """
-energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 = shellEnergy(z(elm), ss.index, ty)
+energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = shellEnergy(z(elm), ss.index, ty)
 
- """
+"""
      atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
 
  Returns a Vector containing all AtomicSubShell structs associated with the
@@ -279,31 +358,34 @@ Example:
      Fe M4
      Fe M2
  """
-function atomicsubshells(elm::Element, maxE=1.0e6, eety::Type{<:NeXLAlgorithm}=FFASTDB)::Vector{AtomicSubShell}
-     res = Vector{AtomicSubShell}()
-     for sh in subshellsindexes(z(elm))
-         if shellEnergy(z(elm), sh, eety) < maxE
-             push!(res, atomicsubshell(elm, SubShell(sh)))
-         end
-     end
-     return res
+function atomicsubshells(elm::Element, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm} = FFASTDB)::Vector{AtomicSubShell}
+    res = Vector{AtomicSubShell}()
+    for sh in subshellsindexes(z(elm))
+        if shellEnergy(z(elm), sh, eety) < maxE
+            push!(res, atomicsubshell(elm, SubShell(sh)))
+        end
+    end
+    return res
 end
 
- z(ass::AtomicSubShell) = ass.z
+atomicsubshells(ss::SubShell, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm} = FFASTDB)::Vector{AtomicSubShell} =
+    [atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
 
- """
-     ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008)
+z(ass::AtomicSubShell) = ass.z
 
- Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
- electon energy (in eV) using the default algorithm.
+"""
+    ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008)
 
- Example:
+Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
+electon energy (in eV) using the default algorithm.
 
-     julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
-     0.5672910174711278
- """
-ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008) =
-     ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
+Example:
+
+    julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
+    0.5672910174711278
+"""
+ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm} = Bote2008) =
+    ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
 
@@ -322,23 +404,23 @@ Example:
     0.5982578301818324
 """
 function relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat, ::Type{Pouchou1991})
-     u = ev / energy(ass)
-     ss = ass.subshell.index
-     m = ss==1 ? 0.86 + 0.12*exp(-(0.2*ass.z)^2) : (ss <= 4 ? 0.82 : 0.78)
-     return capacity(ass.subshell) * log(u)/((energy(ass)^2) * (u^m))
- end
- relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat) =
+    u = ev / energy(ass)
+    ss = ass.subshell.index
+    m = ss == 1 ? 0.86 + 0.12 * exp(-(0.2 * ass.z)^2) : (ss <= 4 ? 0.82 : 0.78)
+    return capacity(ass.subshell) * log(u) / ((energy(ass)^2) * (u^m))
+end
+relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat) =
     relativeionizationcrosssection(ass, ev, Pouchou1991)
 
 struct Bambynek1972 <: NeXLAlgorithm end
 
 """
-    meanfluorescenceyield(ass::AtomicSubShell)
-    meanfluorescenceyield(ass::AtomicSubShell, ::Type{Bambynek1972})
+    meanfluorescenceyield(elm::Element, sh::Shell)
+    meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
 
 Mean fluorescence yields from Bambynek in Reviews of Modern Physics 44(4), 1972
 """
-function meanfluorescenceyield(ass::AtomicSubShell, ::Type{Bambynek1972})
+function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
     fluorYields = (
         (0, 0, 0),
         (0, 0, 0),
@@ -437,11 +519,8 @@ function meanfluorescenceyield(ass::AtomicSubShell, ::Type{Bambynek1972})
         (0.9777, 0.40421064, 0.00129),
         (0.9787, 0.40837776, 0.00126),
     )
-    return fluorYields[ass.z][shell(ass)=='K' ? 1 : (shell(ass)=='L' ? 2 : 3)]
+    return fluorYields[z(elm)][n(sh)]
 end
-meanfluorescenceyield(ass::AtomicSubShell) =
-    meanfluorescenceyield(ass, Bambynek1972)
-
 
 """
     fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
@@ -449,5 +528,5 @@ meanfluorescenceyield(ass::AtomicSubShell) =
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.
 """
-fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64 =
-    sum(map(s->characteristicyield(ass.z, ass.subshell.index, s, ty), ass.subshell.index+1:length(allsubshells)))
+fluorescenceyield(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = NeXL)::Float64 =
+    sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, s, ty), ass.subshell.index+1:length(allsubshells)))

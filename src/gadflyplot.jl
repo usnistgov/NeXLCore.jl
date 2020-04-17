@@ -85,12 +85,46 @@ function plotXrayWeights(transitions::AbstractVector{Transition})
 end
 
 """
-    Gadfly.plot(sss::AbstractVector{SubShell}; palette=NeXLPalette)
+    Gadfly.plot(sss::AbstractVector{SubShell}, mode=:EdgeEnergy|:FluorescenceYield; palette=NeXLPalette)
 
-Plot the edge energies associated with the specified vector of SubShell objects.
+Plot the edge energies/fluorescence yields associated with the specified vector of SubShell objects.
 """
-function Gadfly.plot(sss::AbstractVector{SubShell})
-    plotEdgeEnergies(sss)
+function Gadfly.plot(sss::AbstractVector{SubShell}, mode=:EdgeEnergy)
+    if mode==:FluorescenceYield
+        plotFluorescenceYield(sss::AbstractVector{SubShell})
+    else
+        plotEdgeEnergies(sss)
+    end
+end
+
+function plotFluorescenceYield(sss::AbstractVector{SubShell})
+    layers, names = [], []
+    colors = distinguishable_colors(
+        length(sss)+2,
+        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
+    )
+    for (i, sh) in enumerate(sss)
+        x, y = [], []
+        for elm in element.(elementRange())
+            if has(elm, sh)
+                push!(x, z(elm))
+                push!(y, fluorescenceyield(atomicsubshell(elm, sh)))
+            end
+        end
+        if !isempty(x)
+            push!(names, repr(sh))
+            push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
+        end
+    end
+    Gadfly.plot(
+        layers...,
+        Gadfly.Guide.title("Fluourescence Yield"),
+        Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
+        Gadfly.Guide.xlabel("Atomic Number"),
+        Guide.ylabel("Yield (Fractional)"),
+        Scale.y_log10(maxvalue=1.0),
+        Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop),
+    )
 end
 
 

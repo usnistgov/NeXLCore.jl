@@ -15,10 +15,10 @@ using NeXLCore
             3.5,
         )
 
-        @test massfraction(n"Ca", k411) == 0.110563
-        @test massfraction(n"Ce", k411) == 0.0
-        @test massfraction(k411)[n"Ca"] == massfraction(n"Ca", k411)
-        @test massfraction(n"Ca", k411) == 0.110563
+        @test k411[n"Ca"] == 0.110563
+        @test k411[n"Ce"] == 0.0
+        @test massfraction(k411)[n"Ca"] == k411[n"Ca"]
+        @test k411[n"Ca"] == 0.110563
 
         nk411 = normalizedmassfraction(k411)
 

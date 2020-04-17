@@ -13,7 +13,7 @@ using Pkg
 """
     element(z::Int)::PeriodicTable.Element
 
-Coverts an atomic number into a PeriodicTable.Element
+Covert an atomic number into a PeriodicTable.Element
 """
 element(z::Int) =
     PeriodicTable.elements[z]
@@ -21,35 +21,35 @@ element(z::Int) =
 """
     a(elm::Element)
 
-Mean atomic weight of the Element.
+Return the mean atomic weight of the Element.
 """
 a(elm::Element) = elm.atomic_mass/1.0u"u"
 
 """
     z(elm::Element)
 
-Atomic number of the Element.
+Return the atomic number of the Element.
 """
 z(elm::Element) = elm.number
 
 """
     symbol(elm::Element)
 
-Symbol like "H", "He", "Li", .... for the Element.
+Return the symbol like "H", "He", "Li", .... for the Element.
 """
 symbol(elm::Element) = elm.symbol
 
 """
     name(elm::Element)
 
-Name like "Hydrogen", "Helium",... for the Element.
+Return the name like "Hydrogen", "Helium",... for the Element.
 """
 name(elm::Element) = elm.name
 
 """
     density(elm::Element)
 
-Nominal density for the element.
+Return the nominal density for the element.
 """
 density(elm::Element) = elm.density / 1.0u"g/cm^3"
 

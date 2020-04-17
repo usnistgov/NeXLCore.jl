@@ -55,11 +55,11 @@ using NeXLCore
                 @test nsubshells == map(SubShell, ("N1", "N2", "N3", "N4", "N5", "N6", "N7"))
                 @test osubshells == map(SubShell, ("O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9"))
 
-                @test shell(SubShell("K")) == 'K'
-                @test shell(SubShell("L2")) == 'L'
-                @test shell(SubShell("M4")) == 'M'
-                @test shell(SubShell("N7")) == 'N'
-                @test shell(SubShell("O1")) == 'O'
+                @test shell(SubShell("K")) == Shell(1)
+                @test shell(SubShell("L2")) == Shell(2)
+                @test shell(SubShell("M4")) == Shell(3)
+                @test shell(SubShell("N7")) == Shell(4)
+                @test shell(SubShell("O1")) == Shell(5)
 
                 @test capacity(n"K1") == 2
                 @test capacity(n"L2") == 2
@@ -79,9 +79,9 @@ using NeXLCore
                 @test as2 == n"Po M5"
                 @test as3 == n"U K"
 
-                @test shell(as1) == 'L'
-                @test shell(as2) == 'M'
-                @test shell(as3) == 'K'
+                @test shell(as1) == Shell(2)
+                @test shell(as2) == Shell(3)
+                @test shell(as3) == Shell(1)
 
                 @test n"Ca K" < n"Ca L1"
                 @test n"Ca K" < n"Ti K"
@@ -99,14 +99,14 @@ using NeXLCore
                 #@test_throws ArgumentError n"M5-L3"
                 #@test_throws ArgumentError n"K-N7"
 
-                @test shell(n"K-L3") == 'K'
-                @test shell(n"L3-M5") == 'L'
-                @test shell(n"M5-N7") == 'M'
+                @test shell(n"K-L3") == Shell(1)
+                @test shell(n"L3-M5") == Shell(2)
+                @test shell(n"M5-N7") == Shell(3)
 
-                @test all(tr -> shell(tr) == 'K', ktransitions)
-                @test all(tr -> shell(tr) == 'L', ltransitions)
-                @test all(tr -> shell(tr) == 'M', mtransitions)
-                @test all(tr -> shell(tr) == 'N', ntransitions)
+                @test all(tr -> shell(tr) == Shell(1), ktransitions)
+                @test all(tr -> shell(tr) == Shell(2), ltransitions)
+                @test all(tr -> shell(tr) == Shell(3), mtransitions)
+                @test all(tr -> shell(tr) == Shell(4), ntransitions)
 
                 @test length(alltransitions) == sum(
                         length.( ( ktransitions, ltransitions, mtransitions, ntransitions, otransitions) )
@@ -146,8 +146,8 @@ using NeXLCore
                 @test has(n"U", n"L3-M5")
                 @test has(n"U", n"M5-N7")
 
-                @test all(tr -> shell(tr) == 'L', characteristic(n"Fe", ltransitions))
-                @test all(tr -> shell(tr) == 'K', characteristic(n"Fe", ktransitions))
+                @test all(tr -> shell(tr) == Shell(2), characteristic(n"Fe", ltransitions))
+                @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
                 @test length(characteristic(n"Fe", ltransitions, 0.0)) == 12
                 @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6

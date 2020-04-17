@@ -8,8 +8,8 @@ const valence = (  1, 0, 1, 2, 3, 4, 5, -2, 1, 0, 1, 2, 3, 4, 5, 6, 5, 0, 1, 2, 
 """
     asoxide(elm::Element, val = valence)
 
-Compute the oxidized form of the specified element using the valences provided in <code>val</code>.  By default,
-<code>val = NeXLCore.valences</code>, a typical set of valences.
+Compute the oxidized form of the specified element using the valences provided in `val`.  By default,
+`val = NeXLCore.valences`, a typical set of valences.
 """
 function asoxide(elm::Element, val = valence, name=missing)
     function buildoxidefraction(elm::Element, val=valence)
@@ -30,8 +30,8 @@ end
 """
     asoxide(elm::Element, val = valence; name)
 
-Compute a mixture of the oxidized forms of the specified elements using the valences provided in <code>val</code>.
-By default, <code>val = NeXLCore.valences</code>, a typical set of valences.
+Compute a mixture of the oxidized forms of the specified elements using the valences provided in `val`.
+By default, `val = NeXLCore.valences`, a typical set of valences.
 """
 function asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence; name::Union{AbstractString,Nothing}=nothing)
     buildname(es, vs) = join(map(elm->"$(elms[elm])⋅$(asoxide(elm,vs).name)", collect(keys(es))),"+")
@@ -42,7 +42,7 @@ end
 """
     obystoichiometry(elms::Dict{Element, <:AbstractFloat}, val = valence)
 
-Computes O-by-stoichiometry from the provided mass fractions of elements.
+Compute O-by-stoichiometry from the provided mass fractions of elements.
 """
 obystoichiometry(elms::Dict{Element, <:AbstractFloat}, val = valence) =
     sum(f*(-val[z(elm)]*a(n"O"))/(a(elm)*val[z(n"O")]) for (elm,f) in elms)

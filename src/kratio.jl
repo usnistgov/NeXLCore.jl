@@ -86,7 +86,7 @@ end
 """
     elms(krs::Vector{KRatio})::Set{Element}
 
-Returns a set containing the elements present in krs.
+Return a set containing the elements present in krs.
 """
 function NeXLCore.elms(krs::Vector{KRatio})::Set{Element}
     res = Set{Element}()

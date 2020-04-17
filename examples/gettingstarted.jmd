@@ -202,7 +202,7 @@ Some properties of characteristic X-rays:
 inner.(feka)
 outer.(feka)
 transition.(feka)
-all(s->s=='K', shell.(feka))
+all(s->s==Shell(1), shell.(feka))
 all(e->e==n"Fe", element.(feka))
 ```
 
@@ -292,10 +292,18 @@ display(plot(collect(mtransitions), mode = :Weight))
 
 Plot the edge energy for all subshells in all elements.
 ```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
-display(plot(collect(ksubshells)))
-display(plot(collect(lsubshells)))
-display(plot(collect(msubshells)))
+display(plot(collect(ksubshells), :EdgeEnergy))
+display(plot(collect(lsubshells), :EdgeEnergy))
+display(plot(collect(msubshells), :EdgeEnergy))
 ```
+
+Plot the fluorescence yield for all subshells in all elements.
+```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+display(plot(collect(ksubshells), :FluorescenceYield))
+display(plot(collect(lsubshells), :FluorescenceYield))
+display(plot(collect(msubshells), :FluorescenceYield))
+```
+
 
 Finally, to compare MAC algorithms...
 ```julia; fig_width=8; fig_weight=4; fig_ext=".svg";

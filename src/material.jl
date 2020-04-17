@@ -73,14 +73,14 @@ end
 """
     name(mat::Material)
 
-Human friendly short name for the Material.
+Return a human friendly short name for the Material.
 """
 name(mat::Material) = mat.name
 
 """
     density(mat::Material)
 
-Density in g/cm³ (Might be 'missing')
+Return the density in g/cm³ (Might be 'missing')
 """
 density(mat::Material) = property(mat,:Density)
 
@@ -109,7 +109,17 @@ function material(name::AbstractString,
     aw = Dict( (z(elm), val) for (elm, val) in a )
     return Material(name, mf, density, aw, description)
 end
+"""
+    material(
+        name::AbstractString,
+        massfrac::Pair{Element,<:AbstractFloat}...;
+        density::Union{Missing,AbstractFloat}=missing,
+        a::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}(),
+        description::Union{Missing,AbstractString}=missing
+    )
 
+Constuct a material from mass fraction pairs.
+"""
 material(
     name::AbstractString,
     massfrac::Pair{Element,<:AbstractFloat}...;
@@ -146,6 +156,11 @@ function Base.show(io::IO, mat::Material)
     print(io, res)
 end
 
+"""
+    Base.convert(::Type{Material}, str::AbstractString)
+
+Convert a DTSA-II style string into a material.
+"""
 function Base.convert(::Type{Material}, str::AbstractString)
     tmp = Dict{Element,Float64}()
     items = split(str,',')
@@ -154,7 +169,7 @@ function Base.convert(::Type{Material}, str::AbstractString)
     for item in items[2:end]
         if (item[1]=='(') && (item[end]==')')
             zd = split(item[2:end-1],':')
-            elm = parse(PeriodicTable.Element,zd[1])
+            elm = parse(PeriodicTable.Element, zd[1])
             qty = parse(Float64,zd[2])/100.0
             tmp[elm]=qty
         else
@@ -173,18 +188,14 @@ Get the atomic weight for the specified Element in the specified Material.
 a(elm::Element, mat::Material) =
     get(mat.a, elm.number, a(elm))
 
-massfraction(elm::Element, mat::Material) =
-    get(mat.massfraction,elm.number,zero(eltype(values(mat.massfraction))))
-
 Base.getindex(mat::Material, elm::Element) =
-    massfraction(elm,mat)
+    get(mat.massfraction, elm.number, zero(eltype(values(mat.massfraction))))
 
 Base.getindex(mat::Material, sym::Symbol) =
     property(mat, sym)
 
 Base.get(mat::Material, sym::Symbol, def) =
     get(mat.properties, sym, def)
-
 
 Base.setindex!(mat::Material, val, sym::Symbol) =
     mat.properties[sym] = val
@@ -195,7 +206,7 @@ nonneg(mat::Material, elm::Element) =
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
 
-The normalized mass fraction as a Dict{Element, AbstractFloat}.  Negative values
+Return the normalized mass fraction as a Dict{Element, AbstractFloat}.  Negative values
 are set to zero.
 """
 function normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
@@ -244,7 +255,7 @@ massfraction(mat::Material)::Dict{Element, AbstractFloat} =
 """
     keys(mat::Material)
 
-Returns an interator over the elements in the Material.
+Return an interator over the elements in the Material.
 """
 Base.keys(mat::Material) =
     (element(z) for z in keys(mat.massfraction))
@@ -259,7 +270,7 @@ labeled(mat::Material) =
 """
     atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
 
-The composition in atomic fraction representation.
+Return the composition in atomic fraction representation.
 """
 function atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
     norm = sum(mf/a(element(z),mat) for (z, mf) in mat.massfraction)
@@ -269,10 +280,10 @@ end
 """
     analyticaltotal(mat::Material)
 
-The sum of the positive mass fractions.
+Return the sum of the positive mass fractions.
 """
 analyticaltotal(mat::Material) =
-    sum(nonneg(mat,elm) for elm in keys(mat))
+    sum(nonneg(mat, elm) for elm in keys(mat))
 
 """
     haskey(mat::Material, elm::Element)
@@ -300,6 +311,17 @@ function atomicfraction(
     return material(name, massfracs, density, atomicweights)
 end
 
+"""
+    Base.parse(
+        ::Type{Material},
+        expr::AbstractString;
+        name = missing,
+        density = missing,
+        atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
+    )::Material
+
+Parse a Material from a string.
+"""
 function Base.parse(
     ::Type{Material},
     expr::AbstractString;
@@ -467,11 +489,11 @@ function NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material},
     end
     return res
 end
+
 """
     compare(unk::Material, known::Material)::DataFrame
 
-Compares two compositions in a DataFrame.
-
+Compare two compositions in a DataFrame.
 """
 function compare(unk::Material, known::Material)::DataFrame
     um, km, z, kmf, rmf, dmf =
@@ -505,7 +527,7 @@ compare(unks::AbstractVector{Material}, known::Material) =
 Compute the material MAC using the standard mass fraction weighted formula.
 """
 mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
-    mapreduce(elm->mac(elm, xray, alg)*massfraction(elm,mat),+,keys(mat))
+    mapreduce(elm->mac(elm, xray, alg)*mat[elm],+,keys(mat))
 
 
 """
@@ -522,7 +544,7 @@ Base.show(io::IO, flm::Film) =
 """
     transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
 
-Transmission fraction of an X-ray at the specified angle through a Film.
+Compute the transmission fraction of an X-ray at the specified angle through a Film.
 """
 transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
     exp(-mac(flm.material, xrayE, alg) * csc(θ) * flm.thickness)
@@ -530,15 +552,13 @@ transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeX
 """
     transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
 
-Transmission fraction of an X-ray at the specified angle through a Film.
+Compute the transmission fraction of an X-ray at the specified angle through a Film.
 """
 transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
     transmission(flm, energy(cxr), θ)
 
 material(film::Film) = film.material
 thickness(film::Film) = film.thickness
-
-
 
 function parsedtsa2comp(value::AbstractString)::Material
 	try
@@ -571,6 +591,11 @@ function todtsa2comp(mat::Material)::String
     return res
 end
 
+"""
+    compositionlibrary()::Dict{String, Material}
+
+Load the internal compositon library.
+"""
 function compositionlibrary()::Dict{String, Material}
     result = Dict{String, Material}()
     path = dirname(pathof(@__MODULE__))

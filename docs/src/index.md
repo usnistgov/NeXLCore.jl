@@ -1,5 +1,23 @@
 # NeXLCore
 
+NeXLCore and its dependencies [BoteSalvatICX](https://github.com/usnistgov/BoteSalvatICX.jl),
+[FFAST](https://github.com/usnistgov/FFAST.jl) and
+[NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) are not currently available in the
+Julia registry. So you must use the GitHub URL to install NeXLCore.
+```julia; eval=false;
+using Pkg
+# We need to first install three dependencies
+Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
+Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
+Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
+# Now install NeXLCore
+Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
+```
+
+#### Start Here
+: [Getting Started With NeXLCore](gettingstarted.html)
+
+#### Standards
 The core algorithms used throughout the NeXL libraries for elemental and X-ray
 related data and calculations.
 

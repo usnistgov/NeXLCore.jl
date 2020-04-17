@@ -10,7 +10,7 @@ using Reexport
 # using Base.isless, Base.isequal, Base.show, Base.convert
 
 # Abstract model types
-abstract type NeXLAlgorithm end 
+abstract type NeXLAlgorithm end
 
 include("algorithm.jl")
 include("element.jl")
@@ -19,15 +19,15 @@ include("transition.jl")
 include("parse.jl")
 
 export element # Construct Element structs
-export SubShell # An atomic shell
+export Shell # K, L, M, N etc
+export SubShell # K, L1, L2, L3, M1, ...
 export allsubshells, ksubshells, lsubshells, msubshells, nsubshells, osubshells, pshell # SubShell type lists
 export subshell # Construct SubShell structs from a string
-export AtomicSubShell # A shell in an Element
+export AtomicSubShell # A SubShell plus an Element
 export atomicsubshell # Construct AtomicSubShell structs from a string
 export capacity # The total shell capacity
 export jumpratio # The jump ratio for the specified shell
 export meanfluorescenceyield # The mean shell-based fluorescence yield
-export fluorescenceyield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
 export transition # Constructs Transition from SubShell objects or a string
@@ -52,7 +52,7 @@ export FFASTDB # Chantler's FFAST database
 export DTSA   # Heinrich's IXCOM 11 MACs
 export mac # Calculates the MAC using the default or a specified algorithm
 export macU # Calculates the MAC using the default or a specified algorithm
-export shell # The shell ('K','L','M',...) for an AtomicSubShell, Transition, CharXRay etc.
+export shell # The shell (Shell(K),Shell(L),Shell(M),...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition families to lists of Transition(s)
 export atomicsubshells # Gets an iterator of AtomicSubShell for the specified element
 export brightest # Returns the brightest characteristic X-ray from a set of transitions for an element
@@ -106,6 +106,7 @@ export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
 export Burhop1965 # A fluorescence yield model
+export NeXL
 export fluorescenceyield # fluorescence yield models
 
 include("matu.jl")

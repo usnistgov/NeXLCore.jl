@@ -63,7 +63,7 @@ loadAltWeights()
 """
    nexlDirectWeight(z::Int, ionized::Int, inner::Int, outer::Int)
 
-The line weight for the transition <code>(inner,outer)</code> which results from an ionization of <code>ionized</code>.
+The line weight for the transition `(inner,outer)` which results from an ionization of `ionized`.
 """
 function nexlTotalWeight(z::Int, ionized::Int, inner::Int, outer::Int)
     trs = get(xrayweights, (z, ionized), nothing)
@@ -79,7 +79,7 @@ end
 """
     nexlAllTotalWeights(z::Int, ionized::Int)
 
-Returns a Vector containing tuples <code>(inner, outer, weight)</code> for each transition which could
+Returns a Vector containing tuples `(inner, outer, weight)` for each transition which could
 result when the specified shell is ionized.
 """
 nexlAllTotalWeights(z::Int, ionized::Int)::Vector{Tuple{Int,Int,Float64}} =

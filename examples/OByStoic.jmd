@@ -1,0 +1,40 @@
+## Oxygen by stoichiometry
+Using the `asoxide(...)` and `obystoichiometry(...)` functions
+```julia
+using NeXLCore
+```
+
+Start with a measured dictionary of mass fractions and use the function `obystoichiometry(...)` to calculate the mass fraction of oxygen (using the default set of valences.)
+```julia
+measured=Dict(n"Al"=>0.06986,n"Si"=>0.042324,n"Ca"=>0.063917,n"Ti"=>0.072963,n"Zn"=>0.11421,n"Ge"=>0.317435)
+measured[n"O"]=obystoichiometry(measured)
+```
+
+```julia
+material("ADM-65005a",measured)
+```
+The variable `NeXLCore.valence` contains the default valences.  Copy it and then edit it to use different  assumptions.
+
+```julia
+altvalences=copy([ NeXLCore.valence... ])
+altvalences[z(n"Fe")]=3
+```
+In one case, FeO, and in the other Fe<sub>2</sub>O<sub>3</sub>.
+
+```julia
+( asoxide(n"Fe"), asoxide(n"Fe",altvalences) )
+```
+You can add a similar argument to `obystoichiometry(...)` also.
+
+There is a second usage of `asoxide(...)` when a dictionary is provided.  This calculates a mixture of oxides from the mass fraction of each constituent oxide.  The results is a material and the name of the material makes it pretty clear what was calculated.
+```julia
+k412=asoxide(Dict(n"Mg"=>0.1933,n"Al"=>0.0927,n"Si"=>0.4535,n"Ca"=>0.1525,n"Fe"=>0.0996))
+k411=asoxide(Dict(n"Mg"=>0.1467,n"Si"=>0.5430,n"Ca"=>0.1547,n"Fe"=>0.1442))
+ENV["Columns"]=160
+using DataFrames
+vcat(asa(DataFrame, k411),asa(DataFrame, k412))
+```
+```julia
+asa(DataFrame, [k411, k412] )
+```
+NWMR 18-Nov-2019

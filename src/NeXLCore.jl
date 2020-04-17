@@ -10,10 +10,7 @@ using Reexport
 # using Base.isless, Base.isequal, Base.show, Base.convert
 
 # Abstract model types
-abstract type MACAlgorithm end # FFAST or DTSAMAC
-abstract type JumpRatio end
-abstract type BremmstrahlungModel end
-abstract type FluorescenceYield end
+abstract type NeXLAlgorithm end 
 
 include("algorithm.jl")
 include("element.jl")
@@ -51,8 +48,8 @@ export weight # Returns CharXRay weights with the most intense in a shell = 1
 export normWeight # Returns CharXRay weights normalized by shell to a sum of one.
 export strength #
 export has # Element has a specific Transition
-export FFASTMAC # Chantler's FFAST database
-export DTSAMAC  # Heinrich's IXCOM 11 MACs
+export FFASTDB # Chantler's FFAST database
+export DTSA   # Heinrich's IXCOM 11 MACs
 export mac # Calculates the MAC using the default or a specified algorithm
 export macU # Calculates the MAC using the default or a specified algorithm
 export shell # The shell ('K','L','M',...) for an AtomicSubShell, Transition, CharXRay etc.
@@ -103,15 +100,12 @@ export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
 
 include("misc.jl")
-export BremmstrahlungModel
-export Castellano2004 # A BremmstrahlungModel
+export Castellano2004 # A Bremsstrahlung model
 export bremsstrahlung # Bremsstrahlung model
-export JumpRatio
-export Poehn1985 # A JumpRatio model
+export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
-export FluorescenceYield
-export Burhop1965 # A FluorescenceYield model
+export Burhop1965 # A fluorescence yield model
 export fluorescenceyield # fluorescence yield models
 
 include("matu.jl")

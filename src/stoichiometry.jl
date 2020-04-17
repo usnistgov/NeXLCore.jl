@@ -28,15 +28,15 @@ function asoxide(elm::Element, val = valence, name=missing)
 end
 
 """
-    asoxide(elm::Element, val = valence)
+    asoxide(elm::Element, val = valence; name)
 
 Compute a mixture of the oxidized forms of the specified elements using the valences provided in <code>val</code>.
 By default, <code>val = NeXLCore.valences</code>, a typical set of valences.
 """
-function asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence)
-    name(es, vs) = join(map(elm->"$(elms[elm])⋅$(asoxide(elm,vs).name)", collect(keys(es))),"+")
+function asoxide(elms::Dict{Element, <:AbstractFloat}, val = valence; name::Union{AbstractString,Nothing}=nothing)
+    buildname(es, vs) = join(map(elm->"$(elms[elm])⋅$(asoxide(elm,vs).name)", collect(keys(es))),"+")
     mats = ( massfraction(qty*asoxide(elm, val)) for (elm, qty) in elms )
-    return material(name(elms,val), merge(+,mats...))
+    return material(isnothing(name) ? buildname(elms,val) : name, merge(+,mats...))
 end
 
 """

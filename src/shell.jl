@@ -170,7 +170,7 @@ j(ss::SubShell) =
  end
 
  jumpratio(ass::AtomicSubShell) =
-    jumpratio(ass.z, ass.subshell.index)
+    jumpratio(ass.z, ass.subshell.index, FFASTDB)
 
  """
      element(ass::AtomicSubShell)
@@ -237,7 +237,7 @@ has(elm::Element, ss::SubShell) =
     ss.index in subshellsindexes(z(elm))
 
 """
-     energy(ass::AtomicSubShell)
+     energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
 
  The edge energy in eV for the specified AtomicSubShell
 
@@ -246,10 +246,10 @@ Example:
     julia> energy(n"Fe L3")
     708.0999999999999
  """
- energy(ass::AtomicSubShell)::Float64 = shellEnergy(ass.z, ass.subshell.index)
+energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 = shellEnergy(ass.z, ass.subshell.index, ty)
 
 """
-    energy(elm::Element, ss::SubShell)
+    energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
 
 The edge energy in eV for the specified atomic sub-shell
 
@@ -258,7 +258,7 @@ Example:
    julia> energy(n"Fe", n"L3")
    708.0999999999999
 """
-energy(elm::Element, ss::SubShell)::Float64 = shellEnergy(z(elm), ss.index)
+energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 = shellEnergy(z(elm), ss.index, ty)
 
  """
      atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
@@ -279,22 +279,22 @@ Example:
      Fe M4
      Fe M2
  """
- function atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
+function atomicsubshells(elm::Element, maxE=1.0e6, eety::Type{<:NeXLAlgorithm}=FFASTDB)::Vector{AtomicSubShell}
      res = Vector{AtomicSubShell}()
      for sh in subshellsindexes(z(elm))
-         if shellEnergy(z(elm), sh) < maxE
+         if shellEnergy(z(elm), sh, eety) < maxE
              push!(res, atomicsubshell(elm, SubShell(sh)))
          end
      end
      return res
- end
+end
 
  z(ass::AtomicSubShell) = ass.z
 
  """
-     ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat)
+     ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008)
 
- Computes the absolute ionization crosssection (in cm2) for the specified AtomicSubShell and
+ Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
  electon energy (in eV) using the default algorithm.
 
  Example:
@@ -302,14 +302,16 @@ Example:
      julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
      0.5672910174711278
  """
- ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat) =
-     ionizationcrosssection(ass.z, ass.subshell.index, energy)
+ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008) =
+     ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
 
+struct Pouchou1991 <: NeXLAlgorithm end
+
 """
     relativeionizationcrosssection(z::Int, ss::Int, ev::AbstractFloat)
-
+    relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat, ::Type{Pouchou1991})
 
 An approximate expression based of Pouchou and Pouchoir's 1991 (Green Book) expression
 for the ionization crosssection plus an additional factor for sub-shell capacity.
@@ -319,20 +321,24 @@ Example:
     > (/)(map(e->NeXLCore.relativeionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
     0.5982578301818324
 """
-function relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat)
+function relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat, ::Type{Pouchou1991})
      u = ev / energy(ass)
      ss = ass.subshell.index
      m = ss==1 ? 0.86 + 0.12*exp(-(0.2*ass.z)^2) : (ss <= 4 ? 0.82 : 0.78)
      return capacity(ass.subshell) * log(u)/((energy(ass)^2) * (u^m))
  end
+ relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat) =
+    relativeionizationcrosssection(ass, ev, Pouchou1991)
 
+struct Bambynek1972 <: NeXLAlgorithm end
 
 """
     meanfluorescenceyield(ass::AtomicSubShell)
+    meanfluorescenceyield(ass::AtomicSubShell, ::Type{Bambynek1972})
 
 Mean fluorescence yields from Bambynek in Reviews of Modern Physics 44(4), 1972
 """
-function meanfluorescenceyield(ass::AtomicSubShell)
+function meanfluorescenceyield(ass::AtomicSubShell, ::Type{Bambynek1972})
     fluorYields = (
         (0, 0, 0),
         (0, 0, 0),
@@ -433,13 +439,15 @@ function meanfluorescenceyield(ass::AtomicSubShell)
     )
     return fluorYields[ass.z][shell(ass)=='K' ? 1 : (shell(ass)=='L' ? 2 : 3)]
 end
+meanfluorescenceyield(ass::AtomicSubShell) =
+    meanfluorescenceyield(ass, Bambynek1972)
 
-struct FFASTFluorYield <: FluorescenceYield end
+
 """
-    fluorescenceyield(ass::AtomicSubShell)::Float64
+    fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
 
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.
 """
-fluorescenceyield(::Type{FFASTFluorYield}, ass::AtomicSubShell)::Float64 =
-    sum(map(s->characteristicyield(ass.z, ass.subshell.index, s), ass.subshell.index+1:length(allsubshells)))
+fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64 =
+    sum(map(s->characteristicyield(ass.z, ass.subshell.index, s, ty), ass.subshell.index+1:length(allsubshells)))

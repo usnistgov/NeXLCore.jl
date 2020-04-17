@@ -273,21 +273,20 @@ normWeight(elm::Element, tr::Transition, overvoltage = 4.0) =
     has(elm, tr) ? normWeight(characteristic(elm,tr),overvoltage) : 0.0
 
 """
-    energy(cxr::CharXRay)
+    energy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm}=FFASTDB)
 
 The energy in eV for the specified CharXRay (characteristic X-ray)
 """
-energy(cxr::CharXRay)::Float64 =
-    characteristicXRayEnergy(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index)
-
+energy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 =
+    characteristicXRayEnergy(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index, ty)
 
 """
-    energy(elm::Element, tr::Transition)
+    energy(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm}=FFASTDB)
 
 The energy in eV for the specified characteristic X-ray represented by an element and transition.
 """
-energy(elm::Element, tr::Transition)::Float64 =
-    characteristicXRayEnergy(z(elm), tr.innershell.index, tr.outershell.index)
+energy(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 =
+    characteristicXRayEnergy(z(elm), tr.innershell.index, tr.outershell.index, ty)
 
 ν(cxr::CharXRay) = energy(cxr) / plancksConstant
 ω(cxr::CharXRay) = 2π*ν(cxr)
@@ -307,11 +306,11 @@ X-ray wavenumber in cm¯¹.
 wavenumber(cxr::CharXRay) = 1.0/λ(cxr)
 
 """
-    edgeenergy(cxr::CharXRay)
+    edgeenergy(cxr::CharXRay, ::Type{<:NeXLAlgorithm}=FFASTDB)
 
 Ionization edge energy for the specified X-ray.
 """
-edgeenergy(cxr::CharXRay) = shellEnergy(cxr.z, cxr.transition.innershell.index)
+edgeenergy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB) = shellEnergy(cxr.z, cxr.transition.innershell.index, ty)
 
 """
     weight(cxr::CharXRay)
@@ -448,35 +447,35 @@ end
 The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
 """
-mac(elm::Element, cxr::CharXRay, alg::Type{<:MACAlgorithm}=FFASTMAC)::Float64 =
-    mac(alg, elm, energy(cxr))
+mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 =
+    mac(elm, energy(cxr), alg)
 
 """
-    macU(elm::Element, cxr::CharXRay, alg::Type{<:MACAlgorithm}=FFASTMAC)::UncertainValue
+    macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::UncertainValue
 
 The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
 """
-macU(elm::Element, cxr::CharXRay, alg::Type{<:MACAlgorithm}=FFASTMAC)::UncertainValue =
-    macU(alg, elm, energy(cxr))
+macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::UncertainValue =
+    macU(elm, energy(cxr), alg)
 
 """
-    mac(elm::Element, cxr::Float64, alg::Type{<:MACAlgorithm}=FFASTMAC)::Float64
+    mac(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::Float64
 
 The mass absorption coefficient for an X-ray of the specified energy (eV) in the
 specified element.
 """
-mac(elm::Element, energy::Float64, alg::Type{<:MACAlgorithm}=FFASTMAC)::Float64 =
-    mac(alg, elm, energy)
+mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::Float64 =
+    mac(elm, energy, alg)
 
 """
-    macU(elm::Element, cxr::Float64, alg::Type{<:MACAlgorithm}=FFASTMAC)::UncertainValue
+    macU(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::UncertainValue
 
 The mass absorption coefficient (with uncertainty estimate) for an X-ray of the specified energy (eV) in the
 specified element.
 """
-macU(elm::Element, energy::Float64, alg::Type{<:MACAlgorithm}=FFASTMAC)::UncertainValue =
-    macU(alg, elm, energy)
+macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::UncertainValue =
+    macU(elm, energy, alg)
 
 
 """
@@ -488,14 +487,14 @@ comptonShift(θ::AbstractFloat, energy::AbstractFloat) =
        1.0 / (1.0 + ((energy / 0.511e6) * (1.0 - cos(θ))))
 
 
-struct DTSAMAC <: MACAlgorithm end
+struct DTSA <: NeXLAlgorithm end
 
 """
    mac(::Type{DTSAMAC}, zz::Int, ev::Float64)::Float64
 
 Calculate the elemental MAC using Heinrich's IXCOM 11 formula as implemented by Myklebust in DTSA.
 """
-function mac(::Type{DTSAMAC}, elm::Element, ev::Float64)::Float64
+function mac(elm::Element, ev::Float64, ::Type{DTSA})::Float64
    # Ref: Heinrich's formula as implemented by Myklebust translated into Julia
    # This expression only works for x-ray energies below the K-edge and
    # above the K-edge for Z < 50. Energies above the K-edge for elements

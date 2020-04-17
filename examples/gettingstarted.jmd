@@ -236,7 +236,7 @@ mac( n"Ni", n"Fe K-L3") # In cm²/g
 Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
 mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
 mac( mat"AlNaSi3O8", n"O K-L3") # O K-L3 in Albite (interpreted as a chemical formular)
-mac( mat"AlNaSi3O8", n"O K-L3", FFASTMAC), mac( mat"AlNaSi3O8", n"O K-L3", DTSAMAC) # Compare and contrast...
+mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.FFASTDB), mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.DTSA) # Compare and contrast...
 ```
 
 #### KRatio
@@ -304,15 +304,15 @@ display(NeXLCore.compareMACs(n"U"))
 ```
 Or MAC algorithms one at a time...
 ```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
-display(plot(FFASTMAC, n"Ag"))
-display(plot(DTSAMAC, n"Au"))
+display(plot(NeXLCore.FFASTDB, n"Ag"))
+display(plot(NeXLCore.DTSA, n"Au"))
 ```
 Or many elements at once...
 ```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
-plot(FFASTMAC, collect(keys(albite)),xmax=5.0e3)
+plot(NeXLCore.FFASTDB, collect(keys(albite)),xmax=5.0e3)
 ```
 
 Or a Material MAC...
 ```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
-plot(FFASTMAC, [keys(albite)..., albite], xmax=5.0e3)
+plot(NeXLCore.FFASTDB, [keys(albite)..., albite], xmax=5.0e3)
 ```

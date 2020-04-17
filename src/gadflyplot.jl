@@ -129,8 +129,8 @@ end
 Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element.
 """
 function compareMACs(elm::Element; palette = NeXLPalette)
-    l1 = layer(ev -> log10(mac(FFASTMAC, elm, ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[1]))
-    l2 = layer(ev -> log10(mac(DTSAMAC, elm, ev)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[2]))
+    l1 = layer(ev -> log10(mac(elm, ev, FFASTDB)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[1]))
+    l2 = layer(ev -> log10(mac(elm, ev, DTSA)), 100.0, 20.0e3, Geom.line, Gadfly.Theme(default_color = palette[2]))
     Gadfly.plot(
         l1,
         l2,
@@ -143,11 +143,11 @@ function compareMACs(elm::Element; palette = NeXLPalette)
 end
 
 """
-    plot(alg::Type{<:MACAlgorithm}, elm::Union{Element,Material}; palette = NeXLPalette, xmax=20.0e3)
+    plot(alg::Type{<:NeXLAlgorithm}, elm::Union{Element,Material}; palette = NeXLPalette, xmax=20.0e3)
 
 Plot a MAC tabulations for the specified Element or Material.
 """
-function Gadfly.plot(alg::Type{<:MACAlgorithm}, elm::Union{Element,Material}; palette = NeXLPalette, xmax=20.0e3)
+function Gadfly.plot(alg::Type{<:NeXLAlgorithm}, elm::Union{Element,Material}; palette = NeXLPalette, xmax=20.0e3)
     l1 = layer(ev -> log10(mac(elm, ev, alg)), 100.0, xmax, Geom.line, Gadfly.Theme(default_color = palette[1]))
     Gadfly.plot(
         l1,
@@ -163,7 +163,7 @@ end
 
 Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element or Material.
 """
-function Gadfly.plot(alg::Type{<:MACAlgorithm}, elms::AbstractVector; palette = NeXLPalette, xmin=100.0, xmax=20.0e3)
+function Gadfly.plot(alg::Type{<:NeXLAlgorithm}, elms::AbstractVector; palette = NeXLPalette, xmin=100.0, xmax=20.0e3)
     layers, colors, names = Layer[], Color[], String[]
     for (i,elm) in enumerate(elms)
         append!(layers, layer(ev -> log10(mac(elm, ev, alg)), xmin, xmax, Geom.line, Gadfly.Theme(default_color = palette[i])))

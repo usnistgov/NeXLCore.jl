@@ -377,6 +377,7 @@ atomicsubshells(ss::SubShell, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm} = FFASTD
     [atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
 
 z(ass::AtomicSubShell) = ass.z
+n(ass::AtomicSubShell) = n(ass.subshell)
 
 """
     ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008)
@@ -526,6 +527,7 @@ function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
     )
     return fluorYields[z(elm)][n(sh)]
 end
+meanfluorescenceyield(elm::Element, sh::Shell) = meanfluorescenceyield(elm, sh, Bambynek1972)
 
 """
     fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64

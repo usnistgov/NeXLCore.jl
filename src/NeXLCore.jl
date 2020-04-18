@@ -22,6 +22,7 @@ export element # Construct Element structs
 export elementrange # Elements for which there is a complete set of data :-(
 export Shell # K, L, M, N etc
 export SubShell # K, L1, L2, L3, M1, ...
+export n, l, j # Quantum numbers
 export allsubshells, ksubshells, lsubshells, msubshells, nsubshells, osubshells, pshell # SubShell type lists
 export subshell # Construct SubShell structs from a string
 export firstsubshell, lastsubshell # Given a shell find the lowest/highest subshell in that shell i.e. Shell[M]=>M1/M5

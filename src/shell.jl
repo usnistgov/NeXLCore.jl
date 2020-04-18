@@ -20,7 +20,7 @@ end
 Base.show(io::IO, sh::Shell) = print(io, "Shell[$('J'+sh.n)]")
 n(sh::Shell) = sh.n
 Base.isequal(sh1::Shell, sh2::Shell) = sh1.n == sh2.n
-Base.isless(sh1::Shell, sh2::Shell) = isless(sh1.n, sh2.n)
+Base.isless(sh1::Shell, sh2::Shell) = sh1.n > sh2.n # In binding energy order
 
 """
     SubShell
@@ -40,7 +40,7 @@ end
 Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
 
 Base.isequal(sh1::SubShell, sh2::SubShell) = sh1.index == sh2.index
-Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index < sh2.index
+Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Energy order
 
 """
     allsubshells
@@ -209,6 +209,11 @@ Example:
 """
 shell(sh::SubShell)::Shell = Shell(n(sh))
 
+firstsubshell(sh::Shell) =
+    allsubshells[findfirst(ss->n(ss)==n(sh), allsubshells)]
+lastsubshell(sh::Shell) =
+    allsubshells[findlast(ss->n(ss)==n(sh), allsubshells)]
+
 """
     ksubshells
 
@@ -284,7 +289,7 @@ element(ass::AtomicSubShell) = element(ass.z)
 Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) = (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
 
 Base.isless(ass1::AtomicSubShell, ass2::AtomicSubShell) =
-    return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : ass1.z < ass2.z
+    return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : isless(ass1.z, ass2.z)
 
 Base.show(io::IO, ass::AtomicSubShell) = print(io, "$(element(ass.z).symbol) $(ass.subshell)")
 
@@ -526,7 +531,18 @@ end
     fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
 
 The fraction of relaxations from the specified shell that decay via radiative transition
-rather than electronic (Auger) transition.
+rather than electronic (Auger) transition.  Does not include Coster-Kronig
 """
-fluorescenceyield(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = NeXL)::Float64 =
-    sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, s, ty), ass.subshell.index+1:length(allsubshells)))
+fluorescenceyield(ass::AtomicSubShell, ::Type{NeXL})::Float64 =
+    sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL), ass.subshell.index+1:length(allsubshells)))
+
+"""
+    fluorescenceyieldcc(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
+
+The fraction of relaxations from the specified shell that decay via radiative transition
+rather than electronic (Auger) transition.  Includes Coster-Kronig
+"""
+function fluorescenceyieldcc(ass::AtomicSubShell, ::Type{NeXL})::Float64
+    f(ss) = sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, ss, s, NeXL), ss.index+1:length(allsubshells)))
+    return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
+end

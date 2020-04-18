@@ -34,7 +34,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
     )
     for (i,tr) in enumerate(transitions)
         x, y = [], []
-        for elm in element.(elementRange())
+        for elm in element.(elementrange())
             if has(elm, tr)
                 push!(x, z(elm))
                 push!(y, energy(characteristic(elm, tr)))
@@ -51,7 +51,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop),
+        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
     )
 end
 
@@ -63,7 +63,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition})
     )
     for (i,tr) in enumerate(transitions)
         x, y = [], []
-        for elm in element.(elementRange())
+        for elm in element.(elementrange())
             if has(elm, tr)
                 push!(x, z(elm))
                 push!(y, strength(characteristic(elm, tr)))
@@ -80,7 +80,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition})
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Weight"),
-        Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop),
+        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
     )
 end
 
@@ -105,7 +105,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell})
     )
     for (i, sh) in enumerate(sss)
         x, y = [], []
-        for elm in element.(elementRange())
+        for elm in element.(elementrange())
             if has(elm, sh)
                 push!(x, z(elm))
                 push!(y, fluorescenceyield(atomicsubshell(elm, sh)))
@@ -123,7 +123,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell})
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Yield (Fractional)"),
         Scale.y_log10(maxvalue=1.0),
-        Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop),
+        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
     )
 end
 
@@ -136,7 +136,7 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
     )
     for (i, sh) in enumerate(sss)
         x, y = [], []
-        for elm in element.(elementRange())
+        for elm in element.(elementrange())
             if has(elm, sh)
                 push!(x, z(elm))
                 push!(y, energy(atomicsubshell(elm, sh)))
@@ -153,7 +153,7 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Edge Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = elementRange().start, xmax = elementRange().stop),
+        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
     )
 end
 

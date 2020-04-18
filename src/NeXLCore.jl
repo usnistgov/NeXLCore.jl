@@ -19,10 +19,12 @@ include("transition.jl")
 include("parse.jl")
 
 export element # Construct Element structs
+export elementrange # Elements for which there is a complete set of data :-(
 export Shell # K, L, M, N etc
 export SubShell # K, L1, L2, L3, M1, ...
 export allsubshells, ksubshells, lsubshells, msubshells, nsubshells, osubshells, pshell # SubShell type lists
 export subshell # Construct SubShell structs from a string
+export firstsubshell, lastsubshell # Given a shell find the lowest/highest subshell in that shell i.e. Shell[M]=>M1/M5
 export AtomicSubShell # A SubShell plus an Element
 export atomicsubshell # Construct AtomicSubShell structs from a string
 export capacity # The total shell capacity
@@ -76,6 +78,7 @@ export Material # Material struct
 export name # Material name
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
+export thickness # Of Film in cm
 export compare # Compare compositions as a DataFrame
 export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
@@ -108,6 +111,7 @@ export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 19
 export Burhop1965 # A fluorescence yield model
 export NeXL
 export fluorescenceyield # fluorescence yield models
+export characteristicyield
 
 include("matu.jl")
 export MaterialLabel

@@ -37,10 +37,10 @@ struct KRatio
         if !all(element(l) == elm for l in lines)
             error("The characteristic X-rays must all be from the same element.")
         end
-        if value(standard[elm]) <= 1.0e-4
+        if value(standard[elm]) <= 1.0e-6
             error("The standard must contain the element $(elm).  $(standard[elm])")
         end
-        return new(elm, convert(Vector{CharXRay},lines), copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
+        return new(elm, lines, copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
     end
 end
 
@@ -88,7 +88,7 @@ end
 
 Return a set containing the elements present in krs.
 """
-function NeXLCore.elms(krs::Vector{KRatio})::Set{Element}
+function elms(krs::Vector{KRatio})::Set{Element}
     res = Set{Element}()
     for kr in krs
         push!(res, kr.element)

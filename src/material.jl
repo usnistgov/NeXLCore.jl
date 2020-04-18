@@ -62,7 +62,7 @@ function sum(
         keys(mat2),
     ))
     return material(
-        ismissing(name) ? "$(mat1.name) + $(mat2.name)" : name,
+        ismissing(name) ? "$(mat1.name)+$(mat2.name)" : name,
         mf,
         density,
         atomicweight
@@ -265,7 +265,7 @@ Base.keys(mat::Material) =
 
 Transform the mass fraction representation of a material into a Dict{MassFractionLabel,AbstractFloat}"""
 labeled(mat::Material) =
-    Dict( (MassFractionLabel(element(z), mat), mf) for (z, mf) in mat.massfraction)
+    Dict( (MassFractionLabel(name(mat), element(z)), mf) for (z, mf) in mat.massfraction)
 
 """
     atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
@@ -431,7 +431,7 @@ function Base.parse(
     if !isnothing(p)
         return parse(Float64, expr[firstindex(expr):prevind(expr,p)]) *
                parse(Material, expr[nextind(expr,p):lastindex(expr)],
-               name=expr[nextind(expr,p):lastindex(p)], density=density, atomicweights=atomicweights)
+               name=expr[nextind(expr,p):lastindex(expr)], density=density, atomicweights=atomicweights)
     end
     # Then handle Material/N where N is a number
     p = findfirst(c -> c == '/', expr)

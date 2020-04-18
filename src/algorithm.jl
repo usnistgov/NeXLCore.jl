@@ -50,13 +50,13 @@ shellEnergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 =
 shellEnergy(z::Int, ss::Int)::Float64 = shellEnergy(z, ss, FFASTDB)
 
 """
-    elementRange() = 1:92
+    elementrange() = 1:92
 
 Return the range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data
 """
-elementRange(::Type{FFASTDB}) =
+elementrange(::Type{FFASTDB}) =
     ffastElementRange()
-elementRange() = elementRange(FFASTDB)
+elementrange() = elementrange(FFASTDB)
 
 """
     subshellsindexes(z::Int)
@@ -110,19 +110,16 @@ electronic transition from `outer` to `inner`.
 """
 fluorescenceyield(z::Int, inner::Int, outer::Int, ::Type{NeXL})::Float64 =
     nexlTotalWeight(z, inner, inner, outer)
-fluorescenceyield(z::Int, inner::Int, outer::Int)::Float64 =
-    nexlTotalWeight(z, inner, inner, outer, NeXL)
 
 """
-    fluorescenceyield(z::Int, ionized::Int, inner::Int, outer::Int)::Float64
+    characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int)::Float64
 
 The fraction of `ionized` sub-shell ionizations that relax via a characteristic X-ray resulting from an
-electronic transition from `outer` to `inner`.
+electronic transition from `outer` to `inner`.  This includes both direct transitions (where `outer`==`ionized`)
+and cascade (where `outer` != `ionized` due to Coster-Kronig and previous decays.)
 """
-fluorescenceyield(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{NeXL})::Float64 =
+characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{NeXL})::Float64 =
     nexlTotalWeight(z, ionized, inner, outer)
-fluorescenceyield(z::Int, ionized::Int, inner::Int, outer::Int)::Float64 =
-    fluorescenceyield(z, ionized, inner, outer, NeXL)
 
 """
     characteristicXRayAvailable(z::Int, inner::Int, outer::Int)::Float64

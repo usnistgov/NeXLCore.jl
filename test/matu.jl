@@ -72,7 +72,7 @@ using NeXLCore
 
     @testset "AuAg - MacU" begin
 
-        mat, cxr = material("Au60Ag40",Dict(n"Ag"=>0.4020,n"Au"=>0.5950)), n"O K-L3"
+        mat, cxr = material("Au60Ag40",n"Ag"=>0.4020,n"Au"=>0.5950), n"O K-L3"
         inplbls = [ MassFractionLabel(mat.name,n"Ag"), AtomicWeightLabel(mat.name,n"Ag"),
                     MassFractionLabel(mat.name,n"Au"), AtomicWeightLabel(mat.name,n"Au"),
                     μoρElementLabel(n"Ag", cxr), μoρElementLabel(n"Au", cxr) ]

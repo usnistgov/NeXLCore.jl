@@ -106,7 +106,7 @@ all(e->a(e)==a(e,ss), keys(ss)) # The atomic weights are the default values (fro
 Alternatively, I could have built albite in terms of atom fractions.  Note that the mass fractions are different
 because the assumed atomic weight of sodium is different.
 ```julia; term=true;
-albite2 = atomicfraction("Albite",Dict(n"Al"=>1, n"Na"=>1, n"Si"=>3, n"O"=>8), 2.6, Dict(n"Na"=>22.0))
+albite2 = atomicfraction("Albite", n"Al"=>1, n"Na"=>1, n"Si"=>3, n"O"=>8, properties=Dict{Symbol,Any}(:Density=>2.6), atomicweights=Dict(n"Na"=>22.0))
 ```
 ```julia
 using DataFrames
@@ -128,7 +128,7 @@ compare(ss, asnormalized(ss))
 It is also possible to define materials using `NeXLUncertainties.UncertainValue`s.  However, it is better to use the
 full uncertainty calculation to perform transforms since this handles correlated quantities correctly.
 ```julia; term=true;
-ss=material("Stainless",Dict(n"Fe"=>uv(0.79,0.01),n"Ni"=>uv(0.15,0.003),n"Cr"=>uv(0.04,0.002)))
+ss=material("Stainless",n"Fe"=>uv(0.79,0.01),n"Ni"=>uv(0.15,0.003),n"Cr"=>uv(0.04,0.002))
 ss[n"Fe"]
 atomicfraction(ss)[n"Fe"]
 ```

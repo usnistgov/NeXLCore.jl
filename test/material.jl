@@ -3,16 +3,14 @@ using NeXLCore
 
 @testset "Materials" begin
     @testset "K411" begin
-        k411 = NeXLCore.Material(
+        k411 = material(
             "K411",
-            Dict(
-                z(n"O") => 0.423667,
-                z(n"Mg") => 0.0884654,
-                z(n"Si") => 0.253817,
-                z(n"Ca") => 0.110563,
-                z(n"Fe") => 0.112087,
-            ),
-            3.5,
+            n"O" => 0.423667,
+            n"Mg" => 0.0884654,
+            n"Si" => 0.253817,
+            n"Ca" => 0.110563,
+            n"Fe" => 0.112087,
+            properties=Dict{Symbol, Any}(:Density=>3.5)
         )
 
         @test k411[n"Ca"] == 0.110563
@@ -39,9 +37,9 @@ using NeXLCore
 
         k411_2 = material(
             "K411",
-            Dict(n"O" => 0.423667, n"Mg" => 0.0884654, n"Si" => 0.253817, n"Ca" => 0.110563, n"Fe" => 0.112087),
-            3.5,
-            Dict(n"Ca" => 41.0, n"O" => 16.1),
+            n"O" => 0.423667, n"Mg" => 0.0884654, n"Si" => 0.253817, n"Ca" => 0.110563, n"Fe" => 0.112087,
+            atomicweights=Dict(n"Ca" => 41.0, n"O" => 16.1),
+            properties=Dict{Symbol, Any}(:Density=>3.5)
         )
 
         @test a(n"Ca", k411) == a(n"Ca")
@@ -102,23 +100,23 @@ using NeXLCore
         @test isapprox(parse(Material, "Ba(Al2Si2O8)", name = "Paracelsian"), mat"Ba(Al2Si2O8)", atol = 1.0e-8)
         @test isapprox(mat"Ba(Al2Si2O8)"[n"Ba"], 0.36576, atol = 0.00001)
 
-        para = Material(
+        para = material(
             "Paracelsian",
-            Dict(z(n"O") => 0.340906, z(n"Ba") => 0.36576, z(n"Si") => 0.149607, z(n"Al") => 0.143727),
-            3.5,
+            n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727,
+            properties = Dict{Symbol,Any}(:Density=>3.5)
         )
         @test isapprox(para, mat"Ba(Al2Si2O8)",atol=1.0e-5)
         para = material(
             "Paracelsian",
-            Dict(n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727),
-            3.5,
+            n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727,
+            properties=Dict{Symbol,Any}(:Density=>3.5)
         )
         @test isapprox(para, mat"Ba(Al2Si2O8)",atol=1.0e-5)
 
         para = material(
             "Paracelsian",
             n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727,
-            density = 3.5, description = "Barium-rich feldspar"
+            properties=Dict{Symbol,Any}(:Density=>3.5, :Description => "Barium-rich feldspar")
         )
         @test isapprox(para, mat"Ba(Al2Si2O8)",atol=1.0e-5)
         # Define a couple of additional properties...

@@ -23,7 +23,7 @@ altvalences[z(n"Fe")]=3
 In one case, FeO, and in the other Fe<sub>2</sub>O<sub>3</sub>.
 
 ```julia
-( asoxide(n"Fe"), asoxide(n"Fe",altvalences) )
+( asoxide(n"Fe"), asoxide(n"Fe",valences=altvalences) )
 ```
 You can add a similar argument to `obystoichiometry(...)` also.
 
@@ -31,8 +31,8 @@ There is a second usage of `asoxide(...)` when a dictionary is provided.  This c
 mass fraction of each constituent oxide.  The results is a material and the name of the material makes it pretty clear
 what was calculated.
 ```julia
-k412=asoxide(Dict(n"Mg"=>0.1933,n"Al"=>0.0927,n"Si"=>0.4535,n"Ca"=>0.1525,n"Fe"=>0.0996), name="K412")
-k411=asoxide(Dict(n"Mg"=>0.1467,n"Si"=>0.5430,n"Ca"=>0.1547,n"Fe"=>0.1442), name="K411")
+k412=asoxide(n"Mg"=>0.1933,n"Al"=>0.0927,n"Si"=>0.4535,n"Ca"=>0.1525,n"Fe"=>0.0996, name="K412")
+k411=asoxide(n"Mg"=>0.1467,n"Si"=>0.5430,n"Ca"=>0.1547,n"Fe"=>0.1442, name="K411")
 ENV["Columns"]=160
 using DataFrames
 vcat(asa(DataFrame, k411),asa(DataFrame, k412))

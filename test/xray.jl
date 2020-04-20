@@ -179,10 +179,12 @@ using NeXLCore
             @test density(n"Au")==19.3
             @test density(pure(n"Au"))==density(n"Au")
             @test get(mat"Fe2O3",:Drip,"Drip")=="Drip"
-            m=parse(Material,"Fe2O3",name="Hematite",density=5.25)
+            m=parse(Material,"Fe2O3",name="Hematite",properties=Dict{Symbol,Any}(:Density=>5.25,:Drizzle=>99))
             m[:Drop]="Drop"
             @test get(m, :Density, "Drip")==5.25
             @test get(m, :Drop, "Drip")=="Drop"
+            @test m[:Drizzle]==99
+            @test typeof(m[:Drizzle])==Int64
             lm = labeled(m)
             @test all(e->lm[MassFractionLabel("Hematite",e)]==m[e],keys(m))
             m = asnormalized(mat"0.8*Fe+0.15*Ni+0.04*Cr",1.0)

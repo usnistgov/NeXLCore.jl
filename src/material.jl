@@ -8,30 +8,38 @@ using DataFrames
 
 Holds basic data about a material including name, density and composition in
 mass fraction.
+
+**Properties**
+
+  - `:Density` Density in g/cm³
+  - `:Description` Human friendly
+  - `:Provenance` Source of data ("SRM-XXX", "Stoichiometry", "Wet-chemistry", "???")
+  - `:Conductivity` "Insulator", "Semiconductor", "Conductor"
 """
 struct Material
     name::String
-    properties::Dict{Symbol,Any} # :Density, :Description,
+    properties::Dict{Symbol,Any} # :Density, :Description, :Provenance
     a::Dict{Int,AbstractFloat} # Optional: custom atomic weights for the keys in this Material
     massfraction::Dict{Int,AbstractFloat}
+
+"""
+    Material(
+        name::AbstractString,
+        massfrac::Dict{Int,U},
+        atomicweights::Dict{Int,V} = Dict{Int,Float64}(),
+        properties::Dict{Symbol, Any} = Dict{Symbol, Any}()
+    )
+"""
     function Material(
         name::AbstractString,
         massfrac::Dict{Int,U},
-        density::Union{Missing,AbstractFloat},
-        a::Dict{Int,V} = Dict{Int,Float64}(),
-        description::Union{AbstractString,Missing} = missing,
+        atomicweights::Dict{Int,V} = Dict{Int,Float64}(),
+        properties::Dict{Symbol, Any} = Dict{Symbol, Any}()
     ) where {U<:AbstractFloat,V<:AbstractFloat}
         if sum(value.(values(massfrac)))>10.0
             @warn "The sum mass fraction is $(sum(values(massfrac))) which is much larger than unity."
         end
-        props = Dict{Symbol,Any}()
-        if (!ismissing(density)) && (density>0.0)
-            props[:Density] = density
-        end
-        if !ismissing(description)
-            props[:Description] = string(description)
-        end
-        new(name, props, a, massfrac)
+        new(name, properties, atomicweights, massfrac)
     end
 end
 
@@ -41,32 +49,28 @@ import Base.*
 
 function *(k::AbstractFloat, mat::Material)::Material
     mf = Dict{Int,AbstractFloat}((z, q * k) for (z, q) in mat.massfraction)
-    return Material("$(k)×$(mat.name)", mf, density(mat), mat.a)
+    return Material("$(k)×$(mat.name)", mf, mat.a, copy(mat.properties))
 end
 
 import Base.+
 
-+(mat1::Material, mat2::Material)::Material = sum(mat1, mat2, missing, missing)
++(mat1::Material, mat2::Material)::Material = sum(mat1, mat2)
 
 import Base.sum
 
 function sum(
     mat1::Material,
-    mat2::Material,
-    name::Union{Missing,AbstractString} = missing,
-    density::Union{Missing,AbstractFloat} = missing,
-    atomicweight::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}()
+    mat2::Material;
+    name::Union{AbstractString, Missing}=missing,
+    properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
+    atomicweights::Dict{Element,<:AbstractFloat}=Dict{Element,Float64}()
 )::Material
-    mf = Dict{Element,AbstractFloat}((elm, mat1[elm] + mat2[elm]) for elm in union(
+    mf = Dict((elm, mat1[elm] + mat2[elm]) for elm in union(
         keys(mat1),
         keys(mat2),
     ))
-    return material(
-        ismissing(name) ? "$(mat1.name)+$(mat2.name)" : name,
-        mf,
-        density,
-        atomicweight
-    )
+    name = ismissing(name) ? "$(mat1.name)+$(mat2.name)" : name
+    return material(name, mf, properties=properties, atomicweights=atomicweights)
 end
 
 
@@ -83,50 +87,45 @@ name(mat::Material) = mat.name
 Return the density in g/cm³ (Might be 'missing')
 """
 density(mat::Material) = property(mat,:Density)
-
 description(mat::Material) = property(mat,:Description)
+provenance(mat::Material) = property(mat, :Provenance)
 
 property(mat::Material, sym::Symbol) = get(mat.properties, sym, missing)
 
-"""
-    material(
-      name::AbstractString,
-      massfrac::Dict{Element,<:AbstractFloat},
-      density=missing,
-      a::Dict{Element,<:AbstractFloat}=Dict{Element,Float64}(),
-      description::Union{Missing,AbstractString}=missing
-    )
 
-Construct a material from mass fractions and (optional) atomic weights.
-"""
-function material(name::AbstractString,
-    massfrac::Dict{Element, U},
-    density::Union{Missing,AbstractFloat}=missing,
-    a::Dict{Element, V}=Dict{Element,Float64}(),
-    description::Union{Missing,AbstractString}=missing
-) where { U <: AbstractFloat, V <: AbstractFloat }
-    mf = Dict( (z(elm), val) for (elm, val) in massfrac )
-    aw = Dict( (z(elm), val) for (elm, val) in a )
-    return Material(name, mf, density, aw, description)
-end
 """
     material(
         name::AbstractString,
         massfrac::Pair{Element,<:AbstractFloat}...;
-        density::Union{Missing,AbstractFloat}=missing,
-        a::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}(),
-        description::Union{Missing,AbstractString}=missing
+        properties::Dict{Symbol,Any}=Dict{Symbol,Any)(),
+        atomicweights::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}()
+    )
+    material(
+        name::AbstractString,
+        massfrac::Dict{Element,<:AbstractFloat};
+        properties::Dict{Symbol,Any}=Dict{Symbol,Any)(),
+        atomicweights::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}()
     )
 
 Constuct a material from mass fraction pairs.
 """
+function material(
+    name::AbstractString,
+    massfrac::Dict{Element,U};
+    properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
+    atomicweights::Dict{Element, V}=Dict{Element,Float64}(),
+) where {U <: AbstractFloat, V <: AbstractFloat}
+    mf = Dict{Int,U}( (z(elm), v) for (elm, v) in massfrac)
+    aw = Dict{Int,V}( (z(elm), v) for (elm, v) in atomicweights)
+    return Material(name, mf, aw, properties)
+end
+
 material(
     name::AbstractString,
     massfrac::Pair{Element,<:AbstractFloat}...;
-    density::Union{Missing,AbstractFloat}=missing,
-    a::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}(),
-    description::Union{Missing,AbstractString}=missing
-) = material(name, Dict(massfrac), density, a, description)
+    properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
+    atomicweights::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}(),
+) = material(name, Dict(massfrac), atomicweights=atomicweights, properties=properties)
 
 
 """
@@ -139,7 +138,7 @@ Example:
     > pure(n"Fe")
 """
 pure(elm::Element) =
-    material("Pure $(symbol(elm))", Dict{}(elm=>1.0), density(elm))
+    material("Pure $(symbol(elm))", Dict{}(elm=>1.0), properties=Dict{Symbol,Any}(:Density=>density(elm)))
 
 function Base.show(io::IO, mat::Material)
     res="$(name(mat))["
@@ -148,7 +147,7 @@ function Base.show(io::IO, mat::Material)
         res*=@sprintf("%s%s = %0.4f", comma, element(z).symbol, value(mf))
         comma=", "
     end
-    if !ismissing(density(mat))
+    if haskey(mat.properties,:Density)
         res*=@sprintf(", %0.2f g/cc)", density(mat))
     else
         res*="]"
@@ -164,7 +163,7 @@ Convert a DTSA-II style string into a material.
 function Base.convert(::Type{Material}, str::AbstractString)
     tmp = Dict{Element,Float64}()
     items = split(str,',')
-    density = missing
+    props = Dict{Symbol, Any}()
     name = item[1]
     for item in items[2:end]
         if (item[1]=='(') && (item[end]==')')
@@ -173,10 +172,10 @@ function Base.convert(::Type{Material}, str::AbstractString)
             qty = parse(Float64,zd[2])/100.0
             tmp[elm]=qty
         else
-            density = parse(Float64,zd[2])
+            props[:Density] = parse(Float64,zd[2])
         end
     end
-    return Material(name, tmp, density)
+    return material(name, tmp, properties=props)
 end
 
 
@@ -228,9 +227,8 @@ function asnormalized(mat::Material, n=1.0)
         return Material(
             "N[$(name(mat)),$(n)]",
             Dict( (z(elm), n*nonneg(mat,elm)/at) for elm in keys(mat) ),
-            mat[:Density],
             mat.a,
-            mat[:Description]
+            copy(mat.properties)
         )
     end
 end
@@ -295,20 +293,20 @@ Base.haskey(mat::Material, elm::Element) =
 
 
 """
-    atomicfraction(name::String, atomfracs::Dict{Element,Float64}, density = nothing, atomicweights::Dict{Element,Float64}=Dict())
+    atomicfraction(name::String, atomfracs::Pair{Element,Float64}...; properties::properties::Dict{Symbol, Any}, atomicweights::Dict{Element,Float64})
 
 Build a Material from atomic fractions (or stoichiometries).
 """
 function atomicfraction(
     name::AbstractString,
-    atomfracs::Dict{Element,U},
-    density::Union{Missing,AbstractFloat} = missing,
-    atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
-)::Material where {U<:Number,V<:AbstractFloat}
+    atomfracs::Pair{Element,U}...;
+    properties::Dict{Symbol, Any} = Dict{Symbol,Any}(),
+    atomicweights::Dict{Element,V} = Dict{Element,Float64}()
+)::Material where {U<:Real, V<:AbstractFloat}
     aw(elm) = get(atomicweights, elm, a(elm))
     norm = sum(af * aw(elm) for (elm, af) in atomfracs)
-    massfracs = Dict((elm, af * aw(elm) / norm) for (elm, af) in atomfracs)
-    return material(name, massfracs, density, atomicweights)
+    massfracs = Dict((elm, (aw(elm) / norm) * af) for (elm, af) in atomfracs)
+    return material(name, massfracs, atomicweights=atomicweights, properties=properties)
 end
 
 """
@@ -316,7 +314,7 @@ end
         ::Type{Material},
         expr::AbstractString;
         name = missing,
-        density = missing,
+        properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
         atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
     )::Material
 
@@ -326,7 +324,7 @@ function Base.parse(
     ::Type{Material},
     expr::AbstractString;
     name = missing,
-    density = missing,
+    properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
     atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
 )::Material where {V<:AbstractFloat}
     # Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
@@ -422,7 +420,7 @@ function Base.parse(
     if length(splt) > 1
         return mapreduce(
             t -> parse(Material, strip(t)),
-            (a, b) -> sum(a, b, name, density, atomicweights),
+            (a, b) -> sum(a, b, name=name, properties=properties, atomicweights=atomicweights),
             splt,
         )
     end
@@ -431,16 +429,16 @@ function Base.parse(
     if !isnothing(p)
         return parse(Float64, expr[firstindex(expr):prevind(expr,p)]) *
                parse(Material, expr[nextind(expr,p):lastindex(expr)],
-               name=expr[nextind(expr,p):lastindex(expr)], density=density, atomicweights=atomicweights)
+               name=expr[nextind(expr,p):lastindex(expr)], properties=properties, atomicweights=atomicweights)
     end
     # Then handle Material/N where N is a number
     p = findfirst(c -> c == '/', expr)
     if !isnothing(p)
         return (1.0 / parse(Float64, expr[nextidx(expr,p):lastindex(expr)])) *
-               parse(Material, expr[firstindex(expr):prevind(expr,p)], name=expr[firstindex(expr):previdx(expr,p)], density=density, atomicweights=atomicweights)
+               parse(Material, expr[firstindex(expr):prevind(expr,p)], name=expr[firstindex(expr):previdx(expr,p)], properties=properties, atomicweights=atomicweights)
     end
     # Finally parse material
-    return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr), density, atomicweights)
+    return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr)..., properties=properties, atomicweights=atomicweights)
 end
 
 macro mat_str(str)
@@ -564,17 +562,16 @@ function parsedtsa2comp(value::AbstractString)::Material
 	try
 		sp=split(value,",")
 		name=sp[1]
-		mf = Dict{Element,Float64}()
-		den = missing
+		mf, props = Dict{Element,Float64}(), Dict{Symbol, Any}()
 		for item in sp[2:end]
 			if item[1]=='(' && item[end]==')'
 				sp2=split(item[2:end-1],":")
 				mf[parse(Element, sp2[1])]=0.01*parse(Float64,sp2[2])
 			else
-				den = parse(Float64,item)
+				props[:Density] = parse(Float64,item)
 			end
 		end
-		return material(name, mf, den)
+		return material(name, mf, properties=props)
 	catch err
 		warn("Error parsing composition $(value) - $(err)")
 	end
@@ -604,7 +601,11 @@ function compositionlibrary()::Dict{String, Material}
         name, density = row[1], row[2]
         elmc = collect(zip(element.(1:94), row[3:96])) # (i->getindex(row,i)).(3:96)))
         data=Dict{Element,Float64}(filter(a->(!ismissing(a[2]))&&(a[2]>0.0), elmc))
-        m = material(name, data, density)
+        properties=Dict{Symbol,Any}()
+        if !ismissing(density)
+            properties[:Density]=density
+        end
+        m = material(name, data, properties=properties)
         result[name] = m
     end
     return result

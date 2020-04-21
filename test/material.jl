@@ -128,4 +128,38 @@ using NeXLCore
         @test para[:Color]=="Colorless to white, light yellow tint"
         @test para[:System]==:Monoclinic
     end
+    @testset "K412 w. uncertainty" begin
+        k412u = material("K412",
+                    n"Fe" => uv(0.0774, 0.0014),
+                    n"Al" => uv(0.0491, 0.0010),
+                    n"O"  => uv(0.4276, 0.0006),
+                    n"Ca" => parse(UncertainValue, "0.1090-+0.0012"),
+                    n"Si" => parse(UncertainValue, "0.2120+-0.0005"),
+                    n"Mg" => parse(UncertainValue, "0.1166±0.0010"),
+                    density=3.45,
+                    pedigree="NIST SRM-470",
+                    conductivity=:Insulator,
+                    description="NIST SRM glass - olivine simulant"
+                )
+        @test isapprox(value(k412u[n"O"]), 0.4276, atol=0.00001)
+        @test isapprox(σ(k412u[n"O"]), 0.0006, atol=0.00001)
+        @test isapprox(k412u[n"O"], uv(0.4276,0.0006), atol=0.00001)
+        @test isapprox(value(k412u[n"Si"]), 0.2120, atol=0.00001)
+        @test isapprox(σ(k412u[n"Si"]), 0.0005, atol=0.00001)
+        @test isapprox(analyticaltotal(k412u), 0.9917, atol=0.00005)
+        @test k412u[:Density]==3.45
+        @test startswith(k412u[:Pedigree],"NIST SRM")
+        @test k412u[:Conductivity]==:Insulator
+        @test startswith(k412u[:Description],"NIST SRM glass")
+
+        k412x = mat"0.4535⋅SiO2+0.0996⋅FeO+0.1933⋅MgO+0.1525⋅CaO+0.0927⋅Al2O3"
+        k412y = parse(Material, "0.4535*SiO2+0.0996*FeO+0.1933*MgO+0.1525*CaO+0.0927*Al2O3",name="K412")
+        @test isapprox(k412x, k412u, atol=0.0001)
+        @test isapprox(k412x, k412y, atol=0.0001)
+        @test name(k412y)=="K412"
+        q = parse(Material,"SiO2", name="Quartz", density=2.32, pedigree="Stoichiometric")
+        @test q[:Density]==2.32
+        @test q[:Pedigree]=="Stoichiometric"
+        @test name(q)=="Quartz"
+    end
 end

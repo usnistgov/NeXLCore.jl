@@ -276,7 +276,7 @@ hands.  Please report any bugs you find at [NeXLCore](https://github.com/Nichola
 There are a number of helpful plotting methods to take an overhead look at various NeXLCore attributes.
 
 Plot the X-ray energy for all transitions in all elements
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 using Gadfly
 display(plot(collect(ktransitions), mode = :Energy))
 display(plot(collect(ltransitions), mode = :Energy))
@@ -284,21 +284,21 @@ display(plot(collect(mtransitions), mode = :Energy))
 ```
 
 Plot the X-ray line weight for all transitions
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 display(plot(collect(ktransitions), mode = :Weight))
 display(plot(collect(ltransitions), mode = :Weight))
 display(plot(collect(mtransitions), mode = :Weight))
 ```
 
 Plot the edge energy for all subshells in all elements.
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 display(plot(collect(ksubshells), :EdgeEnergy))
 display(plot(collect(lsubshells), :EdgeEnergy))
 display(plot(collect(msubshells), :EdgeEnergy))
 ```
 
 Plot the fluorescence yield for all subshells in all elements.
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 display(plot(collect(ksubshells), :FluorescenceYield))
 display(plot(collect(lsubshells), :FluorescenceYield))
 display(plot(collect(msubshells), :FluorescenceYield))
@@ -306,21 +306,21 @@ display(plot(collect(msubshells), :FluorescenceYield))
 
 
 Finally, to compare MAC algorithms...
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 display(NeXLCore.compareMACs(n"C"))
 display(NeXLCore.compareMACs(n"U"))
 ```
 Or MAC algorithms one at a time...
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 display(plot(NeXLCore.FFASTDB, n"Ag"))
 display(plot(NeXLCore.DTSA, n"Au"))
 ```
 Or many elements at once...
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 plot(NeXLCore.FFASTDB, collect(keys(albite)),xmax=5.0e3)
 ```
 
 Or a Material MAC...
-```julia; fig_width=8; fig_weight=4; fig_ext=".svg";
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 plot(NeXLCore.FFASTDB, [keys(albite)..., albite], xmax=5.0e3)
 ```

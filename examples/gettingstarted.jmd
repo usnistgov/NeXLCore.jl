@@ -214,7 +214,7 @@ edgeenergy.(feka) # ionization edge energy
 
 Often we want to know the relative line-weights of the transitions.
 ```julia; term=true;
-normWeight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
+normweight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
 strength.(characteristic(n"Fe", ktransitions)) # Not normalized
 brightest(characteristic(n"Fe", ltransitions))
 ```

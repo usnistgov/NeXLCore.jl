@@ -48,7 +48,7 @@ export density # Returns Element or Mateial data
 export λ, ν, ω, wavenumber # wavelength, frequency, angular frequency and wavenumber of X-ray
 export edgeenergy # Ionization edge energy for an X-ray
 export weight # Returns CharXRay weights with the most intense in a shell = 1
-export normWeight # Returns CharXRay weights normalized by shell to a sum of one.
+export normweight # Returns CharXRay weights normalized by shell to a sum of one.
 export strength #
 export has # Element has a specific Transition
 export FFASTDB # Chantler's FFAST database
@@ -56,13 +56,15 @@ export DTSA   # Heinrich's IXCOM 11 MACs
 export mac # Calculates the MAC using the default or a specified algorithm
 export macU # Calculates the MAC using the default or a specified algorithm
 export shell # The shell (Shell(K),Shell(L),Shell(M),...) for an AtomicSubShell, Transition, CharXRay etc.
-export transitionsbyshell # Dictionary mapping transition families to lists of Transition(s)
+export transitionsbyshell # Dictionary mapping transition Shell to lists of Transition(s)
+export transitionsbysubshell # Dictionary mapping transition SubShell to lists of Transition(s)
 export atomicsubshells # Gets an iterator of AtomicSubShell for the specified element
 export brightest # Returns the brightest characteristic X-ray from a set of transitions for an element
 export splitbyshell # Creates a Dict{AtomicSubShell,CharXRay} from a collection of CharXRay and the associated inner AtomicSubShell.
 export relativeionizationcrosssection # Computes a number proportional to the ionization crosssection
 export ionizationcrosssection # Computes the absolute ionization crosssection
 export comptonShift # Computes the fractional compton shift
+export exists # Does a transition occur (according to our list...)
 export @n_str
 
 include("material.jl")

@@ -1,7 +1,9 @@
 using .Gadfly
 
 using Colors
-
+using HTTP
+using CSV
+using DataFrames
 
 const NeXLPalette = distinguishable_colors(
     66,
@@ -55,7 +57,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
     )
 end
 
-function plotXrayWeights(transitions::AbstractVector{Transition})
+function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Bool = false)
     layers, names = [], []
     colors = distinguishable_colors(
         length(transitions)+2,
@@ -66,13 +68,36 @@ function plotXrayWeights(transitions::AbstractVector{Transition})
         for elm in element.(elementrange())
             if has(elm, tr)
                 push!(x, z(elm))
-                push!(y, strength(characteristic(elm, tr)))
+                push!(y, schoonjan ? normweight(characteristic(elm, tr)) : strength(characteristic(elm, tr)))
             end
         end
         if !isempty(x)
             push!(names, repr(tr))
             push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
         end
+    end
+    if schoonjan  # Compare to Shoonjan's xraylib on GitHub
+        function parse2(tr)
+            ss1, ss2 = missing, missing
+            try
+                if tr[1]=='K'
+                    ss1 = n"K1"
+                    ss2 = (tr[2]≠'O' && tr[2]≠'P') ? parse(SubShell,tr[2:end]) : (tr[2]=='O' ? n"O3" : n"P3")
+                else
+                    ss1 = parse(SubShell,tr[1:2])
+                    ss2 = (tr[3]≠'O' && tr[3]≠'P') ? parse(SubShell,tr[3:end]) : (tr[3]=='O' ? n"O3" : n"P3")
+                end
+                return exists(ss1,ss2) ? Transition(ss1, ss2) : missing
+            catch
+                return missing
+            end
+        end
+        res= HTTP.get("https://github.com/tschoonj/xraylib/blob/master/data/radrate.dat?raw=true")
+        csv = CSV.read(res.body,delim=' ',ignorerepeated=true,header=0) |> DataFrame
+        insertcols!(csv, 3, Column2p=parse2.(csv[!,:Column2]))
+        filter!(r->(!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
+        insertcols!(csv, 3, Column2pp=CategoricalArray(map(n->"Schoonj $n", csv[!,:Column2p])))
+        push!(layers, layer(csv, x=:Column1, y=:Column3, color=:Column2pp))
     end
     Gadfly.plot(
         layers...,
@@ -97,7 +122,7 @@ function Gadfly.plot(sss::AbstractVector{SubShell}, mode=:EdgeEnergy)
     end
 end
 
-function plotFluorescenceYield(sss::AbstractVector{SubShell})
+function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool=false)
     layers, names = [], []
     colors = distinguishable_colors(
         length(sss)+2,
@@ -108,13 +133,21 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell})
         for elm in element.(elementrange())
             if has(elm, sh)
                 push!(x, z(elm))
-                push!(y, fluorescenceyield(atomicsubshell(elm, sh)))
+                push!(y, fluorescenceyield(atomicsubshell(elm, sh),NeXL))
             end
         end
         if !isempty(x)
             push!(names, repr(sh))
             push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
         end
+    end
+    if schoonjan
+        res= HTTP.get("https://github.com/tschoonj/xraylib/blob/master/data/fluor_yield.dat?raw=true")
+        csv = CSV.read(res.body,delim=' ',ignorerepeated=true,header=0) |> DataFrame
+        sssname = [ repr(ss) for ss in sss ]
+        filter!(r->r[:Column2] in sssname, csv)
+        insertcols!(csv, 3, Column2p=CategoricalArray(map(n->"Schoonj $n", csv[!,:Column2])))
+        push!(layers, layer(csv, x=:Column1, y=:Column3, color=:Column2p))
     end
     Gadfly.plot(
         layers...,

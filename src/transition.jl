@@ -148,6 +148,9 @@ const transitionsbyshell = Dict(
     Shell(5) => otransitions,
 )
 
+const transitionsbysubshell = Dict(
+    ss=>filter(tr->tr.innershell==ss,alltransitions) for ss in allsubshells)
+
 Base.isequal(tr1::Transition, tr2::Transition) =
     isequal(tr1.innershell, tr2.innershell) && isequal(tr1.outershell, tr2.outershell)
 
@@ -167,6 +170,14 @@ function transition(inner::SubShell, outer::SubShell)::Transition
     @assert !isnothing(ff) "$(inner)-$(outer) does not represent a known Transition."
     alltransitions[ff]
 end
+
+"""
+    exists(inner::SubShell, outer::SubShell)::Bool
+
+Does a transition exist in our database for this pair of shells?
+"""
+exists(inner::SubShell, outer::SubShell)::Bool =
+    !isnothing(findfirst(tr -> (tr.innershell == inner) && (tr.outershell == outer), alltransitions))
 
 Base.show(io::IO, tr::Transition) = print(io, tr.innershell, "-", tr.outershell)
 
@@ -256,13 +267,13 @@ strength(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64 
     fluorescenceyield(z(elm), tr.innershell.index, tr.outershell.index, ty)
 
 """
-    normWeight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
+    normweight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
 
 Return the nominal line strength for the specified transition in the specified element.
 The strength differs from the weight in that the weight is normalized to the most intense line in the shell.
 """
-normWeight(elm::Element, tr::Transition, overvoltage = 4.0) =
-    has(elm, tr) ? normWeight(characteristic(elm, tr), overvoltage) : 0.0
+normweight(elm::Element, tr::Transition, overvoltage = 4.0) =
+    has(elm, tr) ? normweight(characteristic(elm, tr), overvoltage) : 0.0
 
 """
     energy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -316,15 +327,15 @@ function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
 end
 
 """
-    normWeight(cxr::CharXRay)
+    normweight(cxr::CharXRay)
 
 The line weight of the specified characteristic X-ray with the sum of the
-weights equal to unity.
+weights in a subshell equals to unity.
 """
-function normWeight(cxr::CharXRay, overvoltage = 4.0)::Float64
+function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0, elm = overvoltage * energy(inner(cxr)), element(cxr)
     safeSS(z, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-    return strength(cxr) / sum(safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
+    return strength(cxr) / sum(safeSS(element(cxr), tr2) for tr2 in transitionsbysubshell[cxr.transition.innershell])
 end
 
 """

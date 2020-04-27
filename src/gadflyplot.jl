@@ -1,7 +1,7 @@
 using .Gadfly
 
 using Colors
-using HTTP
+using Pkg.Artifacts
 using CSV
 using DataFrames
 
@@ -30,11 +30,8 @@ end
 
 function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeXLPalette)
     layers, names = [], []
-    colors = distinguishable_colors(
-        length(transitions)+2,
-        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
-    )
-    for (i,tr) in enumerate(transitions)
+    colors = distinguishable_colors(length(transitions) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
+    for (i, tr) in enumerate(transitions)
         x, y = [], []
         for elm in element.(elementrange())
             if has(elm, tr)
@@ -59,11 +56,8 @@ end
 
 function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Bool = false)
     layers, names = [], []
-    colors = distinguishable_colors(
-        length(transitions)+2,
-        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0) ],
-    )
-    for (i,tr) in enumerate(transitions)
+    colors = distinguishable_colors(length(transitions) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
+    for (i, tr) in enumerate(transitions)
         x, y = [], []
         for elm in element.(elementrange())
             if has(elm, tr)
@@ -80,24 +74,24 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
         function parse2(tr)
             ss1, ss2 = missing, missing
             try
-                if tr[1]=='K'
+                if tr[1] == 'K'
                     ss1 = n"K1"
-                    ss2 = (tr[2]≠'O' && tr[2]≠'P') ? parse(SubShell,tr[2:end]) : (tr[2]=='O' ? n"O3" : n"P3")
+                    ss2 = (tr[2] ≠ 'O' && tr[2] ≠ 'P') ? parse(SubShell, tr[2:end]) : (tr[2] == 'O' ? n"O3" : n"P3")
                 else
-                    ss1 = parse(SubShell,tr[1:2])
-                    ss2 = (tr[3]≠'O' && tr[3]≠'P') ? parse(SubShell,tr[3:end]) : (tr[3]=='O' ? n"O3" : n"P3")
+                    ss1 = parse(SubShell, tr[1:2])
+                    ss2 = (tr[3] ≠ 'O' && tr[3] ≠ 'P') ? parse(SubShell, tr[3:end]) : (tr[3] == 'O' ? n"O3" : n"P3")
                 end
-                return exists(ss1,ss2) ? Transition(ss1, ss2) : missing
+                return exists(ss1, ss2) ? Transition(ss1, ss2) : missing
             catch
                 return missing
             end
         end
-        res= HTTP.get("https://github.com/tschoonj/xraylib/blob/master/data/radrate.dat?raw=true")
-        csv = CSV.read(res.body,delim=' ',ignorerepeated=true,header=0) |> DataFrame
-        insertcols!(csv, 3, Column2p=parse2.(csv[!,:Column2]))
-        filter!(r->(!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
-        insertcols!(csv, 3, Column2pp=CategoricalArray(map(n->"Schoonj $n", csv[!,:Column2p])))
-        push!(layers, layer(csv, x=:Column1, y=:Column3, color=:Column2pp))
+        artpath = downloadschoonjan()
+        csv = CSV.read("$artpath\\radrate.dat", delim = ' ', ignorerepeated = true, header = 0) |> DataFrame
+        insertcols!(csv, 3, Column2p = parse2.(csv[!, :Column2]))
+        filter!(r -> (!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
+        insertcols!(csv, 3, Column2pp = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2p])))
+        push!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2pp))
     end
     Gadfly.plot(
         layers...,
@@ -114,26 +108,39 @@ end
 
 Plot the edge energies/fluorescence yields associated with the specified vector of SubShell objects.
 """
-function Gadfly.plot(sss::AbstractVector{SubShell}, mode=:EdgeEnergy)
-    if mode==:FluorescenceYield
+function Gadfly.plot(sss::AbstractVector{SubShell}, mode = :EdgeEnergy)
+    if mode == :FluorescenceYield
         plotFluorescenceYield(sss::AbstractVector{SubShell})
     else
         plotEdgeEnergies(sss)
     end
 end
 
-function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool=false)
+# Download the data once per installation...
+function downloadschoonjan()
+    artifacts_toml = joinpath(@__DIR__, "Artifacts.toml")
+    hash = artifact_hash("schoonjan", artifacts_toml)
+    if hash == nothing || !artifact_exists(hash)
+        hash = create_artifact() do artifact_dir
+            # We create the artifact by simply downloading a few files into the new artifact directory
+            download("https://github.com/tschoonj/xraylib/blob/master/data/fluor_yield.dat?raw=true", joinpath(artifact_dir, "fluor_yield.dat"))
+            download("https://github.com/tschoonj/xraylib/blob/master/data/radrate.dat?raw=true", joinpath(artifact_dir, "radrate.dat"))
+        end
+        bind_artifact!(artifacts_toml, "schoonjan", hash)
+        @info "Downloaded Schoonjan data into Archive."
+    end
+    return artifact_path(hash)
+end
+
+function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = false)
     layers, names = [], []
-    colors = distinguishable_colors(
-        length(sss)+2,
-        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
-    )
+    colors = distinguishable_colors(length(sss) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, sh) in enumerate(sss)
         x, y = [], []
         for elm in element.(elementrange())
             if has(elm, sh)
                 push!(x, z(elm))
-                push!(y, fluorescenceyield(atomicsubshell(elm, sh),NeXL))
+                push!(y, fluorescenceyield(atomicsubshell(elm, sh), NeXL))
             end
         end
         if !isempty(x)
@@ -142,12 +149,12 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool=fa
         end
     end
     if schoonjan
-        res= HTTP.get("https://github.com/tschoonj/xraylib/blob/master/data/fluor_yield.dat?raw=true")
-        csv = CSV.read(res.body,delim=' ',ignorerepeated=true,header=0) |> DataFrame
-        sssname = [ repr(ss) for ss in sss ]
-        filter!(r->r[:Column2] in sssname, csv)
-        insertcols!(csv, 3, Column2p=CategoricalArray(map(n->"Schoonj $n", csv[!,:Column2])))
-        push!(layers, layer(csv, x=:Column1, y=:Column3, color=:Column2p))
+        artpath = downloadschoonjan()
+        csv = CSV.read("$artpath\\fluor_yield.dat", delim = ' ', ignorerepeated = true, header = 0) |> DataFrame
+        sssname = [repr(ss) for ss in sss]
+        filter!(r -> r[:Column2] in sssname, csv)
+        insertcols!(csv, 3, Column2p = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2])))
+        push!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2p))
     end
     Gadfly.plot(
         layers...,
@@ -155,7 +162,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool=fa
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Yield (Fractional)"),
-        Scale.y_log10(maxvalue=1.0),
+        Scale.y_log10(maxvalue = 1.0),
         Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
     )
 end
@@ -163,10 +170,7 @@ end
 
 function plotEdgeEnergies(sss::AbstractVector{SubShell})
     layers, names = [], []
-    colors = distinguishable_colors(
-        length(sss)+2,
-        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
-    )
+    colors = distinguishable_colors(length(sss) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, sh) in enumerate(sss)
         x, y = [], []
         for elm in element.(elementrange())
@@ -214,7 +218,7 @@ end
 
 Plot a MAC tabulations for the specified Element or Material.
 """
-function Gadfly.plot(alg::Type{<:NeXLAlgorithm}, elm::Union{Element,Material}; palette = NeXLPalette, xmax=20.0e3)
+function Gadfly.plot(alg::Type{<:NeXLAlgorithm}, elm::Union{Element,Material}; palette = NeXLPalette, xmax = 20.0e3)
     l1 = layer(ev -> log10(mac(elm, ev, alg)), 100.0, xmax, Geom.line, Gadfly.Theme(default_color = palette[1]))
     Gadfly.plot(
         l1,
@@ -230,10 +234,19 @@ end
 
 Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element or Material.
 """
-function Gadfly.plot(alg::Type{<:NeXLAlgorithm}, elms::AbstractVector; palette = NeXLPalette, xmin=100.0, xmax=20.0e3)
+function Gadfly.plot(
+    alg::Type{<:NeXLAlgorithm},
+    elms::AbstractVector;
+    palette = NeXLPalette,
+    xmin = 100.0,
+    xmax = 20.0e3,
+)
     layers, colors, names = Layer[], Color[], String[]
-    for (i,elm) in enumerate(elms)
-        append!(layers, layer(ev -> log10(mac(elm, ev, alg)), xmin, xmax, Geom.line, Gadfly.Theme(default_color = palette[i])))
+    for (i, elm) in enumerate(elms)
+        append!(
+            layers,
+            layer(ev -> log10(mac(elm, ev, alg)), xmin, xmax, Geom.line, Gadfly.Theme(default_color = palette[i])),
+        )
         push!(colors, palette[i])
         push!(names, name(elm))
     end
@@ -242,6 +255,6 @@ function Gadfly.plot(alg::Type{<:NeXLAlgorithm}, elms::AbstractVector; palette =
         Gadfly.Guide.xlabel("Energy (eV)"),
         Guide.ylabel("log₁₀(MAC (cm²/g))"),
         Gadfly.Guide.manual_color_key("Material", names, colors),
-        Gadfly.Coord.cartesian(xmin = max(0.0,xmin-100.0), xmax = xmax),
+        Gadfly.Coord.cartesian(xmin = max(0.0, xmin - 100.0), xmax = xmax),
     )
 end

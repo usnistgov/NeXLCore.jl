@@ -23,6 +23,11 @@ n(sh::Shell) = sh.n
 Base.isequal(sh1::Shell, sh2::Shell) = sh1.n == sh2.n
 Base.isless(sh1::Shell, sh2::Shell) = sh1.n > sh2.n # In binding energy order
 
+const KShell = Shell(1)
+const LShell = Shell(2)
+const MShell = Shell(3)
+const NShell = Shell(4)
+
 """
     SubShell
 

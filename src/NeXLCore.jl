@@ -21,6 +21,7 @@ include("parse.jl")
 export element # Construct Element structs
 export elementrange # Elements for which there is a complete set of data :-(
 export Shell # K, L, M, N etc
+export KShell, LShell, MShell, NShell # The first few Shell(s)
 export SubShell # K, L1, L2, L3, M1, ...
 export n, l, j # Quantum numbers
 export allsubshells, ksubshells, lsubshells, msubshells, nsubshells, osubshells, pshell # SubShell type lists
@@ -79,13 +80,15 @@ export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
-export Film # A thin film of Material
-export transmission # Transmission fraction through a Film
-export thickness # Of Film in cm
 export compare # Compare compositions as a DataFrame
 export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
 export @mat_str
+
+include("film.jl")
+export Film # A thin film of Material
+export transmission # Transmission fraction through a Film
+export thickness # Of Film in cm
 
 # For DTSA-II interop
 export todtsa2comp    # Write a mass fraction (+opt density) to a string parsable by parsedtsa2comp
@@ -138,5 +141,13 @@ include("kratio.jl")
 export KRatio # Represents a measured intensity ratio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
+
+include("properties.jl")
+# Methods for checking what properties are required for an algorithm.
+export minproperties # A list of the minimum required properties
+export hasminrequired # Checks whether a spectrum has necessary properties
+export requiredbutmissing # Lists missing properties
+
+
 
 end

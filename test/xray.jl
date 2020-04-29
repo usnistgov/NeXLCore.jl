@@ -208,7 +208,7 @@ using NeXLCore
         @testset "Film" begin
             f = Film(pure(n"C"), 1.0e-6)
             @test repr(f)=="10.0 nm of Pure C"
-            @test isapprox(0.981955, transmission(f,n"O K-L3",deg2rad(40.0)), atol=0.000001)
+            @test isapprox(0.9673838, transmission(f,n"O K-L3",deg2rad(40.0)), atol=0.000001)
             @test material(f)[n"C"]==1.0
             @test thickness(f)==1.0e-6 # cm
         end

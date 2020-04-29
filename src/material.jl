@@ -120,13 +120,15 @@ function material(
     atomicweights::Dict{Element, V}=Dict{Element,Float64}(),
     kwargs...
 ) where {U <: AbstractFloat, V <: AbstractFloat}
-    haskey(kwargs, :density) && ((properties[:Density] = kwargs[:density])==properties)
-    haskey(kwargs, :description) && ((properties[:Description] = kwargs[:description])==properties)
-    haskey(kwargs, :pedigree) && ((properties[:Pedigree] = kwargs[:pedigree])==properties)
-    haskey(kwargs, :conductivity) && ((properties[:Conductivity] = kwargs[:conductivity])==properties)
+    props = copy(properties)
+    reallyhas(kwa, sym) = haskey(kwa, sym) && (!ismissing(kwa[sym])) && (!isnothing(kwa[sym]))
+    reallyhas(kwargs, :density) && ((props[:Density] = kwargs[:density])==props)
+    reallyhas(kwargs, :description) && ((props[:Description] = kwargs[:description])==props)
+    reallyhas(kwargs, :pedigree) && ((props[:Pedigree] = kwargs[:pedigree])==props)
+    reallyhas(kwargs, :conductivity) && ((props[:Conductivity] = kwargs[:conductivity])==props)
     mf = Dict{Int,U}( (z(elm), v) for (elm, v) in massfrac)
     aw = Dict{Int,V}( (z(elm), v) for (elm, v) in atomicweights)
-    return Material(name, mf, aw, properties)
+    return Material(name, mf, aw, props)
 end
 
 material(
@@ -295,6 +297,14 @@ Does this material contain this element?
 """
 Base.haskey(mat::Material, elm::Element) =
     haskey(mat.massfraction, z(elm))
+
+"""
+    haskey(mat::Material, sym::Symbol)
+
+Does this material have this property defined?
+"""
+Base.haskey(mat::Material, sym::Symbol) =
+    haskey(mat.properties, sym)
 
 
 """
@@ -554,37 +564,6 @@ Compute the material MAC using the standard mass fraction weighted formula.
 """
 mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
     mapreduce(elm->mac(elm, xray, alg)*mat[elm],+,keys(mat))
-
-
-"""
-    A structure defining a thin film of Material.
-"""
-struct Film
-    material::Material
-    thickness::AbstractFloat
-end
-
-Base.show(io::IO, flm::Film) =
-    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material))
-
-"""
-    transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
-
-Compute the transmission fraction of an X-ray at the specified angle through a Film.
-"""
-transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
-    exp(-mac(flm.material, xrayE, alg) * csc(θ) * flm.thickness)
-
-"""
-    transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
-
-Compute the transmission fraction of an X-ray at the specified angle through a Film.
-"""
-transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
-    transmission(flm, energy(cxr), θ)
-
-material(film::Film) = film.material
-thickness(film::Film) = film.thickness
 
 function parsedtsa2comp(value::AbstractString)::Material
 	try

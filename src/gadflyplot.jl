@@ -4,6 +4,7 @@ using Colors
 using Pkg.Artifacts
 using CSV
 using DataFrames
+using Statistics
 
 const NeXLPalette = distinguishable_colors(
     66,
@@ -257,4 +258,47 @@ function Gadfly.plot(
         Gadfly.Guide.manual_color_key("Material", names, colors),
         Gadfly.Coord.cartesian(xmin = max(0.0, xmin - 100.0), xmax = xmax),
     )
+end
+
+function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Missing}=missing, delta::Bool=false, label::AbstractString="Material")
+    allelms = collect(union(map(keys,mats)...))
+    xs = [ name(mat) for mat in mats ]
+    layers, names, colors = Layer[], String[], RGB{Float64}[]
+    if ismissing(known)
+        known = material("the Mean", Dict{Element,Float64}( elm=>mean([value(mat[elm]) for mat in mats]) for elm in allelms))
+    end
+    for (i, elm) in enumerate(allelms)
+        if delta
+            append!(layers,
+                layer(x=xs, y=[ value(mat[elm])-known[elm] for mat in mats],
+                    ymin = [ value(mat[elm])-σ(mat[elm])-known[elm] for mat in mats],
+                    ymax = [ value(mat[elm])+σ(mat[elm])-known[elm] for mat in mats],
+                    Gadfly.Theme(default_color = NeXLPalette[i]), Geom.errorbar, Geom.point
+                )
+            )
+        else
+            append!(layers,
+                layer(x=xs, y=[ value(mat[elm]) for mat in mats],
+                    ymin = [ value(mat[elm])-σ(mat[elm]) for mat in mats],
+                    ymax = [ value(mat[elm])+σ(mat[elm]) for mat in mats],
+                    Gadfly.Theme(default_color = NeXLPalette[i]), Geom.errorbar, Geom.point
+                )
+            )
+        end
+        push!(names, name(elm))
+        push!(colors, NeXLPalette[i])
+    end
+    lighten(col)=weighted_color_mean(0.2, RGB(col), colorant"white")
+    if delta
+        plot(layers..., Guide.ylabel("Δ(Mass Fraction)"),
+            Guide.xlabel(label),
+            Guide.manual_color_key("Element", names, colors),
+            Guide.title("Difference from $(known)"),
+            Geom.hline(color="black"), yintercept=[0.0])
+    else
+        plot(layers..., Guide.ylabel("Mass Fraction"), Guide.xlabel(label), #
+                Guide.manual_color_key("Element", names, colors),
+                yintercept=[known[elm] for elm in allelms],
+                Geom.hline(color=[ lighten(col) for col in colors], style=:dash))
+    end
 end

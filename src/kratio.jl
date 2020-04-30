@@ -13,7 +13,7 @@ Properties: (These Symbols are intentionally the same used in NeXLSpectrum)
 
     :BeamEnergy incident beam energy in eV
     :TakeOffAngle in radians
-    :Coating A NeXLCore.Film object describing a conductive coating
+    :Coating A NeXLCore.Film object or Film[] detailing a conductive coating
 """
 struct KRatio
     element::Element

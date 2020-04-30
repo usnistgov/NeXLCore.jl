@@ -42,6 +42,9 @@ struct Material
     end
 end
 
+Base.copy(m::Material) =
+    Material(m.name, copy(m.massfraction), copy(m.a), copy(m.properties))
+
 elms(mat::Material) = Set(element(z) for z in keys(mat.massfraction))
 
 function Base.:*(k::AbstractFloat, mat::Material)::Material

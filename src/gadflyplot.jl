@@ -9,6 +9,7 @@ using Statistics
 const NeXLPalette = distinguishable_colors(
     66,
     Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), RGB(0 / 255, 168 / 255, 45 / 255)],
+    transform = deuteranopic,
 )[3:end]
 const NeXLColorblind = distinguishable_colors(
     66,
@@ -301,4 +302,20 @@ function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Miss
                 yintercept=[known[elm] for elm in allelms],
                 Geom.hline(color=[ lighten(col) for col in colors], style=:dash))
     end
+end
+
+function plot2(mats::AbstractVector{Material}; known::Union{Material, Missing}=missing, label::AbstractString="Material")
+    allelms = sort(convert(Vector{Element},collect(union(map(keys,mats)...))))
+    elmcol = Dict(elm=>NeXLPalette[i] for (i, elm) in enumerate(allelms))
+    xs, ymin, ymax, ygroups, colors = String[], Float64[], Float64[], Element[], Color[]
+    for mat in mats
+        append!(xs, [ name(mat) for elm in keys(mat) ])
+        append!(ymin, [ value(mat[elm])-σ(mat[elm]) for elm in keys(mat) ])
+        append!(ymax, [ value(mat[elm])+σ(mat[elm]) for elm in keys(mat) ])
+        append!(colors, [elmcol[elm] for elm in keys(mat)])
+        append!(ygroups, collect(keys(mat)))
+    end
+    plot(x=xs, ymin=ymin, ymax=ymax, color=colors, ygroup=ygroups,
+        Geom.subplot_grid(Geom.errorbar, free_y_axis=true), Scale.ygroup(labels=elm->symbol(elm), levels=allelms),
+        Guide.xlabel(label), Guide.ylabel("Mass Fraction by Element"))
 end

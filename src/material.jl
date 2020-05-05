@@ -523,7 +523,7 @@ function NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material},
         vals = ( mode==:AtomicFraction ? atomicfraction(mat) :
                 ( mode==:NormalizedMassFraction ? normalizedmassfraction(mat) :
                     massfraction(mat)))
-        tmp = [ name(mat), (get(vals, elm, 0.0) for elm in elms)..., analyticaltotal(mat) ]
+        tmp = [ name(mat), (value(get(vals, elm, 0.0)) for elm in elms)..., analyticaltotal(mat) ]
         push!(res, tmp)
     end
     return res

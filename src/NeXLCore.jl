@@ -118,6 +118,7 @@ export Burhop1965 # A fluorescence yield model
 export NeXL
 export fluorescenceyield # fluorescence yield models
 export characteristicyield
+export J # Mean ionization potential
 
 include("matu.jl")
 export MaterialLabel
@@ -147,7 +148,5 @@ include("properties.jl")
 export minproperties # A list of the minimum required properties
 export hasminrequired # Checks whether a spectrum has necessary properties
 export requiredbutmissing # Lists missing properties
-
-
 
 end

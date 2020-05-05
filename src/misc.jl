@@ -65,3 +65,12 @@ end
 
 fluorescenceyield(z::Int) =
     fluorescenceyield(z, Burhop1965)
+
+
+"""
+    J(elm)
+
+Mean ionization potential for the specified element in eV. (PAP1991 Eqn 7)
+"""
+J(elm::Element) = #C1
+    z(elm) * (10.04 + 8.25 * exp(-z(elm) / 11.22))

@@ -15,7 +15,7 @@ using Pkg
 
 Covert an atomic number into a PeriodicTable.Element
 """
-element(z::Int) =
+element(z::Integer) =
     PeriodicTable.elements[z]
 
 """

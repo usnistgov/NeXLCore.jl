@@ -11,6 +11,7 @@ using Reexport
 
 # Abstract model types
 abstract type NeXLAlgorithm end
+export NeXLAlgorithm
 
 include("algorithm.jl")
 include("element.jl")
@@ -108,9 +109,19 @@ export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitio
 export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
 
-include("misc.jl")
-export Castellano2004 # A Bremsstrahlung model
+include("bremsstrahlung.jl")
+export NeXLBremsstrahlung # <: NeXLAlgorithm
+export Kramers1923 # <: NeXLBremsstrahlung
+export Lifshin1974 # <: NeXLBremsstrahlung
+export Reed1975 # <: NeXLBremsstrahlung
+export Smith1975 # <: NeXLBremsstrahlung
+export Small1987 # <: NeXLBremsstrahlung
+export Trincavelli1997 # <: NeXLBremsstrahlung
+export Castellano2004a # <: NeXLBremsstrahlung
+export Castellano2004b # <: NeXLBremsstrahlung
 export bremsstrahlung # Bremsstrahlung model
+
+include("misc.jl")
 export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972

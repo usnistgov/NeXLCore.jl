@@ -34,22 +34,6 @@ Shown to be reliable for Z>36 or so.
 klinewidths(elm::Element) =
    1.73e-6*z(elm)^3.93
 
-
-struct Castellano2004 <: NeXLAlgorithm end
-"""
-    bremsstrahlung(::Type{Castellano2004}, elm::Element, e0::Real, e::Real)
-
-Castellano[2004]'s Bremsstrahlung model (Spectrochimica Acta Part B 59 (2004) 313–319)
-Nominally for e0 in 500 eV to 20,000 eV
-"""
-function bremsstrahlung(elm::Element, e0::Real, e::Real, ::Type{Castellano2004})
-    zz, E0, E = z(elm), e0/1000.0, e/1000.0
-    return ((-E + E0)*sqrt(zz)*(1.0 + ((-0.006626 + 0.0002906*E0)*zz)/E)*
-            (-77.28317356370013 + (148.5*E0^0.1293)/zz + 36.502*log(zz)))/E
-end
-bremsstrahlung(elm::Element, e0::Real, e::Real) =
-    bremsstrahlung(elm, e0, e, Castellano2004)
-
 struct Burhop1965 <: NeXLAlgorithm end
 
 """

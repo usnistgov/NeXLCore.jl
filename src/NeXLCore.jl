@@ -121,6 +121,18 @@ export Castellano2004a # <: NeXLBremsstrahlung
 export Castellano2004b # <: NeXLBremsstrahlung
 export bremsstrahlung # Bremsstrahlung model
 
+include("meanionizationpotential.jl")
+export NeXLMeanIonizationPotential
+export Bloch1933 # <: NeXLMeanIonizationPotential
+export Jensen1937 # <: NeXLMeanIonizationPotential
+export Wilson1941 # <: NeXLMeanIonizationPotential
+export Sternheimer1964 # <: NeXLMeanIonizationPotential
+export Springer1967 # <: NeXLMeanIonizationPotential
+export Zeller1975 # <: NeXLMeanIonizationPotential
+export Brizuela1990 # <: NeXLMeanIonizationPotential
+export Berger1983 # <: NeXLMeanIonizationPotential
+export J # Mean ionization potential
+
 include("misc.jl")
 export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
@@ -129,7 +141,6 @@ export Burhop1965 # A fluorescence yield model
 export NeXL
 export fluorescenceyield # fluorescence yield models
 export characteristicyield
-export J # Mean ionization potential
 
 include("matu.jl")
 export MaterialLabel

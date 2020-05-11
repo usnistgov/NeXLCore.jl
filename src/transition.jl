@@ -58,6 +58,23 @@ A complete list of all the transitions present in one or more elements.
 """
 const alltransitions = tuple(filter(tr -> n(shell(tr)) <= 3, everytransition(transitions))...)
 
+const transitionnames = tuple(map(tr->"$(tr.innershell)-$(tr.outershell)", alltransitions)...)
+
+"""
+    transition(str::AbstractString)::Transition
+
+Constructs a Transition structure from a string representation of the form \"K-L3\"
+or \"L3-M5\".  Asserts if the transition is not a known transition.
+"""
+function transition(str::AbstractString)::Transition
+    ff = findfirst(name -> name == str, transitionnames)
+    if isnothing(ff)
+        error("$(str) does not represent a known transition.")
+    end
+    return alltransitions[ff]
+end
+
+
 """
     ktransitions
 
@@ -93,6 +110,9 @@ A complete list of all the L-shell transitions.
 """
 const ltransitions = tuple(filter(tr -> shell(tr) == Shell(2), collect(alltransitions))...)
 
+const lalpha = transition.( ( "L3-M4", "L3-M5" ))
+const lbeta = transition.( ( "L2-M4", "L1-M2", "L1-M3", "L3-N4", "L3-N5", "L3-N1", "L3-O1" ))
+
 """
     mtransitions
 
@@ -100,6 +120,8 @@ A complete list of all the M-shell transitions.
 """
 const mtransitions = tuple(filter(tr -> shell(tr) == Shell(3), collect(alltransitions))...)
 
+const malpha = transition.( ("M5-N6", "M5-N7") )
+const mbeta = transition.( ( "M4-N6", ))
 """
     ntransitions
 
@@ -128,7 +150,13 @@ const transitionsbygroup = Dict(
     "Kb" => kbeta,
     "Kother" => kother,
     "L" => ltransitions,
+    "Lα" => lalpha,
+    "La" => lalpha,
+    "Lβ" => lbeta,
     "M" => mtransitions,
+    "Mα" => malpha,
+    "Ma" => malpha,
+    "Mβ" => mbeta,
     "N" => ntransitions,
     "O" => otransitions,
 )
@@ -191,7 +219,7 @@ struct CharXRay
     z::Int
     transition::Transition
     function CharXRay(z::Int, transition::Transition)
-        @assert charactericXRayAvailable(z, transition.innershell.index, transition.outershell.index, NeXL)
+        @assert charactericXRayAvailable(z, transition.innershell.index, transition.outershell.index, NeXL) "$z $transition unknown!"
         "$(symbol(element(z))) $(transition) does not occur."
         return new(z, transition)
     end

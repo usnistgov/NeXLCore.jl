@@ -1,0 +1,22 @@
+```julia
+using ModelingToolkit, OrdinaryDiffEqn
+
+@parameters E eq Z A Jj
+@variables ρz(E)
+@derivatives D'~E
+
+eqns = [
+   D(E) = (2π e^4 Z)/(A E) log(1.166 E/J)
+]
+
+sys = ODESystem(eqns)
+
+u0 = [ E=> 20.0e3 ]
+elm = n"Fe" # Initial conditions
+p = [ Z=>z(elm), A=>a(elm), Jj = J(Berger1982,elm), eq = 1.0 ]
+prob = ODEProblem(sys,u0,tspan,p,jac=true)
+
+tspan = (20.0e3,100.0)
+prob = ODEProblem(sys, u0, Espan, p, jac=true)
+sol = solve(prob,Tsit5())
+```

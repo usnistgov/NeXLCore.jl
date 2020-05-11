@@ -83,22 +83,6 @@ end
 Base.parse(::Type{AtomicSubShell}, str::AbstractString)::AtomicSubShell =
      atomicsubshell(str)
 
-const transitionnames = tuple(map(tr->"$(tr.innershell)-$(tr.outershell)", alltransitions)...)
-
-"""
-    transition(str::AbstractString)::Transition
-
-Constructs a Transition structure from a string representation of the form \"K-L3\"
-or \"L3-M5\".  Asserts if the transition is not a known transition.
-"""
-function transition(str::AbstractString)::Transition
-    ff = findfirst(name -> name == str, transitionnames)
-    if isnothing(ff)
-        error("$(str) does not represent a known transition.")
-    end
-    return alltransitions[ff]
-end
-
 Base.parse(::Type{Transition}, str::AbstractString) =
         transition(str)
 

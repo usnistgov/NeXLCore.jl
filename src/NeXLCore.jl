@@ -38,6 +38,7 @@ export Transition # An X-ray transition
 export transition # Constructs Transition from SubShell objects or a string
 export alltransitions, ktransitions, ltransitions, mtransitions, ntransitions, otransitions
 export kalpha, kbeta, kother # K-L?, K->M? and K->!L
+export lalpha, lbeta, malpha, mbeta
 export CharXRay # A characteristic X-ray
 export characteristic # Constructs CharXRay
 export inner, outer  # Returns AtomiShell for inner and outer CharXRay

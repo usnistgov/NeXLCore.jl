@@ -60,7 +60,10 @@ function Base.sum(
     mat2::Material;
     name::Union{AbstractString, Missing}=missing,
     properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
-    kwargs...
+    density::Union{Missing, AbstractFloat}=missing,
+    description::Union{Missing, AbstractString}=missing,
+    pedigree::Union{Missing, AbstractString}=missing,
+    conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 )::Material
     mf = Dict( ( elm, mat1[elm] + mat2[elm] ) for elm in union(keys(mat1),keys(mat2)) )
     aw=Dict{Element,Float64}()
@@ -69,7 +72,7 @@ function Base.sum(
         aw[elm]=(mat1[elm]+mat2[elm])/(mat1[elm]/a(elm,mat1)+mat2[elm]/a(elm,mat2))
     end
     name = ismissing(name) ? "$(mat1.name)+$(mat2.name)" : name
-    return material(name, mf; properties=properties, atomicweights=aw, kwargs...)
+    return material(name, mf; properties=properties, atomicweights=aw, density=density, description=description, conductivity=conductivity, pedigree=pedigree)
 end
 
 
@@ -121,14 +124,17 @@ function material(
     massfrac::Dict{Element,U};
     properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
     atomicweights::Dict{Element, V}=Dict{Element,Float64}(),
-    kwargs...
+    density::Union{Missing, AbstractFloat}=missing,
+    description::Union{Missing, AbstractString}=missing,
+    pedigree::Union{Missing, AbstractString}=missing,
+    conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 ) where {U <: AbstractFloat, V <: AbstractFloat}
     props = copy(properties)
+    (!ismissing(density)) && ((props[:density]=density)==density)
+    (!ismissing(description)) && ((props[:description]=description)==description)
+    (!ismissing(pedigree)) && ((props[:pedigree]=pedigree)==pedigree)
+    (!ismissing(conductivity)) && ((props[:conductivity]=conductivity)==conductivity)
     reallyhas(kwa, sym) = haskey(kwa, sym) && (!ismissing(kwa[sym])) && (!isnothing(kwa[sym]))
-    reallyhas(kwargs, :density) && ((props[:Density] = kwargs[:density])==props)
-    reallyhas(kwargs, :description) && ((props[:Description] = kwargs[:description])==props)
-    reallyhas(kwargs, :pedigree) && ((props[:Pedigree] = kwargs[:pedigree])==props)
-    reallyhas(kwargs, :conductivity) && ((props[:Conductivity] = kwargs[:conductivity])==props)
     mf = Dict{Int,U}( (z(elm), v) for (elm, v) in massfrac)
     aw = Dict{Int,V}( (z(elm), v) for (elm, v) in atomicweights)
     return Material(name, mf, aw, props)
@@ -139,9 +145,13 @@ material(
     massfrac::Pair{Element, U}...;
     properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
     atomicweights::Dict{Element, V}=Dict{Element,Float64}(),
-    kwargs...
+    density::Union{Missing, AbstractFloat}=missing,
+    description::Union{Missing, AbstractString}=missing,
+    pedigree::Union{Missing, AbstractString}=missing,
+    conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 ) where {U <: AbstractFloat, V <: AbstractFloat} =
-    material(name, Dict(massfrac); properties=properties, atomicweights=atomicweights, kwargs...)
+    material(name, Dict(massfrac); properties=properties, atomicweights=atomicweights, density=density,
+        description=description, pedigree=pedigree, conductivity=conductivity)
 
 """
     pure(elm::Element)
@@ -316,7 +326,11 @@ Base.haskey(mat::Material, sym::Symbol) =
         atomfracs::Union{Dict{Element,Float64},Pair{Element,Float64}...};
         properties::properties::Dict{Symbol, Any},
         atomicweights::Dict{Element,Float64},
-        kwargs...) # density, description, pedigree, conductivity
+        density::Union{Missing, AbstractFloat}=missing,
+        description::Union{Missing, AbstractString}=missing,
+        pedigree::Union{Missing, AbstractString}=missing,
+        conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
+) # density, description, pedigree, conductivity
 
 Build a Material from atomic fractions (or stoichiometries).
 """
@@ -325,21 +339,29 @@ atomicfraction(
     atomfracs::Pair{Element,U}...;
     properties::Dict{Symbol, Any} = Dict{Symbol,Any}(),
     atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
-    kwargs...
+    density::Union{Missing, AbstractFloat}=missing,
+    description::Union{Missing, AbstractString}=missing,
+    pedigree::Union{Missing, AbstractString}=missing,
+    conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 ) where { U<:Real, V<:AbstractFloat } =
-    atomicfraction(name, Dict(atomfracs); properties=properties, atomicweights=atomicweights, kwargs...)
+    atomicfraction(name, Dict(atomfracs); properties=properties, atomicweights=atomicweights, density=density,
+        description=description, pedigree=pedigree, conductivity=conductivity)
 
 function atomicfraction(
     name::AbstractString,
     atomfracs::Dict{Element,U};
     properties::Dict{Symbol, Any} = Dict{Symbol,Any}(),
     atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
-    kwargs...
+    density::Union{Missing, AbstractFloat}=missing,
+    description::Union{Missing, AbstractString}=missing,
+    pedigree::Union{Missing, AbstractString}=missing,
+    conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 ) where { U<:Real, V<:AbstractFloat }
     aw(elm) = get(atomicweights, elm, a(elm))
     norm = sum(af * aw(elm) for (elm, af) in atomfracs)
     massfracs = Dict((elm, (aw(elm) / norm) * af) for (elm, af) in atomfracs)
-    return material(name, massfracs; atomicweights=atomicweights, properties=properties, kwargs...)
+    return material(name, massfracs; atomicweights=atomicweights, properties=properties, density=density,
+        description=description, pedigree=pedigree, conductivity=conductivity)
 end
 
 """
@@ -363,7 +385,10 @@ function Base.parse(
     name::Union{AbstractString,Missing}=missing,
     properties::Dict{Symbol,Any}=Dict{Symbol,Any}(),
     atomicweights::Dict{Element,V}=Dict{Element,Float64}(),
-    kwargs...
+    density::Union{Missing, AbstractFloat}=missing,
+    description::Union{Missing, AbstractString}=missing,
+    pedigree::Union{Missing, AbstractString}=missing,
+    conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 ) where { V<:AbstractFloat }
     # Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
     function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
@@ -457,8 +482,8 @@ function Base.parse(
     splt = split(expr, c -> c == '+')
     if length(splt) > 1
         return mapreduce(
-            t -> parse(Material, strip(t), properties=properties, atomicweights=atomicweights, kwargs...),
-            (a, b) -> sum(a, b, name=name, properties=properties, kwargs...),
+            t -> parse(Material, strip(t), properties=properties, atomicweights=atomicweights, density=density, description=description, conductivity=conductivity, pedigree=pedigree),
+            (a, b) -> sum(a, b, name=name, properties=properties, density=density, description=description, conductivity=conductivity, pedigree=pedigree),
             splt
         )
     end
@@ -468,7 +493,7 @@ function Base.parse(
         nm = ismissing(name) ? expr[nextind(expr,p):lastindex(expr)] : name
         return parse(Float64, expr[firstindex(expr):prevind(expr,p)]) *
                parse(Material, expr[nextind(expr,p):lastindex(expr)], name=nm,
-                    properties=properties, atomicweights=atomicweights, kwargs...)
+                    properties=properties, atomicweights=atomicweights, density=density, description=description, conductivity=conductivity, pedigree=pedigree)
     end
     # Then handle Material/N where N is a number
     p = findfirst(c -> c == '/', expr)
@@ -476,10 +501,10 @@ function Base.parse(
         nm = ismissing(name) ? expr[firstindex(expr):previdx(expr,p)] : name
         return (1.0 / parse(Float64, expr[nextidx(expr,p):lastindex(expr)])) *
                parse(Material, expr[firstindex(expr):prevind(expr,p)], name=nm,
-                    properties=properties, atomicweights=atomicweights, kwargs...)
+                    properties=properties, atomicweights=atomicweights, density=density, description=description, conductivity=conductivity, pedigree=pedigree)
     end
     # Finally parse material
-    return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr); properties=properties, atomicweights=atomicweights, kwargs...)
+    return atomicfraction(ismissing(name) ? expr : name, parseCompH2(expr); properties=properties, atomicweights=atomicweights, density=density, description=description, conductivity=conductivity, pedigree=pedigree)
 end
 
 macro mat_str(str)

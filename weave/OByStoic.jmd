@@ -7,17 +7,17 @@ using NeXLCore
 Start with a measured dictionary of mass fractions and use the function `obystoichiometry(...)` to calculate the mass
 fraction of oxygen (using the default set of valences.)
 ```julia
-measured=Dict(n"Al"=>0.06986,n"Si"=>0.042324,n"Ca"=>0.063917,n"Ti"=>0.072963,n"Zn"=>0.11421,n"Ge"=>0.317435)
-measured[n"O"]=obystoichiometry(measured)
+measured = Dict(n"Al"=>0.06986, n"Si"=>0.042324, n"Ca"=>0.063917, n"Ti"=>0.072963, n"Zn"=>0.11421, n"Ge"=>0.317435)
+measured[n"O"] = obystoichiometry(measured)
 ```
 
 ```julia
 material("ADM-65005a",measured)
 ```
-The variable `NeXLCore.valence` contains the default valences.  Copy it and then edit it to use different  assumptions.
+The variable `NeXLCore.valences` contains the default valences.  Copy it and then edit it to use different  assumptions.
 
 ```julia
-altvalences=copy([ NeXLCore.valence... ])
+altvalences=copy([ NeXLCore.valences... ])
 altvalences[z(n"Fe")]=3
 ```
 In one case, FeO, and in the other Fe<sub>2</sub>O<sub>3</sub>.

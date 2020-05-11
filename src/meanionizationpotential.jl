@@ -1,23 +1,137 @@
 
+"""
+Algorithms that implement the mean ionization potential.  The mean ionization potential is the primary parameter
+in continuous slowing down models of electron energy loss in matter.  Electrons primarily lose energy through
+two mechanisms - 1) collision stopping power parameterized by J, the mean ionization potential; and 2)
+Bremsstrahlung production.  Two or three orders of magnitude more energy is lost to collisional loss so
+collisional loss dominates the process and losses due to Bremsstrahlung production are insignificant
+relative to the uncertainty in collisional loss.
+
+Implement this:
+
+    J(::Type{<:NeXLMeanIonizationPotential}, z)  # in eV
+
+Also provided:
+
+    J(::Type{<:NeXLMeanIonizationPotential}, elm::Element)  # in eV
+"""
 abstract type NeXLMeanIonizationPotential <: NeXLAlgorithm end
 
+"""
+@article{von1933bremsvermogen,
+  title={Bremsverm{\"o}gen von Atomen mit mehreren Elektronen (Braking capabilities of multi-electron atoms)},
+  author={von Bloch, F},
+  journal={Z. Phys},
+  volume={81},
+  pages={363},
+  year={1933}
+}
+"""
 struct Bloch1933 <: NeXLMeanIonizationPotential end
+
+"""
+@article{jensen1937eigenschwingungen,
+  title={Eigenschwingungen eines fermi-gases und anwendung auf die blochsche bremsformel f{\"u}r schnelle teilchen},
+  author={Jensen, Hans},
+  journal={Zeitschrift f{\"u}r Physik},
+  volume={106},
+  number={9-10},
+  pages={620--632},
+  year={1937},
+  publisher={Springer}
+}
+"""
 struct Jensen1937 <: NeXLMeanIonizationPotential end
+
+"""
+@article{wilson1941range,
+  title={Range and ionization measurements on high speed protons},
+  author={Wilson, Robert R},
+  journal={Physical Review},
+  volume={60},
+  number={11},
+  pages={749},
+  year={1941},
+  publisher={APS}
+}
+"""
 struct Wilson1941 <: NeXLMeanIonizationPotential end
+
+"""
+Cited personal communication in
+@article{berger196410,
+  title={10. Tables of energy-losses and ranges of electrons and positrons},
+  author={Berger, M and Seltzer, S},
+  journal={Studies in penetration of charged particles in matter},
+  number={39},
+  pages={205},
+  year={1964}
+}
+"""
 struct Sternheimer1964 <: NeXLMeanIonizationPotential end
+
+"""
+@article{springer1967electron,
+  title={Electron Transport in Amorphous Materials. I},
+  author={Springer, Bernard},
+  journal={Physical Review},
+  volume={154},
+  number={3},
+  pages={614},
+  year={1967},
+  publisher={APS}
+}
+"""
 struct Springer1967 <: NeXLMeanIonizationPotential end
-struct Zeller1975 <: NeXLMeanIonizationPotential end
+
+"""
+@article{coulon1973determination,
+  title={D{\'e}termination th{\'e}oretique du facteur de r{\'e}trodiffusion en microanalyse par {\'e}mission X},
+  author={Coulon, J and Zeller, C},
+  journal={CR Acad Sci Paris},
+  volume={276},
+  pages={215--218},
+  year={1973}
+}
+"""
+struct Zeller1973 <: NeXLMeanIonizationPotential end
+
+"""
+@article{brizuela1990study,
+  title={Study of mean excitation energy and K-shell effect for electron probe microanalysis},
+  author={Brizuela, Horacio and Riveros, Jos{\'e} Alberto},
+  journal={X-Ray Spectrometry},
+  volume={19},
+  number={4},
+  pages={173--176},
+  year={1990},
+  publisher={Wiley Online Library}
+}
+"""
 struct Brizuela1990 <: NeXLMeanIonizationPotential end
-struct Berger1983 <: NeXLMeanIonizationPotential end
+
+"""
+@techreport{berger1982national,
+  title={National Bureau of Standards, Report NBSIR 82-2550},
+  author={Berger, MJ and Seltzer, SM},
+  journal={NBS, Washington, DC},
+  year={1982},
+  url={https://nvlpubs.nist.gov/nistpubs/Legacy/IR/nbsir82-2550A.pdf}
+}
+
+According to B&S "The continuous-slowing-down approximation, i.e., the use of a stopping power to describe the
+gradual energy loss along the electron track, ceases to be meaningful at energies below several hundred eV."
+"""
+struct Berger1982 <: NeXLMeanIonizationPotential end
 
 J(::Type{Bloch1933}, z) = 13.5 * z
 J(::Type{Jensen1937}, z) = 9.0 * z * (1.0 + 0.5 * z^(-2.0 / 3.0))
 J(::Type{Wilson1941}, z) = 11.5 * z
 J(::Type{Sternheimer1964}, z) = z >= 12 ? z * (9.76 + 58.82 * z^-1.19) : J(Bloch1933, z)
 J(::Type{Springer1967}, z) = z * ((9.0 * (1.0 + z^(-2.0/3.0))) + (0.03 * z))
-J(::Type{Zeller1975}, z) = z * (10.04 + 8.25 * exp(-z / 11.22))
+J(::Type{Zeller1973}, z) = z * (10.04 + 8.25 * exp(-z / 11.22))
 J(::Type{Brizuela1990}, z) = 22.4 * z^0.828
-J(::Type{Berger1983}, z::Int) = (
+J(::Type{Berger1982}, z::Int) = (
     21.8,  # 21-21+1 = H
     41.8,
     40.0,
@@ -119,5 +233,6 @@ J(::Type{Berger1983}, z::Int) = (
     980.0,
     994.0, # Z = 120-21+1 = 100
 )[z]
-J(ty::Type{Berger1983}, elm::Element) = J(Berger1983, z(elm))
+J(ty::Type{Berger1982}, elm::Element) = J(Berger1982, z(elm))
 J(ty::Type{<:NeXLMeanIonizationPotential}, elm::Element) = J(ty, convert(Float64, z(elm)))
+J(ty::Type{<:NeXLMeanIonizationPotential}, mat::Material) = sum(mat[elm]*J(ty, convert(Float64, z(elm))),keys(mat))

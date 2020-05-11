@@ -11,7 +11,7 @@ using Gadfly
 ```
 
 ```julia; fig_height=6; fig_width=8; fig_ext=".svg"
-algs = Iterators.reverse( (Bloch1933, Jensen1937, Wilson1941, Sternheimer1964, Springer1967, Zeller1975, Brizuela1990, Berger1983,) )
+algs = Iterators.reverse( (Bloch1933, Jensen1937, Wilson1941, Sternheimer1964, Springer1967, Zeller1973, Brizuela1990, Berger1982,) )
 zs = 1:99
 colors = Scale.color_discrete_hue().f(length(algs))
 layers = [ layer(x = zs, y = map(z->J(alg,z),zs), Theme(default_color=color(colors[i]))) for (i,alg) in enumerate(algs) ]
@@ -20,7 +20,7 @@ plot(layers..., Guide.manual_color_key("Algorithm", collect(repr.(algs)), colors
 ```
 Looking more close at the important low-Z end.
 ```julia; fig_height=6; fig_width=8; fig_ext=".svg"
-algs = Iterators.reverse( (Bloch1933, Jensen1937, Wilson1941, Sternheimer1964, Springer1967, Zeller1975, Brizuela1990, Berger1983,) )
+algs = Iterators.reverse( (Bloch1933, Jensen1937, Wilson1941, Sternheimer1964, Springer1967, Zeller1973, Brizuela1990, Berger1982,) )
 zs = 1:20
 colors = Scale.color_discrete_hue().f(length(algs))
 layers = [ layer(x = zs, y = map(z->J(alg,z),zs), Theme(default_color=color(colors[i]))) for (i,alg) in enumerate(algs) ]
@@ -28,8 +28,9 @@ plot(layers..., Guide.manual_color_key("Algorithm", collect(repr.(algs)), colors
   Guide.xlabel("Atomic Number (Z)"), Guide.ylabel("eV"))
 ```
 
-If we presume that Berger (1983) is the most accurate, then Zeller (1975) is about as good as it gets for the analytical
+If we presume that Berger (1982) is the most accurate, then Zeller (1975) is about as good as it gets for the analytical
 expressions.
 
 If we assume that each element acts independently, the we would expect that
-``\frac{\delta E}{\delta \rho z} = \sum_{z} \frac{2 \pi e^4 Z}{A E} log(1.166 \frac{E}{J_z}) `` in ``\frac{eV cm^2}{g}``
+``\frac{\delta E}{\delta \rho z} = \sum_{z} C_z \frac{2 \pi e^4 Z}{A E} log(1.166 \frac{E}{J_z}) `` where ``C_z`` is
+the mass-fraction of element ``z``.

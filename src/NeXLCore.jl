@@ -128,7 +128,7 @@ export Jensen1937 # <: NeXLMeanIonizationPotential
 export Wilson1941 # <: NeXLMeanIonizationPotential
 export Sternheimer1964 # <: NeXLMeanIonizationPotential
 export Springer1967 # <: NeXLMeanIonizationPotential
-export Zeller1975 # <: NeXLMeanIonizationPotential
+export Zeller1973 # <: NeXLMeanIonizationPotential
 export Brizuela1990 # <: NeXLMeanIonizationPotential
 export Berger1983 # <: NeXLMeanIonizationPotential
 export J # Mean ionization potential

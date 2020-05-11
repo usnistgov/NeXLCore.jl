@@ -130,7 +130,7 @@ export Sternheimer1964 # <: NeXLMeanIonizationPotential
 export Springer1967 # <: NeXLMeanIonizationPotential
 export Zeller1973 # <: NeXLMeanIonizationPotential
 export Brizuela1990 # <: NeXLMeanIonizationPotential
-export Berger1983 # <: NeXLMeanIonizationPotential
+export Berger1982 # <: NeXLMeanIonizationPotential
 export J # Mean ionization potential
 
 include("misc.jl")

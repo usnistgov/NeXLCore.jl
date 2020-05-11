@@ -90,7 +90,7 @@ Return the density in g/cm³ (Might be 'missing')
 """
 density(mat::Material) = property(mat,:Density)
 description(mat::Material) = property(mat,:Description)
-pedigree(mat::Material) = property(mat, :pedigree)
+pedigree(mat::Material) = property(mat, :Pedigree)
 
 property(mat::Material, sym::Symbol) = get(mat.properties, sym, missing)
 
@@ -130,10 +130,10 @@ function material(
     conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
 ) where {U <: AbstractFloat, V <: AbstractFloat}
     props = copy(properties)
-    (!ismissing(density)) && ((props[:density]=density)==density)
-    (!ismissing(description)) && ((props[:description]=description)==description)
-    (!ismissing(pedigree)) && ((props[:pedigree]=pedigree)==pedigree)
-    (!ismissing(conductivity)) && ((props[:conductivity]=conductivity)==conductivity)
+    (!ismissing(density)) && ((props[:Density]=density)==density)
+    (!ismissing(description)) && ((props[:Description]=description)==description)
+    (!ismissing(pedigree)) && ((props[:Pedigree]=pedigree)==pedigree)
+    (!ismissing(conductivity)) && ((props[:Conductivity]=conductivity)==conductivity)
     reallyhas(kwa, sym) = haskey(kwa, sym) && (!ismissing(kwa[sym])) && (!isnothing(kwa[sym]))
     mf = Dict{Int,U}( (z(elm), v) for (elm, v) in massfrac)
     aw = Dict{Int,V}( (z(elm), v) for (elm, v) in atomicweights)

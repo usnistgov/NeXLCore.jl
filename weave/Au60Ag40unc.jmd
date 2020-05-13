@@ -1,0 +1,47 @@
+### Computing the Composition of SRM-481
+One of the Au-Ag wires is nominally 59.50±1.20% Au and 40.20±0.90% Ag according to the SRM certificate. We will use
+`NeXLUncertainties` and `NeXLCore` to compute various different representations of the composition (normalized, atom
+fraction, etc.)
+
+```julia
+using NeXLCore
+using DataFrames
+```
+Let's set up the `UncertainValues` object containing the input values which include the mass fractions of each element
+and the nominal atomic weight of each element with uncertainties.
+```julia
+mat = "Au60Ag40"
+inplbls = [ MassFractionLabel(mat,n"Ag"), AtomicWeightLabel(mat,n"Ag"),
+            MassFractionLabel(mat,n"Au"), AtomicWeightLabel(mat,n"Au") ]
+inpvals = [ 0.4020, 107.8682, 0.5950, 196.966570 ]
+inpcovs = [ (0.0090)^2 0 0 0; 0 (0.0002)^2 0 0; 0 0 (0.0120)^2 0; 0 0 0 (0.000004)^2 ]
+inputs = uvs(inplbls, inpvals, inpcovs)
+```
+`mf2comp(...)` defined in `NeXLCore` takes the inputs and computes the atom fractions, normalized mass fractions,
+mean atomic number, and mean atomic weight while propagating uncertaities in the input variables into the output
+variables.  In both the case of the atom fraction and the normalized mass fraction, the normalization step introduces
+correlations between the output values.
+```julia
+afs = mf2comp( mat, inputs)
+```
+
+The data can also be output as a DataFrame to simplify presentation and exporting to CSV files.
+```julia
+asa(DataFrame,afs)
+```
+To access a single value, you can use bracket notation and the label associated with the desired parameter.
+```julia
+afs[MeanAz(mat)], afs[AtomicFractionLabel(mat,n"Au")], afs[NormMassFractionLabel(mat,n"Au")]
+```
+Or you can iterate over all the labels.  Note this style of presentation is suitable if these numbers are to be
+reported as the final value in a calculation.  The full values+covariance matrix representation is required if
+the values will be used in subsequent calculations.
+```julia
+map(lbl->(lbl => afs[lbl]),labels(afs))
+```
+Let's time this...
+```julia
+using BenchmarkTools
+@btime mf2comp( mat, inputs);
+```
+Not to shabby!?

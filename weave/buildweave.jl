@@ -12,6 +12,7 @@ let start_dir = pwd()
     weave(joinpath(@__DIR__, "OByStoic.jmd"), out_path=joinpath(outpath, "OByStoic.html"))
     weave(joinpath(@__DIR__, "fluoryield.jmd"), out_path=joinpath(outpath, "fluoryield.html"))
     weave(joinpath(@__DIR__, "meanionizationpotential.jmd"), out_path=joinpath(outpath, "meanionizationpotential.html"))
+    weave(joinpath(@__DIR__, "Au60Ag40unc.jmd"), out_path=joinpath(outpath, "Au60Ag40unc.html"))
 
     cd(start_dir)
 end

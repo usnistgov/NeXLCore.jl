@@ -44,4 +44,4 @@ Let's time this...
 using BenchmarkTools
 @btime mf2comp( mat, inputs);
 ```
-Not to shabby!?
+Not too shabby!?

@@ -11,7 +11,6 @@ using CSV
 
 function loadAltWeights()
     path = dirname(pathof(@__MODULE__))
-    #path = "C:\\Users\\nicho\\.julia\\dev\\NeXLCore\\src"
     xrw = Dict{Tuple{Int, Int},Vector{Tuple{Int, Int, Float64}}}()
     nn = ( 1, # Shell index
            2, 2, 2,
@@ -20,7 +19,7 @@ function loadAltWeights()
            5, 5, 5, 5, 5, 5, 5, 5, 5,
            6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 )
-    for row in CSV.File("$(path)\\..\\data\\relax.csv")
+    for row in CSV.File(joinpath("$(path)","..","data","relax.csv"))
         z, ionized, inner, outer, weight  = row.ZZ, row.II, row.NN, row.OO, row.PP
         if (z<=92) && ffastEdgeAvailable(z, inner) && ffastEdgeAvailable(z, outer) && (nn[inner]!=nn[outer])
             if !haskey(xrw,(z, ionized))
@@ -44,6 +43,14 @@ function loadAltWeights()
     end
     for (key, val) in xrw
         xrayweights[key]=tuple(val...)
+    end
+    # Add these which aren't in Cullen (The weights are WAGs)
+    extra = (
+        ( 3, 1, 1, 2, 0.00001),
+        ( 4, 1, 1, 2, 0.00005),
+        ( 5, 1, 1, 3, 0.0002) )
+    for x in extra
+        xrayweights[(x[1], x[2])] = ( ( x[3], x[4], x[5] ), )
     end
 end
 

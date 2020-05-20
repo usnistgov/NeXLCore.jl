@@ -53,7 +53,7 @@ struct LoveScott1978η <: BackscatterCoefficient end
 
 function η(::Type{LoveScott1978η}, elm::Element, e0::Real)
 	η20(z) = (-52.3791 + z*(150.48371 + z*(-1.67373 + z*0.00716)))*1.0e-4
-	Goη20(z) = -1112.8 + z*(30.289 + z* -0.15498)*1.0e-4
+	Goη20(z) = (-1112.8 + z*(30.289 + z* -0.15498))*1.0e-4
 	zz=convert(Float64, z(elm))
 	return η20(zz)*(1.0+Goη20(zz)*log(e0/20.0e3))
 end

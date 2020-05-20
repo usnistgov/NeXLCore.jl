@@ -134,6 +134,11 @@ export Brizuela1990 # <: NeXLMeanIonizationPotential
 export Berger1982 # <: NeXLMeanIonizationPotential
 export J # Mean ionization potential
 
+include("eta.jl")
+export LoveScott1978η
+export Tomlin1963
+export η
+
 include("misc.jl")
 export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm

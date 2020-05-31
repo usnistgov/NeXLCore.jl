@@ -3,17 +3,23 @@
 """
 struct Film
     material::Material
-    thickness::AbstractFloat
+    thickness::Float64
 
     Film() = new(pure(n"C"), 0.0)
+
     function Film(mat::Material, thickness::AbstractFloat)
         @assert haskey(mat.properties, :Density) "Missing the :Density property when constructing a Film."
         return new(mat, thickness)
     end
 end
 
+Base.isequal(f1::Film, f2::Film) = isequal(f1.material, f2.material) && isequal(f1.thickness,f2.thickness)
+
+Base.isapprox(f1::Film, f2::Film) = isequal(f1.material, f2.material) && isapprox(f1.thickness, f2.thickness, rtol=1.0e5)
+
 Base.show(io::IO, flm::Film) =
-    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material))
+    flm.thickness < 1.0e-4 ? print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material)) : #
+        print(io, 1.0e4 * flm.thickness, " μm of ", name(flm.material))
 
 """
     transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =

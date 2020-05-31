@@ -38,6 +38,7 @@ To reduce ambiguity, the following X-ray microanalysis-standard units are used b
   - Length is measured in centimeters (cm)
   - Time is measured in seconds (s)
   - Energy is measured in electron-volts (eV)
+  - Pressure is measured in Pascal (p)
   - Mixed units are expressed in combinations of these units (MACS are in cm<sup>2</sup>/g)
 
 NeXLCore implements a `@n_str` macro to parse Element, SubShell and Transition objects at compile time.  The `n"???"` notation is used throughout NeXL.

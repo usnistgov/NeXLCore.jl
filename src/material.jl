@@ -52,6 +52,9 @@ function Base.:*(k::AbstractFloat, mat::Material)::Material
     return Material("$(k)×$(mat.name)", mf, copy(mat.a), copy(mat.properties))
 end
 
+Base.isequal(m1::Material, m2::Material) =
+    isequal(m1.name,m2.name) && isequal(m1.properties,m2.properties) && isequal(m1.a,m2.a) && isequal(m1.massfraction, m2.massfraction)
+
 
 Base.:+(mat1::Material, mat2::Material)::Material = sum(mat1, mat2)
 

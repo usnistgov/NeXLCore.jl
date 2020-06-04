@@ -19,13 +19,11 @@ NeXLCore is part of the NeXL collection of Julia language packages.
 #### Stablizing (Nearing release status - &beta;ish)
   - [NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
   - [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
+    - [NeXLSpectrum](https://github.com/NicholasWMRitchie/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
+  - [NeXLMatrixCorrection](https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
 
 #### Under rapid development but largely functional (pre-&alpha;)
-  - [NeXLSpectrum](https://github.com/NicholasWMRitchie/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
-  - [NeXLMatrixCorrection](https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
   - [NeXLDatabase](https://github.com/NicholasWMRitchie/NeXLDatabase.jl) - A database for handling NeXL library datatypes
-
-#### Currently broken
   - [NeXLParticle](https://github.com/NicholasWMRitchie/NeXLParticle.jl) - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
 
 #### Depreciated

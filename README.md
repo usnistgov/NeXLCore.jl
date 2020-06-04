@@ -1,4 +1,6 @@
 # NeXLCore.jl
+![NeXL Logo](NeXL.png)
+
 ## Core X-ray Microanalysis Data and Algorithms
 
 #### Installation

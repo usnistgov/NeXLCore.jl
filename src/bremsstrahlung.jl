@@ -106,7 +106,7 @@ struct Castellano2004a <: NeXLBremsstrahlung end
 struct Castellano2004b <: NeXLBremsstrahlung end
 
 bremsstrahlung(::Type{Kramers1923}, e::AbstractFloat, e0::AbstractFloat, elm::Element) =
-    e<e0 ? z(elm)*(e0-e)/e : 0.0
+    e < e0 ? z(elm)*(e0-e)/e : 0.0
 
 bremsstrahlung(::Type{Lifshin1974}, e::AbstractFloat, e0::AbstractFloat, elm::Element; a=0.0001) =
     bremsstrahlung(Kramers1923,e,e0,elm)*(1.0-1.0e-3*a*(e0-e))
@@ -134,11 +134,10 @@ bremsstrahlung(::Type{Trincavelli1997}, e::AbstractFloat, e0::AbstractFloat, elm
 
 
 bremsstrahlung(::Type{Castellano2004a}, e::AbstractFloat, e0::AbstractFloat, elm::Element) =
-    e < e0 ? (sqrt(z(elm))*(e0-e)/e)*(-73.90 - 1.2446e-3*e + 36.502*log(z(elm)) + 148.5e-3*e0^0.1239)* #
-            (1.0 + (-0.006624 + 0.002906e-3*e0)*z(elm)/(1.0e-3*e)) : 0.0
+    e < e0 ? (sqrt(z(elm))*(e0-e)/e)*(-73.90 - 1.2446*(1.0e-3*e) + 36.502*log(z(elm)) + (148.5*(1.0e-3*e0)^0.1239)/z(elm))* #
+            (1.0 + (-0.006624 + 0.0002906*(1.0e-3*e0))*z(elm)/(1.0e-3*e)) : 0.0
 
 function bremsstrahlung(::Type{Castellano2004b}, e::AbstractFloat, e0::AbstractFloat, elm::Element)
-    # I can't remember where these numbers actually come from...
     zz, E0, E = z(elm), e0/1000.0, e/1000.0
     return e < e0 ? ((-E + E0)*sqrt(zz)*(1.0 + ((-0.006626 + 0.0002906*E0)*zz)/E)*
             (-77.28317356370013 + (148.5*E0^0.1293)/zz + 36.502*log(zz)))/E : 0.0

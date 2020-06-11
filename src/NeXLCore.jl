@@ -137,7 +137,10 @@ export J # Mean ionization potential
 include("eta.jl")
 export LoveScott1978η
 export Tomlin1963
+export August1989η
+export Pouchou1991η
 export η
+export zbar  # Calculated using Donovan /
 
 include("misc.jl")
 export Poehn1985 # A jump ratio model
@@ -177,4 +180,12 @@ export minproperties # A list of the minimum required properties
 export hasminrequired # Checks whether a spectrum has necessary properties
 export requiredbutmissing # Lists missing properties
 
+include("custommac.jl")
+export CustomMAC  # Tied to "data\specialmacs.csv"
+export UserMAC # Allows the user to specify which MACs to use for specific elements while defaulting to the default algorithm otherwise.
+export addusermac # Specify a mac for an element and characteristic x-ray
+export clearusermacs # Reset user macs
+export getcustommac # Retrieve a specific custom MAC value
+export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke1982, :Bastin19XX, etc. (see specialmacs.csv))
+export addcustommacs # Adds custom macs to user macs
 end

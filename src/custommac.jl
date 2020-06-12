@@ -61,7 +61,7 @@ let usermacs = Dict{Tuple{Int, CharXRay},Float64}()
         return DataFrame(Elements = elms, Characteristic = cxrs, MAC = macs)
     end
 
-    global getusermacs() = getusermacs
+    global getusermacs() = usermacs
 end
 
 addcustommacs(model::Symbol, withsimilar=true) =

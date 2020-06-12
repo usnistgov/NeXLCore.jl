@@ -83,7 +83,7 @@ The default backscatter coefficient algorith which is August1989η.
 η(elm::Element, e0::Real) = η(August1989η, elm, e0)
 
 """
-    η(ty::Type{<:BackscatterCoefficient}, mat::Material, e0::Float64)::Float64 =
+    η([ty::Type{<:BackscatterCoefficient},] mat::Material, e0::Float64)::Float64 =
 
 Calculate the backscatter coefficient for a material using Armstrong's 1991 algorithm for materials.
 
@@ -98,6 +98,10 @@ Calculate the backscatter coefficient for a material using Armstrong's 1991 algo
 """
 η(ty::Type{<:BackscatterCoefficient}, mat::Material, e0::Float64)::Float64 =
 	mapreduce(el->η(ty, el, e0)*elasticfraction(el, mat, e0), +, keys(mat))
+η(mat::Material, e0::Float64)::Float64 =
+	mapreduce(el->η(el, e0)*elasticfraction(el, mat, e0), +, keys(mat))
+
+
 
 """
     elasticfraction(elm::Element, mat::Material, e0::Float64)::Float64

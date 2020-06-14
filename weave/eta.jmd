@@ -32,7 +32,7 @@ elms = elements[1:99]
 algs = ( Donovanη, LoveScott1978η, August1989η, Pouchou1991η, Tomlin1963 )
 lyrs = map(l->layer(x=z.(elms), y=map(elm->η(l[1], elm, 15.0e3), elms), Gadfly.Theme(default_color = l[2])), zip(algs, NeXLPalette[1:5]))
 plot(lyrs..., Guide.xlabel("Atomic Number"), Guide.ylabel("η"), #
-    Guide.manual_color_key("Algorithm", repr.(algs), NeXLPalette[1:5]))
+    Guide.manual_color_key("Algorithm", [ repr.(algs)... ], color = NeXLPalette[1:5]))
 ```
 
 Compare the empirical expressions with measured values taken from Donovan's paper.
@@ -52,7 +52,7 @@ data = layer(x=collect(map(de->de[3], donovanelastic)), y=collect(map(de->de[4],
 calcs = map(l->layer(x=collect(map(de->de[3], donovanelastic)), y=collect(map(de->η(l[1], parse(Material,de[2]), 20.0e3), donovanelastic)), Gadfly.Theme(default_color=l[2])), zip(algs, NeXLPalette[1:4]))
 # map(de->η(Donovanη, parse(Material, de[2]), 20.0e3), donovanelastic)
 plot(data, calcs..., Guide.xlabel("Measured"), Guide.ylabel("Computed"), #
-    Guide.manual_color_key("Algorithm", (repr.(algs)...,"Data"), NeXLPalette[1:6]),
+    Guide.manual_color_key("Algorithm", [ repr.(algs)...,"Data" ], color = NeXLPalette[1:6]),
     Geom.abline(color="red", style=:dash), intercept=[0,], slope=[1,])
 ```
 
@@ -178,7 +178,7 @@ for (alg,col) in zip(algs, NeXLPalette[1:length(algs)]), elm in [n"C", n"Si", n"
   append!(calcs, layer(x=collect(e0s), y=collect(map(x->η(alg, elm, x*1000.0), e0s)), Geom.line, Gadfly.Theme(default_color=col)))
 end
 data = layer(x=collect(map(d->d[2],backscatterdata)), y=collect(map(d->d[3],backscatterdata)), Geom.point, Gadfly.Theme(default_color=NeXLPalette[length(algs)+1]) )
-plot(data, calcs..., Guide.manual_color_key("Algorithm", (repr.(algs)...,"Data"), NeXLPalette[1:length(algs)+1]))
+plot(data, calcs..., Guide.manual_color_key("Algorithm", [ repr.(algs)...,"Data"], color = NeXLPalette[1:length(algs)+1]))
 ```
 
 Overall, August1989η looks the best.

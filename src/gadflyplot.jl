@@ -6,16 +6,16 @@ using CSV
 using DataFrames
 using Statistics
 
-const NeXLPalette = distinguishable_colors(
+const NeXLPalette = Colorant[ distinguishable_colors(
     66,
     Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), RGB(0 / 255, 168 / 255, 45 / 255)],
     transform = deuteranopic,
-)[3:end]
-const NeXLColorblind = distinguishable_colors(
+)[3:end]... ]
+const NeXLColorblind = Colorant[ distinguishable_colors(
     66,
     Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
     transform = deuteranopic,
-)[3:end]
+)[3:end]... ]
 
 #Compose.parse_colorant(c::Array{<:Colorant,1}) = c
 
@@ -51,7 +51,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
     Gadfly.plot(
         layers...,
         Gadfly.Guide.title("Characteristic X-ray Energies"),
-        Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
+        Gadfly.Guide.manual_color_key("Type", names, color = colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Energy (eV)"),
         Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
@@ -295,12 +295,12 @@ function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Miss
     if delta
         plot(layers..., Guide.ylabel("Δ(Mass Fraction)"),
             Guide.xlabel(label),
-            Guide.manual_color_key("Element", names, colors),
+            Guide.manual_color_key("Element", names, Colorant[colors...]),
             Guide.title("Difference from $(known)"),
             Geom.hline(color="black"), yintercept=[0.0])
     else
         plot(layers..., Guide.ylabel("Mass Fraction"), Guide.xlabel(label), #
-                Guide.manual_color_key("Element", names, colors),
+                Guide.manual_color_key("Element", names, Colorant[colors...]),
                 yintercept=[known[elm] for elm in allelms],
                 Geom.hline(color=[ lighten(col) for col in colors], style=:dash))
     end

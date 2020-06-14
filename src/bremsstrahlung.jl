@@ -144,9 +144,25 @@ function bremsstrahlung(::Type{Castellano2004b}, e::AbstractFloat, e0::AbstractF
 end
 
 bremsstrahlung(e::AbstractFloat, e0::AbstractFloat, elm::Element) =
-    bremsstrahlung(Castellano2004b, e, e0, elm)
+    bremsstrahlung(Castellano2004a, e, e0, elm)
 
 function bremsstrahlung(ty::Type{<:NeXLBremsstrahlung}, e::AbstractFloat, e0::AbstractFloat, mat::Material; kwargs...)
     af=atomicfraction(mat) # According to Trincavelli1997
     return mapreduce(elm->af[elm]*bremsstrahlung(ty,e,e0,elm; kwargs...),+,keys(af))
 end
+
+
+# Evaluating these models
+# The weave script "NeXLSpectrum/weave/continuummodel.jmd" can be used to compare the NeXLBremsstrahlung algorithms
+# against a K412 spectrum and the associated standard spectra.  In addition to the continuum model, it is also necessary
+# to provide a detector efficiency model and matrix correction model.  Often a conventional Z⋅A matrix correction
+# model is adapted by replacing the edge energy with the the Bremsstrahlung emission energy.  This is correct to
+# the degree which the ϕ(ρz)-curve models share the same emission profile as the continuum emission.
+
+# Evaluating the models I find that Castellano2004a, Trincavelli1997 work well with the Riveros1993 matrix correction
+# algorithm and the AP33Tabulation window.  Smith1975 works surprisigly well with the CitZAF matrix correction model.
+# Other old models based on Si(Li) data tend to not do too well at lower energies.  This shouldn't surprise anyone
+# as these models were often based on data from Be window detectors.  Castellano2004a and Trincavelli1997 were
+# designed around the Riveros1993 matrix correction model and don't perform well using CitZAF.
+
+# My current recommendation is Castellano2004a & Riveros1993.

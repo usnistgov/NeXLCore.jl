@@ -17,6 +17,8 @@ const NeXLColorblind = distinguishable_colors(
     transform = deuteranopic,
 )[3:end]
 
+#Compose.parse_colorant(c::Array{<:Colorant,1}) = c
+
 """
     Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energy|:Weight, palette=NeXLPalette)
 
@@ -31,7 +33,7 @@ function Gadfly.plot(transitions::AbstractVector{Transition}; mode = :Energy, pa
 end
 
 function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeXLPalette)
-    layers, names = [], []
+    layers, names = [], String[]
     colors = distinguishable_colors(length(transitions) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, tr) in enumerate(transitions)
         x, y = [], []
@@ -43,7 +45,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
         end
         if !isempty(x)
             push!(names, repr(tr))
-            push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
+            append!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
         end
     end
     Gadfly.plot(
@@ -57,7 +59,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
 end
 
 function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Bool = false)
-    layers, names = [], []
+    layers, names = [], String[]
     colors = distinguishable_colors(length(transitions) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, tr) in enumerate(transitions)
         x, y = [], []
@@ -69,7 +71,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
         end
         if !isempty(x)
             push!(names, repr(tr))
-            push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
+            append!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
         end
     end
     if schoonjan  # Compare to Shoonjan's xraylib on GitHub
@@ -93,7 +95,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
         insertcols!(csv, 3, Column2p = parse2.(csv[!, :Column2]))
         filter!(r -> (!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
         insertcols!(csv, 3, Column2pp = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2p])))
-        push!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2pp))
+        append!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2pp))
     end
     Gadfly.plot(
         layers...,
@@ -135,7 +137,7 @@ function downloadschoonjan()
 end
 
 function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = false)
-    layers, names = [], []
+    layers, names = [], String[]
     colors = distinguishable_colors(length(sss) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, sh) in enumerate(sss)
         x, y = [], []
@@ -147,7 +149,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
         end
         if !isempty(x)
             push!(names, repr(sh))
-            push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
+            append!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
         end
     end
     if schoonjan
@@ -156,7 +158,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
         sssname = [repr(ss) for ss in sss]
         filter!(r -> r[:Column2] in sssname, csv)
         insertcols!(csv, 3, Column2p = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2])))
-        push!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2p))
+        append!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2p))
     end
     Gadfly.plot(
         layers...,
@@ -171,7 +173,7 @@ end
 
 
 function plotEdgeEnergies(sss::AbstractVector{SubShell})
-    layers, names = [], []
+    layers, names = [], String[]
     colors = distinguishable_colors(length(sss) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, sh) in enumerate(sss)
         x, y = [], []
@@ -183,7 +185,7 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
         end
         if !isempty(x)
             push!(names, repr(sh))
-            push!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
+            append!(layers, Gadfly.layer(x = x, y = y, Geom.point, Gadfly.Theme(default_color = colors[i+2])))
         end
     end
     Gadfly.plot(
@@ -208,7 +210,7 @@ function compareMACs(elm::Element; palette = NeXLPalette)
         l1,
         l2,
         Gadfly.Guide.title("MAC - $elm"),
-        Gadfly.Guide.manual_color_key("Type", ("Default/FFAST", "Heinrich"), palette[1:2]),
+        Gadfly.Guide.manual_color_key("Type", [ "Default/FFAST", "Heinrich" ], palette[1:2]),
         Gadfly.Guide.xlabel("Energy (eV)"),
         Guide.ylabel("log₁₀(MAC (cm²/g))"),
         Gadfly.Coord.cartesian(xmin = 0.0, xmax = 20.0e3),

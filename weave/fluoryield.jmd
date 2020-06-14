@@ -2,7 +2,7 @@
 
 Let's investigate the fluorescence yield algorithms
 
-```julia
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
 using NeXLCore
 using Gadfly
 

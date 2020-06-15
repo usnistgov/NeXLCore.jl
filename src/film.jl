@@ -28,6 +28,10 @@ Compute the transmission fraction of an X-ray at the specified angle through a F
 """
 transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
     flm.thickness > 0.0 ? exp(-mac(flm.material, xrayE, alg) * csc(θ) * flm.thickness * flm.material[:Density]) : 1.0
+transmission(flm::Film, xrayE::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
+    flm.thickness > 0.0 ? exp(-mac(flm.material, xrayE, alg) * flm.thickness * flm.material[:Density]) : 1.0
+
+
 
 """
     transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =

@@ -14,6 +14,6 @@ using Test
     @test isapprox(dEds(JoyLuo, 1.0e2, n"U", 18.0), -4.805e8, atol=0.01e7)
 
     @test isapprox(range(JoyLuo, parse(Material, "BaTiSi3O9", density=3.65), 20.0e3)*1.0e4, 3.59, atol=0.01)
-    @test isapprox(range(Bethe, parse(Material, "BaTiSi3O9", density=3.65), 20.0e3, 200.0)*1.0e4, 3.615, atol=0.01)
+    @test isapprox(range(Bethe, parse(Material, "BaTiSi3O9", density=3.65), 20.0e3, true, emin=200.0)*1.0e4, 3.615, atol=0.01)
     @test isapprox(range(Kanaya1972, parse(Material, "BaTiSi3O9", density=3.65), 20.0e3)*1.0e4, 3.32, atol=0.01)
 end

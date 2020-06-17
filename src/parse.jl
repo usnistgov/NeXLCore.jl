@@ -16,6 +16,24 @@ macro n_str(str)
     parsex(str)
 end
 
+"""
+    enx"Fe K"
+    enx"Fe L3-M5"
+
+Implements compile time parsing of strings to produce the energy associated with AtomicSubShell,
+or CharXRay objects.  The advantage of enx"Fe K" over `energy(n"Fe K")` is that the evaluation occurs
+entirely at compile time with the former while the later still needs to call `energy(...)` at runtime.
+
+Examples:
+
+    enx"Fe L3" == energy(AtomicSubShell(element(26),subshell("L3")))
+    enx"Fe L3-M5" == energy(CharXRay(element(26),Transition(SubShell("L3"),"SubShell("M5")))
+"""
+
+macro enx_str(str)
+    energy(parsex(str))
+end
+
 Base.parse(::Type{Element}, str::AbstractString) =
     element(str)
 

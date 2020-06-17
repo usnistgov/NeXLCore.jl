@@ -68,7 +68,8 @@ export relativeionizationcrosssection # Computes a number proportional to the io
 export ionizationcrosssection # Computes the absolute ionization crosssection
 export comptonShift # Computes the fractional compton shift
 export exists # Does a transition occur (according to our list...)
-export @n_str
+export @n_str # Parses a string into an Element, SubShell, AtomicSubShell, Transition or CharXRay
+export @enx_str # Energy of a atomic sub-shell or characteristic X-ray in string form
 
 include("material.jl")
 export material # Construct a Material struct
@@ -141,6 +142,13 @@ export August1989η
 export Pouchou1991η
 export η
 export zbar  # Calculated using Donovan /
+
+include("bethe.jl")
+export BetheEnergyLoss # <: BetheEnergyLoss
+export Bethe # <: BetheEnergyLoss
+export JoyLuo # <: BetheEnergyLoss
+export dEds
+export Kanaya1972
 
 include("misc.jl")
 export Poehn1985 # A jump ratio model

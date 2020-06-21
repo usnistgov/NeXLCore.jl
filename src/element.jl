@@ -54,15 +54,3 @@ Return the nominal density for the element.
 density(elm::Element) = elm.density / 1.0u"g/cm^3"
 
 Base.print(io::IO, elm::Element) = print(io, elm.symbol)
-
-if Pkg.installed()["PeriodicTable"] <= v"0.1.2"
-    """
-        isless(elm1::Element, elm2::Element)
-
-    Compares Element structures by atomic number.
-    """
-    Base.isless(elm1::Element, elm2::Element) = elm1.number < elm2.number
-
-    Base.hash(elm::Element, h::UInt) = hash(elm.number, h)
-    Base.isequal(elm1::Element,elm2::Element) = elm1.number==elm2.number
-end

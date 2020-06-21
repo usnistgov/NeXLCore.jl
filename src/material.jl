@@ -367,6 +367,16 @@ function atomicfraction(
         description=description, pedigree=pedigree, conductivity=conductivity)
 end
 
+isdigitex(c::Char) = isdigit(c) || ((c>='₀') && (c<='₉'))
+
+function remapdigits(str::String)
+    res = str
+    for repl in ( '₀'+i => '0'+i for i in 0:9 )
+        res = replace(res, repl)
+    end
+    return res
+end
+
 """
     Base.parse(
         ::Type{Material},
@@ -407,16 +417,16 @@ function Base.parse(
                     error("Element abbreviations must start with a capital letter. $(expr[idx[i]])")
                 end
                 next=i+1
-                if (next>length(idx)) || isuppercase(expr[idx[next]]) || isdigit(expr[idx[next]])
+                if (next>length(idx)) || isuppercase(expr[idx[next]]) || isdigitex(expr[idx[next]])
                     z = parseSymbol(expr[idx[start]:idx[i]])
                     if isnothing(z)
                         error("Unrecognized element parsing compound: $(expr[start:i])")
                     end
                     elm, cx = elements[z], 1
-                    if (next<=length(idx)) && isdigit(expr[idx[next]])
+                    if (next<=length(idx)) && isdigitex(expr[idx[next]])
                         for stop in next:length(idx)
-                            if (stop == length(idx)) || (!isdigit(expr[idx[stop+1]]))
-                                cx = parse(Int, expr[idx[next]:idx[stop]])
+                            if (stop == length(idx)) || (!isdigitex(expr[idx[stop+1]]))
+                                cx = parse(Int, remapdigits(expr[idx[next]:idx[stop]]))
                                 start = stop + 1
                                 break
                             end
@@ -457,11 +467,11 @@ function Base.parse(
         end
         if (start>0) && (stop>start)
             res, q = parseCompH2(expr[nextind(expr, start):prevind(expr,stop)]), 1
-            if (nextind(expr,stop) > lastindex(expr)) || isdigit(expr[nextind(expr,stop)])
+            if (nextind(expr,stop) > lastindex(expr)) || isdigitex(expr[nextind(expr,stop)])
                 for i in stop:lastindex(expr)
-                    if (nextind(expr,i)>lastindex(expr)) || (!isdigit(expr[nextind(expr,i)]))
+                    if (nextind(expr,i)>lastindex(expr)) || (!isdigitex(expr[nextind(expr,i)]))
                         nxt = nextind(expr,stop)
-                        q = nxt <= lastindex(expr) ? parse(Int, expr[nxt:i]) : 1
+                        q = nxt <= lastindex(expr) ? parse(Int, remapdigits(expr[nxt:i])) : 1
                         stop=i
                         break
                     end

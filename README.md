@@ -2,7 +2,7 @@
 ![NeXL Logo](NeXL.png)
 
 ## Core X-ray Microanalysis Data and Algorithms
-
+![Build Badge](https://travis-ci.com/usnistgov/NeXLCore.jl.svg?branch=master)
 #### Installation
 ```julia
 using Pkg

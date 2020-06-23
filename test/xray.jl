@@ -171,7 +171,7 @@ using NeXLCore
       @test lastsubshell(Shell(1)) == n"K1"
       @test firstsubshell(Shell(2)) == n"L1"
       @test lastsubshell(Shell(2)) == n"L3"
-      @test elementrange() == 1:92
+      @test eachelement() == 1:92
       @test NeXLCore.characteristicyield(20, 1, 4, 9, NeXL) == 0.0
       @test isapprox(NeXLCore.characteristicyield(25, 1, 4, 9, NeXL), 0.0007828, atol = 0.0000001)
       @test configuration(n"Fe") == "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d⁶"

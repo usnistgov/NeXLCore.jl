@@ -369,7 +369,7 @@ end
 
 isdigitex(c::Char) = isdigit(c) || ((c>='₀') && (c<='₉'))
 
-function remapdigits(str::String)
+function remapdigits(str::AbstractString)
     res = str
     for repl in ( '₀'+i => '0'+i for i in 0:9 )
         res = replace(res, repl)

@@ -1,5 +1,6 @@
-# NeXLCore
+![](NeXL_sm.png)
 
+# NeXLCore - Part of the NeXL X-ray Microanalysis Library
 NeXLCore and its dependencies [BoteSalvatICX](https://github.com/usnistgov/BoteSalvatICX.jl),
 [FFAST](https://github.com/usnistgov/FFAST.jl) and
 [NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) are not currently available in the
@@ -13,9 +14,6 @@ Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.
 # Now install NeXLCore
 Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
 ```
-
-#### Start Here
-: [Getting Started With NeXLCore](gettingstarted.html)
 
 #### Standards
 The core algorithms used throughout the NeXL libraries for elemental and X-ray

@@ -40,4 +40,3 @@ vcat(asa(DataFrame, k411),asa(DataFrame, k412))
 ```julia
 asa(DataFrame, [k411, k412] )
 ```
-NWMR 18-Nov-2019 updated 16-Apr-2020

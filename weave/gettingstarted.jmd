@@ -90,7 +90,6 @@ You can enter mass fractions in directly using the `mat"??"` syntax.
 mat = mat"0.8*Fe+0.15*Ni+0.05*Cr"
 ```
 
-
 There are more sophisticated ways to create materials with additional properties.  For example, I could have
 created a richer definition of albite.
 ```julia; term=true;

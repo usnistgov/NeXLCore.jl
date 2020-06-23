@@ -336,7 +336,7 @@ Example:
     julia> energy(n"Fe L3")
     708.0999999999999
  """
-energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = shellEnergy(ass.z, ass.subshell.index, ty)
+energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = NeXLCore.edgeenergy(ass.z, ass.subshell.index, ty)
 
 """
     energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -348,7 +348,7 @@ Example:
    julia> energy(n"Fe", n"L3")
    708.0999999999999
 """
-energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = shellEnergy(z(elm), ss.index, ty)
+energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = NeXLCore.edgeenergy(z(elm), ss.index, ty)
 
 """
      atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
@@ -372,7 +372,7 @@ Example:
 function atomicsubshells(elm::Element, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm} = FFASTDB)::Vector{AtomicSubShell}
     res = Vector{AtomicSubShell}()
     for sh in subshellsindexes(z(elm))
-        if shellEnergy(z(elm), sh, eety) < maxE
+        if NeXLCore.edgeenergy(z(elm), sh, eety) < maxE
             push!(res, atomicsubshell(elm, SubShell(sh)))
         end
     end
@@ -386,7 +386,7 @@ z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)
 
 """
-    ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2008)
+    ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2009)
 
 Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
 electon energy (in eV) using the default algorithm.
@@ -396,7 +396,7 @@ Example:
     julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
     0.5672910174711278
 """
-ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm} = Bote2008) =
+ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm} = Bote2009) =
     ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)

@@ -276,11 +276,11 @@ function ionizationfraction(z::Int, sh::Int, over = 4.0)
     function relativeTo(z, sh)
         nn = (1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4)
         # Find the largest available shell in shell
-        return findlast(ss -> (nn[ss] == nn[sh]) && ffastEdgeAvailable(z, ss), eachindex(nn))
+        return findlast(ss -> (nn[ss] == nn[sh]) && FFAST.hasedge(FFASTMAC,z, ss), eachindex(nn))
     end
     rel = relativeTo(z, sh)
     @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
-    ee = over * shellEnergy(z, rel)
+    ee = over * NeXLCore.edgeenergy(z, rel)
     return rel == sh ? 1.0 : ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
 end
 
@@ -341,7 +341,7 @@ wavenumber(cxr::CharXRay) = 1.0 / λ(cxr)
 
 Ionization edge energy for the specified X-ray.
 """
-edgeenergy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB) = shellEnergy(cxr.z, cxr.transition.innershell.index, ty)
+NeXLCore.edgeenergy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB) = NeXLCore.edgeenergy(cxr.z, cxr.transition.innershell.index, ty)
 
 """
     weight(cxr::CharXRay)

@@ -38,7 +38,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
     colors = distinguishable_colors(length(transitions) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, tr) in enumerate(transitions)
         x, y = [], []
-        for elm in element.(elementrange())
+        for elm in element.(eachelement())
             if has(elm, tr)
                 push!(x, z(elm))
                 push!(y, energy(characteristic(elm, tr)))
@@ -55,7 +55,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
         Gadfly.Guide.manual_color_key("Type", names, color = colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
+        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
     )
 end
 
@@ -64,7 +64,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
     colors = distinguishable_colors(length(transitions) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, tr) in enumerate(transitions)
         x, y = [], []
-        for elm in element.(elementrange())
+        for elm in element.(eachelement())
             if has(elm, tr)
                 push!(x, z(elm))
                 push!(y, schoonjan ? normweight(characteristic(elm, tr)) : strength(characteristic(elm, tr)))
@@ -104,7 +104,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Weight"),
-        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
+        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
     )
 end
 
@@ -142,7 +142,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
     colors = distinguishable_colors(length(sss) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, sh) in enumerate(sss)
         x, y = [], []
-        for elm in element.(elementrange())
+        for elm in element.(eachelement())
             if has(elm, sh)
                 push!(x, z(elm))
                 push!(y, fluorescenceyield(atomicsubshell(elm, sh), NeXL))
@@ -168,7 +168,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Yield (Fractional)"),
         Scale.y_log10(maxvalue = 1.0),
-        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
+        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
     )
 end
 
@@ -178,7 +178,7 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
     colors = distinguishable_colors(length(sss) + 2, Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)])
     for (i, sh) in enumerate(sss)
         x, y = [], []
-        for elm in element.(elementrange())
+        for elm in element.(eachelement())
             if has(elm, sh)
                 push!(x, z(elm))
                 push!(y, energy(atomicsubshell(elm, sh)))
@@ -195,7 +195,7 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Edge Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = elementrange().start, xmax = elementrange().stop),
+        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
     )
 end
 

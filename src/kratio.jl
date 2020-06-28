@@ -31,14 +31,18 @@ struct KRatio
         kratio::AbstractFloat,
     )
         if length(lines) < 1
-            error("Must specify at least one characteristic X-ray.")
+            error("A k-ratio must specify at least one characteristic X-ray.")
         end
         elm = element(lines[1])
         if !all(element(l) == elm for l in lines)
-            error("The characteristic X-rays must all be from the same element.")
+            error("The characteristic X-rays in a k-ratio must all be from the same element.")
         end
         if value(standard[elm]) <= 1.0e-6
-            error("The standard must contain the element $(elm).  $(standard[elm])")
+            error("The standard $standard does not contain the element $(elm).")
+        end
+        if haskey(unkProps,:TakeOffAngle) && haskey(stdProps,:TakeOffAngle) &&
+            (!isapprox(unkProps[:TakeOffAngle],stdProps[:TakeOffAngle],atol=deg2rad(0.1)))
+            @warn "The unknown and standard take-off angles do not match."
         end
         return new(elm, lines, copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
     end

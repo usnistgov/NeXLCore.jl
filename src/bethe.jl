@@ -32,5 +32,5 @@ struct Kanaya1972 end
 
 function Base.range(::Type{Kanaya1972}, mat::Material, e0::Float64, inclDensity=true)
     ko(elm, e0) = 0.0276 * a(elm) * (0.001*e0)^1.67 / z(elm)^0.89
-    return (1.0e-4 / mapreduce(elm->mat[elm]/ko(elm,e0), +, keys(mat))) / (inclDensity ? density(mat) : 1)
+    return (1.0e-4 / mapreduce(elm->mat[elm]/ko(elm,e0), +, keys(mat))) / (inclDensity ? density(mat) : 1.0)
 end

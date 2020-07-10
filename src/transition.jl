@@ -328,13 +328,14 @@ energy(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float
 X-ray wavelength in cm.
 """
 λ(cxr::CharXRay) = hc / energy(cxr)
-
+λ(energy::Real) = hc / energy
 """
     wavenumber(cxr::CharXRay)
 
 X-ray wavenumber in cm¯¹.
 """
 wavenumber(cxr::CharXRay) = 1.0 / λ(cxr)
+wavenumber(energy::Real) = 1.0 / λ(energy)
 
 """
     edgeenergy(cxr::CharXRay, ::Type{<:NeXLAlgorithm}=FFASTDB)

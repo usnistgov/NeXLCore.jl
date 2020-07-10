@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Getting Started · NeXLCore</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+<script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js" type="text/javascript" defer="defer"></script>
+<script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+</head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">NeXLCore</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Getting Started</a></li><li><a class="tocitem" href="../bremsstrahlung/">Bremsstrahlung</a></li><li><a class="tocitem" href="../Au60Ag40unc/">Mass Fraction Uncertainty</a></li><li><a class="tocitem" href="../eta/">Backscatter</a></li><li><a class="tocitem" href="../fluoryield/">Fluorescence Yield</a></li><li><a class="tocitem" href="../OByStoic/">O by Stoichiometry</a></li><li><a class="tocitem" href="../meanionizationpotential/">Mean Ionization Potential</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Getting Started</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Getting Started</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/usnistgov/NeXLCore.jl/blob/master/docs/src/gettingstarted.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Getting-Started-With-NeXLCore"><a class="docs-heading-anchor" href="#Getting-Started-With-NeXLCore">Getting Started With NeXLCore</a><a id="Getting-Started-With-NeXLCore-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-Started-With-NeXLCore" title="Permalink"></a></h1><p>Nicholas W. M. Ritchie, 16-Apr-2020</p><p><a href="https://github.com/NicholasWMRitchie/NeXLCore.jl">NeXLCore</a> provides the core data, algorithms and data structures for the <code>NeXL</code> collection of microanalysis libraries.</p><p>NeXLCore and its dependencies <a href="https://github.com/usnistgov/BoteSalvatICX.jl">BoteSalvatICX</a>, <a href="https://github.com/usnistgov/FFAST.jl">FFAST</a> and <a href="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl">NeXLUncertainties</a> are not currently available in the Julia registry. So you must use the GitHub URL to install NeXLCore.</p><pre><code class="language-julia">
+using Pkg
+# We need to first install three dependencies
+Pkg.add(PackageSpec(url=&quot;https://github.com/usnistgov/BoteSalvatICX.jl&quot;))
+Pkg.add(PackageSpec(url=&quot;https://github.com/usnistgov/FFAST.jl&quot;))
+Pkg.add(PackageSpec(url=&quot;https://github.com/NicholasWMRitchie/NeXLUncertainties.jl&quot;))
+# Now install NeXLCore
+Pkg.add(PackageSpec(url=&quot;https://github.com/NicholasWMRitchie/NeXLCore.jl&quot;))</code></pre><p>Primarily <code>NeXLCore</code> provides:</p><ul><li>Definitions of data types relevant to X-ray microanalysis<ul><li><code>Element</code> : Borrowed from the third-party <a href="https://github.com/JuliaPhysics/PeriodicTable.jl"><code>PeriodicTable</code></a> library</li><li><code>Material</code> : Combinations of <code>Element</code>s</li><li><code>SubShell</code> : Representing <code>K</code>, <code>L1</code>, <code>L2</code>, <code>L3</code>, <code>M1</code>,... sub-shells</li><li><code>AtomicSubShell</code> : Representing a <code>SubShell</code> in a specific <code>Element</code></li><li><code>Transition</code> : Representing a non-forbidden X-ray transition between <code>SubShell</code>s - like &quot;K-L3&quot;</li><li><code>CharXRay</code> : Representing a <code>Transition</code> in a specific <code>Element</code></li><li><code>KRatio</code> : A ratio of X-ray intensities</li></ul></li><li>Algorithms to work on these data structures, including (but not limited to)<ul><li><code>energy(xx)</code> where <code>xx</code> may be an <code>AtomicSubShell</code> or a <code>CharXRay</code> (Always in eV!!!)</li><li><code>mac(xx, yy)</code> where <code>xx</code> may be an <code>Element</code> or <code>Material</code> and <code>yy</code> may be a <code>CharXRay</code> or a <code>Float64</code></li></ul></li><li><code>NeXLCore</code> defines two useful macros. Learn them, love them, use them...<ul><li><code>n&quot;???&quot;</code> which creates <code>Element</code>s, <code>SubShell</code>s, <code>AtomicSubShell</code>s, <code>Transition</code>s and <code>CharXRay</code>s from <code>AbstractString</code>s</li><li><code>mat&quot;???&quot;</code> which creates <code>Material</code>s from <code>AbstractString</code>s like <code>mat&quot;AlNaSi3O8&quot;</code></li></ul></li><li>Throughout <code>NeXL</code>, units are always electron-volt (energy), centimeter (length), second (time), gram (mass) and angles are in radians even when it seems a little odd.<ul><li>A foolish consistency? I think not...</li></ul></li><li><code>NeXL</code> uses <a href="https://github.com/GiovineItalia/Gadfly.jl">Gadfly</a> for plotting.<ul><li>Many things you&#39;d want to plot can be plotted using <code>using Gadfly; plot(x)</code></li><li>However, to minimize overhead, plotting support is not loaded (thanks to <a href="https://github.com/JuliaPackaging/Requires.jl">Requires</a>) until Gadfly is explicitly loaded by the user.</li></ul></li><li><code>NeXL</code> uses <a href="https://github.com/JuliaData/DataFrames.jl">DataFrames</a> for tabular data.</li></ul><p><strong>Let&#39;s get this party started...</strong></p><p>Load the library</p><pre><code class="language-julia">using NeXLCore</code></pre><h4 id="Element"><a class="docs-heading-anchor" href="#Element">Element</a><a id="Element-1"></a><a class="docs-heading-anchor-permalink" href="#Element" title="Permalink"></a></h4><p>Constructing <code>Element</code> objects</p><pre><code class="language-julia">julia&gt; e1, e2, e3 = n&quot;Ca&quot;, elements[20], parse(Element, &quot;Pu&quot;)
+(Element(Calcium), Element(Calcium), Element(Plutonium))
+
+julia&gt; es = parse.(Element, [&quot;Ca&quot;, &quot;21&quot;, &quot;Ti&quot;, &quot;Vanadium&quot;  ])
+4-element Array{Element,1}:
+ Element(Calcium)
+ Element(Scandium)
+ Element(Titanium)
+ Element(Vanadium)
+</code></pre><p>Note the use of <code>n&quot;??&quot;</code>.  We&#39;ll see a lot of this.</p><p>Elements come with lots of useful information...</p><pre><code class="language-julia">e3</code></pre><pre><code class="language-none">Plutonium (Pu), number 94:
+        category: actinide
+     atomic mass: 244.0 u
+         density: 19.816 g/cm³
+      molar heat: 35.5 J/mol⋅K
+   melting point: 912.5 K
+   boiling point: 3505.0 K
+           phase: Solid
+          shells: [2, 8, 18, 32, 24, 8, 2]
+e⁻-configuration: 1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d
+¹⁰ 6p⁶ 7s² 5f⁶
+      appearance: silvery white, tarnishing to dark gray in air
+         summary: Plutonium is a transuranic radioactive chemical element w
+ith symbol Pu and atomic number 94. It is an actinide metal of silvery-gray
+ appearance that tarnishes when exposed to air, and forms a dull coating wh
+en oxidized. The element normally exhibits six allotropes and four oxidatio
+n states.
+   discovered by: Glenn T. Seaborg
+          source: https://en.wikipedia.org/wiki/Plutonium</code></pre><p>As you can see, each element comes with many different properties which can be accessed by the field names. <code>PeriodicTable</code> uses <a href="https://github.com/PainterQubits/Unitful.jl"><code>Unitful</code></a> to provide physical units for quantities.</p><pre><code class="language-julia">julia&gt; fieldnames(Element)
+(:name, :appearance, :atomic_mass, :boil, :category, :color, :density, :discovered_by, :el_config, :melt, :molar_heat, :named_by, :number, :period, :phase, :source, :spectral_img, :summary, :symbol, :xpos, :ypos, :shells)
+
+julia&gt; e1.name, name(e1)
+(&quot;Calcium&quot;, &quot;Calcium&quot;)
+
+julia&gt; e1.symbol, symbol(e1)
+(&quot;Ca&quot;, &quot;Ca&quot;)
+
+julia&gt; e1.atomic_mass, a(e1)
+(40.0784 u, 40.0784)
+
+julia&gt; e1.number, z(e1)
+(20, 20)
+
+julia&gt; e1.boil
+1757.0 K
+
+julia&gt; e1.density, density(e1)
+(1.55 g cm^-3, 1.55)
+
+julia&gt; e1.el_config
+&quot;1s² 2s² 2p⁶ 3s² 3p⁶ 4s²&quot;
+</code></pre><h4 id="Material"><a class="docs-heading-anchor" href="#Material">Material</a><a id="Material-1"></a><a class="docs-heading-anchor-permalink" href="#Material" title="Permalink"></a></h4><p>The <code>Material</code> structure carries composition information as mass fractions of the elements. This object also carries name, atomic weight, and other properties like density.  A simple way to create <code>Material</code> objects is the <code>mat&quot;??&quot;</code> macro. To get the mass fraction&#39;s out index the object with an element.  All the <code>Element</code>s in a <code>Material</code> are accessed via <code>keys(...)</code>.</p><pre><code class="language-julia">julia&gt; albite = mat&quot;AlNaSi3O8&quot;
+AlNaSi3O8[Al=0.1029,Si=0.3213,Na=0.0877,O=0.4881]
+
+julia&gt; albite[n&quot;Al&quot;], albite[n&quot;Na&quot;], albite[n&quot;Tc&quot;]
+(0.10289723395373596, 0.08767415772881798, 0.0)
+
+julia&gt; keys(albite) # keys(...) for consistency with other Julia objects
+Base.Generator{Base.KeySet{Int64,Dict{Int64,AbstractFloat}},typeof(element)}(NeXLCore.element, [13, 14, 11, 8])
+
+julia&gt; collect(keys(albite)) # Now maybe this is a little more clear
+4-element Array{Element,1}:
+ Element(Aluminium)
+ Element(Silicon)
+ Element(Sodium)
+ Element(Oxygen)
+
+julia&gt; a(n&quot;Na&quot;, albite)
+22.989769282
+</code></pre><p>You can enter mass fractions in directly using the <code>mat&quot;??&quot;</code> syntax.</p><pre><code class="language-julia">mat = mat&quot;0.8*Fe+0.15*Ni+0.05*Cr&quot;</code></pre><pre><code class="language-none">0.8×Fe+0.15×Ni+0.05×Cr[Fe=0.8000,Ni=0.1500,Cr=0.0500]</code></pre><p>There are more sophisticated ways to create materials with additional properties.  For example, I could have created a richer definition of albite.</p><pre><code class="language-julia">julia&gt; albite = parse(Material, &quot;AlNaSi3O8&quot;, name=&quot;Albite&quot;, density=2.60, atomicweights=Dict(n&quot;Na&quot;=&gt;23.0))
+Albite[Al=0.1029,Si=0.3213,Na=0.0877,O=0.4881,2.60 g/cm³]
+
+julia&gt; all(e-&gt;a(e)==a(e,albite), keys(albite)) # Not all are default
+false
+
+julia&gt; a(n&quot;Na&quot;, albite),  a(n&quot;O&quot;, albite)
+(23.0, 15.999)
+
+julia&gt; 
+ss = parse(Material, &quot;0.8*Fe+0.15*Ni+0.05*Cr&quot;, name=&quot;Stainless&quot;, density=7.5)
+Stainless[Fe=0.8000,Ni=0.1500,Cr=0.0500,7.50 g/cm³]
+
+julia&gt; ss[n&quot;Fe&quot;], density(ss), name(ss)
+(0.8, 7.5, &quot;Stainless&quot;)
+
+julia&gt; all(e-&gt;a(e)==a(e,ss), keys(ss)) # The atomic weights are the default values (from PeriodicTable)
+true
+</code></pre><p>Alternatively, I could have built albite in terms of atom fractions.  Note that the mass fractions are different because the assumed atomic weight of sodium is different.</p><pre><code class="language-julia">julia&gt; albite2 = atomicfraction(&quot;Albite&quot;, n&quot;Al&quot;=&gt;1, n&quot;Na&quot;=&gt;1, n&quot;Si&quot;=&gt;3, n&quot;O&quot;=&gt;8, properties=Dict{Symbol,Any}(:Density=&gt;2.6), atomicweights=Dict(n&quot;Na&quot;=&gt;22.0))
+Albite[Al=0.1033,Si=0.3225,Na=0.0842,O=0.4900,2.60 g/cm³]
+</code></pre><pre><code class="language-julia">using DataFrames
+asa(DataFrame, albite2)</code></pre><pre><code class="language-none">4×7 DataFrame. Omitted printing of 2 columns
+│ Row │ Material │ Element │ AtomicNumber │ AtomicWeight │ MassFraction │
+│     │ String   │ String  │ Int64        │ AbstractFlo… │ AbstractFlo… │
+├─────┼──────────┼─────────┼──────────────┼──────────────┼──────────────┤
+│ 1   │ Albite   │ O       │ 8            │ 15.999       │ 0.489962     │
+│ 2   │ Albite   │ Na      │ 11           │ 22.0         │ 0.0842174    │
+│ 3   │ Albite   │ Al      │ 13           │ 26.9815      │ 0.103287     │
+│ 4   │ Albite   │ Si      │ 14           │ 28.085       │ 0.322534     │</code></pre><p>There are many methods for transforming representation of the composition.</p><pre><code class="language-julia">julia&gt; ss = parse(Material,&quot;0.78*Fe+0.15*Ni+0.04*Cr&quot;,name=&quot;Stainless&quot;)
+Stainless[Fe=0.7800,Ni=0.1500,Cr=0.0400]
+
+julia&gt; analyticaltotal(ss)
+0.9700000000000001
+
+julia&gt; atomicfraction(ss)
+Dict{Element,AbstractFloat} with 3 entries:
+  Element(Iron)     =&gt; 0.807719
+  Element(Nickel)   =&gt; 0.147793
+  Element(Chromium) =&gt; 0.0444878
+
+julia&gt; normalizedmassfraction(ss)
+Dict{Element,AbstractFloat} with 3 entries:
+  Element(Iron)     =&gt; 0.804124
+  Element(Nickel)   =&gt; 0.154639
+  Element(Chromium) =&gt; 0.0412371
+
+julia&gt; asnormalized(ss)
+N[Stainless,1.0][Fe=0.8041,Ni=0.1546,Cr=0.0412]
+</code></pre><pre><code class="language-julia">compare(ss, asnormalized(ss))</code></pre><pre><code class="language-none">3×11 DataFrame. Omitted printing of 6 columns
+│ Row │ Unkown    │ Known            │ Elm    │ Cknown    │ Cresult │
+│     │ String    │ String           │ String │ Float64   │ Float64 │
+├─────┼───────────┼──────────────────┼────────┼───────────┼─────────┤
+│ 1   │ Stainless │ N[Stainless,1.0] │ Fe     │ 0.804124  │ 0.78    │
+│ 2   │ Stainless │ N[Stainless,1.0] │ Ni     │ 0.154639  │ 0.15    │
+│ 3   │ Stainless │ N[Stainless,1.0] │ Cr     │ 0.0412371 │ 0.04    │</code></pre><p>It is also possible to define materials using <code>NeXLUncertainties.UncertainValue</code>s.  However, it is better to use the full uncertainty calculation to perform transforms since this handles correlated quantities correctly.</p><pre><code class="language-julia">julia&gt; ss=material(&quot;Stainless&quot;,n&quot;Fe&quot;=&gt;uv(0.79,0.01),n&quot;Ni&quot;=&gt;uv(0.15,0.003),n&quot;Cr&quot;=&gt;uv(0.04,0.002))
+Stainless[Fe=0.7900,Ni=0.1500,Cr=0.0400]
+
+julia&gt; ss[n&quot;Fe&quot;]
+0.79 ± 0.01
+
+julia&gt; atomicfraction(ss)[n&quot;Fe&quot;]
+0.8097 ± 0.01
+</code></pre><h4 id="SubShell"><a class="docs-heading-anchor" href="#SubShell">SubShell</a><a id="SubShell-1"></a><a class="docs-heading-anchor-permalink" href="#SubShell" title="Permalink"></a></h4><p><code>SubShell</code> objects are not often used directly but are occasionally returned by other methods so I&#39;ll just mention them in passing.  <code>SubShell</code> represent the notion of a sub-shell independent of which element it is associated with.  There are properties of sub-shells that don&#39;t depend on the element like the angular momentum quantum numbers.</p><pre><code class="language-julia">ss = n&quot;L3&quot;
+shell(ss) # Shells are identified by a Char
+NeXLCore.n(ss), NeXLCore.l(ss), NeXLCore.j(ss)
+allsubshells
+ksubshells, lsubshells, msubshells, nsubshells
+```
+There is one gotcha with `SubShell`s and the `n&quot;??&quot;` notation.  What is `n&quot;K&quot;`? Potassium or the K-subshell?  The answer
+for `NeXL` is potassium.  The K-subshell is `n&quot;K1&quot;` like the first L-subshell is `n&quot;L1&quot;`.  (This is rarely ever an
+issue)</code></pre><p>julia julia&gt; n&quot;K1&quot;, n&quot;K&quot; (K, Element(Potassium))</p><pre><code class="language-none">
+
+
+
+
+#### AtomicSubShell
+`AtomicSubShell` joins an `Element` to a `SubShell`.  You&#39;ll only be permitted to create `AtomicSubShell` objects
+for sub-shells which exist for the ground state of the element.
+(X-ray microanalysis only deals with ground state atoms.  Astronomers and plasma physicists not so much...)
+</code></pre><p>julia julia&gt; ass = n&quot;Fe L3&quot; Fe L3</p><p>julia&gt; shell(ass), ass.subshell (Shell[L], L3)</p><p>julia&gt; jumpratio(ass) 6.34014793507294</p><p>julia&gt; has(n&quot;C&quot;,n&quot;L3&quot;), has(n&quot;C&quot;,n&quot;L2&quot;)  # Carbon Kα1 is K-L2!!! (false, true)</p><p>julia&gt; n&quot;C L2&quot; # works while n&quot;C L3&quot; throws an exception C L2</p><p>julia&gt; energy(ass), energy(n&quot;Ca K&quot;) (708.0999999999999, 4038.1)</p><p>julia&gt; kk=n&quot;K K&quot; K K</p><p>julia&gt; element(kk), shell(kk), kk.subshell # This works as you&#39;d expect. (Relevant to the earlier gotcha notice...) (Element(Potassium), Shell[K], K)</p><pre><code class="language-none">
+
+
+
+
+#### Transition
+Transitions are the analog to `SubShell`.  They represent the non-element related information associated with optical
+(in the broad sense) transitions.  You can only create `Transition`s for transitions with a non-negligible transition
+rate in some element.
+</code></pre><p>julia julia&gt; trs = n&quot;K-L3&quot;, n&quot;L3-M5&quot;, n&quot;M5-N7&quot; (K-L3, L3-M5, M5-N7)</p><p>julia&gt; alltransitions (K-L2, K-L3, K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, K-P3, L1-M2, L1-M3, L1-M4, L1-M5, L1-N2, L1-N3, L1-N4, L1-N5, L1-O2, L1-O3, L1-O4, L1-O5, L1-P2, L1-P3, L2-M1, L2-M3, L2-M4, L2-N1, L2-N3, L2-N4, L2-N6, L2-O1, L2-O3, L2-O4, L2-P1, L2-P3, L3-M1, L3-M2, L3-M3, L3-M4, L3-M5, L3-N1, L3-N2, L3-N3, L3-N4, L3-N5, L3-N6, L3-N7, L3-O1, L3-O2, L3-O3, L3-O4, L3-O5, L3-P1, L3-P2, L3-P3, M1-N2, M1-N3, M1-O2, M1-O3, M1-P2, M1-P3, M2-N1, M2-N4, M2-O1, M2-O4, M2-P1, M3-N1, M3-N4, M3-N5, M3-O1, M3-O4, M3-O5, M3-P1, M4-N2, M4-N3, M4-N6, M4-O2, M4-O3, M4-P2, M4-P3, M5-N3, M5-N6, M5-N7, M5-O3, M5-P3)</p><p>julia&gt; ktransitions (K-L2, K-L3, K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, K-P3)</p><p>julia&gt; kalpha, kbeta, kother ((K-L2, K-L3), (K-M2, K-M3, K-M4, K-M5), (K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, K-P3))</p><p>julia&gt; ltransitions (L1-M2, L1-M3, L1-M4, L1-M5, L1-N2, L1-N3, L1-N4, L1-N5, L1-O2, L1-O3, L1-O4, L1-O5, L1-P2, L1-P3, L2-M1, L2-M3, L2-M4, L2-N1, L2-N3, L2-N4, L2-N6, L2-O1, L2-O3, L2-O4, L2-P1, L2-P3, L3-M1, L3-M2, L3-M3, L3-M4, L3-M5, L3-N1, L3-N2, L3-N3, L3-N4, L3-N5, L3-N6, L3-N7, L3-O1, L3-O2, L3-O3, L3-O4, L3-O5, L3-P1, L3-P2, L3-P3)</p><p>julia&gt; mtransitions (M1-N2, M1-N3, M1-O2, M1-O3, M1-P2, M1-P3, M2-N1, M2-N4, M2-O1, M2-O4, M2-P1, M3-N1, M3-N4, M3-N5, M3-O1, M3-O4, M3-O5, M3-P1, M4-N2, M4-N3, M4-N6, M4-O2, M4-O3, M4-P2, M4-P3, M5-N3, M5-N6, M5-N7, M5-O3, M5-P3)</p><p>julia&gt; shell.( trs ) (Shell[K], Shell[L], Shell[M])</p><p>julia&gt; inner.( trs ) (K, L3, M5)</p><p>julia&gt; outer.( trs ) (L3, M5, N7)</p><pre><code class="language-none">
+
+
+
+The lists of transitions will suddenly seem useful in just a minute...
+
+#### CharXRay
+Finally! What we came here for... `CharXRay` represent a specific `Transition` in a specific `Element`.  Again you
+can only create `CharXRay` objects for characteristic X-rays with non-negligible transition rates. (i.e. Ones that
+you might see in a X-ray spectrum or wavescan.)
+
+First, let&#39;s create some characteristic X-rays using `n&quot;??&quot;` notation or `characteristic(...)`</code></pre><p>julia julia&gt; feka1, fela = n&quot;Fe K-L3&quot;, n&quot;Fe L3-M5&quot; (Fe K-L3, Fe L3-M5)</p><p>julia&gt; feka = characteristic(n&quot;Fe&quot;,kalpha) # Filters kalpha to produce only those CharXRay that exist for Fe 2-element Array{CharXRay,1}:  Fe K-L2  Fe K-L3</p><p>julia&gt; fekb = characteristic(n&quot;Fe&quot;,kbeta) 4-element Array{CharXRay,1}:  Fe K-M2  Fe K-M3  Fe K-M4  Fe K-M5</p><pre><code class="language-none">
+
+
+
+
+Some properties of characteristic X-rays:</code></pre><p>julia julia&gt; inner.(feka) 2-element Array{AtomicSubShell,1}:  Fe K  Fe K</p><p>julia&gt; outer.(feka) 2-element Array{AtomicSubShell,1}:  Fe L2  Fe L3</p><p>julia&gt; transition.(feka) 2-element Array{Transition,1}:  K-L2  K-L3</p><p>julia&gt; all(s-&gt;s==Shell(1), shell.(feka)) true</p><p>julia&gt; all(e-&gt;e==n&quot;Fe&quot;, element.(feka)) true</p><pre><code class="language-none">
+
+
+
+
+Let&#39;s extract some energy-related properties from these objects.  Of course, it is in eV.</code></pre><p>julia julia&gt; energy.(feka) # The x-ray energy 2-element Array{Float64,1}:  6390.9  6403.9</p><p>julia&gt; edgeenergy.(feka) # ionization edge energy 2-element Array{Float64,1}:  7112.0  7112.0</p><pre><code class="language-none">
+
+
+
+
+Often we want to know the relative line-weights of the transitions.</code></pre><p>julia julia&gt; normweight.(characteristic(n&quot;Fe&quot;, ktransitions)) # sum(...)=1 6-element Array{Float64,1}:  0.30154168064716697  0.5907083508331229  0.036316387945901134  0.07138962415597284  1.7874023761566593e-5  2.6082394074698673e-5</p><p>julia&gt; strength.(characteristic(n&quot;Fe&quot;, ktransitions)) # Not normalized 6-element Array{Float64,1}:  0.10139102  0.19862104  0.0122111  0.0240042  6.01e-6  8.77e-6</p><p>julia&gt; brightest(characteristic(n&quot;Fe&quot;, ltransitions)) Fe L3-M5</p><pre><code class="language-none">
+
+
+
+
+Some other X-ray related properties...</code></pre><p>julia julia&gt; λ.(feka)  # this is \lambda (wavelength in cm) 2-element Array{Float64,1}:  1.9400114694331004e-8  1.9360732210059497e-8</p><p>julia&gt; ν.(feka)  # this is \nu (frequency in 1/s) 2-element Array{Float64,1}:  1.5453127450692544e18  1.5484561310846671e18</p><p>julia&gt; ω.(feka)  # this is \omega (angular frequency in radian/s) 2-element Array{Float64,1}:  9.709486334816494e18  9.729236811643329e18</p><p>julia&gt; wavenumber.(feka) # In 1/cm 2-element Array{Float64,1}:  5.154608700804303e7  5.165093908382337e7</p><pre><code class="language-none">
+
+
+
+
+Finally, mass absorption coefficients.  MACs quantify the degree to which X-rays are absorbed as they travel through
+material. MACs are available for `Element` or for `Material`.  Here we are accepting the default
+([FFAST](https://www.nist.gov/pml/x-ray-form-factor-attenuation-and-scattering-tables)) algorithm
+for the MACs except in the last line.</code></pre><p>julia julia&gt; mac( n&quot;Ni&quot;, n&quot;Fe K-L3&quot;) # In cm²/g 83.48344476953369</p><p>julia&gt; Dict(map(cxr-&gt;(cxr=&gt;( mac(n&quot;Ni&quot;,cxr), weight(cxr))), characteristic(n&quot;Ni&quot;, ltransitions))) Dict{CharXRay,Tuple{Float64,Float64}} with 12 entries:   Ni L3-M4 =&gt; (1693.36, 0.0918605)   Ni L2-M1 =&gt; (2149.34, 0.0873993)   Ni L2-M4 =&gt; (9677.04, 0.52428)   Ni L1-M2 =&gt; (11241.6, 0.063308)   Ni L3-M3 =&gt; (1999.76, 0.0023918)   Ni L2-M3 =&gt; (1910.69, 0.00233952)   Ni L1-M4 =&gt; (9496.52, 0.000227338)   Ni L3-M1 =&gt; (2255.04, 0.170298)   Ni L3-M2 =&gt; (1999.76, 0.00246174)   Ni L1-M5 =&gt; (9496.52, 0.000298443)   Ni L3-M5 =&gt; (1693.36, 1.0)   Ni L1-M3 =&gt; (11241.6, 0.0969139)</p><p>julia&gt; mac( mat&quot;0.8<em>Fe+0.15</em>Ni+0.05*Cr&quot;, n&quot;C K-L2&quot;) # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements) 12220.92856189755</p><p>julia&gt; mac( mat&quot;AlNaSi3O8&quot;, n&quot;O K-L3&quot;) # O K-L3 in Albite (interpreted as a chemical formular) 3834.2955800593218</p><p>julia&gt; mac( mat&quot;AlNaSi3O8&quot;, n&quot;O K-L3&quot;, NeXLCore.FFASTDB), mac( mat&quot;AlNaSi3O8&quot;, n&quot;O K-L3&quot;, NeXLCore.DTSA) # Compare and contrast... (3834.2955800593218, 4111.003591230517)</p><pre><code class="language-none">
+
+
+
+
+#### KRatio
+k-ratios are the core quantity for X-ray microanalysis.  We measure intensities but k-ratios make the intensities
+meaningful.</code></pre><p>julia kr = KRatio(       [n&quot;Fe K-L3&quot;, n&quot;Fe K-L2&quot; ],       Dict(:BeamEnergy=&gt;20.0e3, :TakeOffAngle=&gt;deg2rad(40.0)), # Unknown properties       Dict(:BeamEnergy=&gt;20.0e3, :TakeOffAngle=&gt;deg2rad(40.0)), # Standard properties       mat&quot;Fe2O3&quot;, # Standard composition       uv(0.343563,0.0123105)) # The k-ratio value</p><pre><code class="language-none">
+</code></pre><p>k[Fe2O3, Fe K-L3 + 1 other] = 0.3436 ± 0.012</p><pre><code class="language-none">
+
+
+
+
+Combine k-ratios together in `Vector`.</code></pre><p>julia props =  ( Dict(:BeamEnergy=&gt;20.0e3, :TakeOffAngle=&gt;deg2rad(40.0)),            Dict(:BeamEnergy=&gt;20.0e3, :TakeOffAngle=&gt;deg2rad(40.0))) krs = [   KRatio(characteristic(n&quot;O&quot;, ktransitions), props..., mat&quot;SiO2&quot;, uv(0.984390, 0.00233)),   KRatio(characteristic(n&quot;Na&quot;, ktransitions), props..., mat&quot;NaCl&quot;, uv(0.155406, 0.00093)),   KRatio(characteristic(n&quot;Al&quot;, ktransitions), props..., mat&quot;Al&quot;, uv(0.068536, 0.000733)),   KRatio(characteristic(n&quot;Si&quot;, ktransitions), props..., mat&quot;Si&quot;, uv(0.219054, 0.00023)),   KRatio(characteristic(n&quot;Th&quot;, mtransitions), props..., mat&quot;Th&quot;, uv(-0.00023, 0.00046)), ]</p><pre><code class="language-none">
+</code></pre><p>5-element Array{KRatio,1}:  k[SiO2, O K-L3 + 1 other] = 0.98439 ± 0.0023  k[NaCl, Na K-L3 + 1 other] = 0.15541 ± 0.00093  k[Al, Al K-L3 + 1 other] = 0.06854 ± 0.00073  k[Si, Si K-L3 + 2 others] = 0.21905 ± 0.00023  k[Th, Th M5-N7 + 29 others] = -0.00023 ± 0.00046</p><pre><code class="language-none">
+
+</code></pre><p>julia julia&gt; nonnegk.(krs) 5-element Array{UncertainValue,1}:  0.98439 ± 0.0023  0.15541 ± 0.00093  0.06854 ± 0.00073  0.21905 ± 0.00023  0.000e+00 ± 4.60e-04</p><p>julia&gt; elms(krs) Set{Element} with 5 elements:   Element(Aluminium)   Element(Silicon)   Element(Sodium)   Element(Oxygen)   Element(Thorium)</p><pre><code class="language-none">
+
+
+
+
+There is more but this should get you started.  As always, the code is the ultimate resource and you have it in your
+hands.  Please report any bugs you find at [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl).
+
+#### Appendix: Plotting with Gadfly
+There are a number of helpful plotting methods to take an overhead look at various NeXLCore attributes.
+
+Plot the X-ray energy for all transitions in all elements</code></pre><p>julia using Gadfly display(plot(collect(ktransitions), mode = :Energy))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_26_1.svg)
+</code></pre><p>julia display(plot(collect(ltransitions), mode = :Energy))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_26_2.svg)
+</code></pre><p>julia display(plot(collect(mtransitions), mode = :Energy))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_26_3.svg)
+
+
+
+Plot the X-ray line weight for all transitions</code></pre><p>julia display(plot(collect(ktransitions), mode = :Weight))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_27_1.svg)
+</code></pre><p>julia display(plot(collect(ltransitions), mode = :Weight))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_27_2.svg)
+</code></pre><p>julia display(plot(collect(mtransitions), mode = :Weight))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_27_3.svg)
+
+
+
+Plot the edge energy for all subshells in all elements.</code></pre><p>julia display(plot(collect(ksubshells), :EdgeEnergy))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_28_1.svg)
+</code></pre><p>julia display(plot(collect(lsubshells), :EdgeEnergy))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_28_2.svg)
+</code></pre><p>julia display(plot(collect(msubshells), :EdgeEnergy))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_28_3.svg)
+
+
+
+Plot the fluorescence yield for all subshells in all elements.</code></pre><p>julia display(plot(collect(ksubshells), :FluorescenceYield))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_29_1.svg)
+</code></pre><p>julia display(plot(collect(lsubshells), :FluorescenceYield))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_29_2.svg)
+</code></pre><p>julia display(plot(collect(msubshells), :FluorescenceYield))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_29_3.svg)
+
+
+
+
+Finally, to compare MAC algorithms...</code></pre><p>julia display(NeXLCore.compareMACs(n&quot;C&quot;))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_30_1.svg)
+</code></pre><p>julia display(NeXLCore.compareMACs(n&quot;U&quot;))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_30_2.svg)
+
+
+Or MAC algorithms one at a time...</code></pre><p>julia display(plot(NeXLCore.FFASTDB, n&quot;Ag&quot;))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_31_1.svg)
+</code></pre><p>julia display(plot(NeXLCore.DTSA, n&quot;Au&quot;))</p><pre><code class="language-none">
+
+![](figures/gettingstarted_31_2.svg)
+
+
+Or many elements at once...</code></pre><p>julia plot(NeXLCore.FFASTDB, collect(keys(albite)),xmax=5.0e3)</p><pre><code class="language-none">
+
+![](figures/gettingstarted_32_1.svg)
+
+
+
+Or a Material MAC...</code></pre><p>julia plot(NeXLCore.FFASTDB, [keys(albite)..., albite], xmax=5.0e3) ````</p><p><img src="../figures/gettingstarted_33_1.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="../bremsstrahlung/">Bremsstrahlung »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Friday 10 July 2020 13:35">Friday 10 July 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

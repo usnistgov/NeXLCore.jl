@@ -24,10 +24,18 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 BoteSalvatICX = "^1.0.0"
+CSV = "^0.7.3"
+Colors = "^0.12.0"
+DataFrames = "^0.21.0"
 FFAST = "^1.0.0"
 Gadfly = "^1.3.0"
 NeXLUncertainties = "^0.1.0"
 PeriodicTable = "^1.0.0"
+PhysicalConstants = "^0.2.1"
+QuadGK = "^2.4.0"
+Reexport = "^0.2.0"
+Requires = "^1.0.0"
+Unitful = "^1.3.0"
 julia = "1"
 
 [extras]

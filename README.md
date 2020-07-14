@@ -1,8 +1,16 @@
-# NeXLCore.jl
-![NeXL Logo](NeXL.png)
+# ![NeXL Logo](NeXL.png)Core
 
 ## Core X-ray Microanalysis Data and Algorithms
-![Build Badge](https://travis-ci.com/usnistgov/NeXLCore.jl.svg?branch=master)
+| **Documentation**                        | **Build Status**                  |
+|:----------------------------------------:|:---------------------------------:|
+| [![][docs-stable-img]][docs-stable-url]  | [![][travis-img]][travis-url]     |
+
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://pages.nist.gov/NeXLCore.jl
+[travis-img]: https://travis-ci.com/usnistgov/NeXLCore.jl.svg?branch=master
+[travis-url]: https://travis-ci.com/usnistgov/NeXLCore.jl
+
 #### Installation
 ```julia
 using Pkg

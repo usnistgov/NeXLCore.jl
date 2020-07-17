@@ -17,15 +17,9 @@ matrix:
 notifications:
   email: true
 
-script: # the default script is equivalent to the following
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --project -e 'using Pkg;
-                          Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl.git"));
-                          Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl.git"));
-                          Pkg.add(PackageSpec(url="https://github.com/usnistgov/NeXLUncertainties.jl.git"));
-                          Pkg.instantiate();
-                          Pkg.build();
-                          Pkg.test(; coverage=true)';
+#script: # the default script is equivalent to the following
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia --project -e 'using Pkg; Pkg.build(); Pkg.test(; coverage=true)';
 
 after_success:
   - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
@@ -37,11 +31,7 @@ jobs:
       julia: 1.4
       os: linux
       script:
-        - julia --project=docs/ -e 'using Pkg;
-                                    Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl.git"));
-                                    Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl.git"));
-                                    Pkg.add(PackageSpec(url="https://github.com/usnistgov/NeXLUncertainties.jl.git"));
-                                    Pkg.instantiate();
+        - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()))'
         - julia --project=docs/ docs/make.jl
       after_success: skip

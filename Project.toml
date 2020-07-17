@@ -1,7 +1,7 @@
 name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
-authors = ["Nicholas W.M. Ritchie <nicholas.wm.ritchie@gmail.com>"]
-repo-url = "https://github.com/NicholasWMRitchie/NeXLCore.jl"
+authors = ["Nicholas W.M. Ritchie <nicholas.ritchie@nist.gov>"]
+repo-url = "https://github.com/usnistgov/NeXLCore.jl"
 version = "0.1.0"
 
 [deps]

@@ -1,4 +1,4 @@
-# ![NeXL Logo](NeXL.png)Core
+# ![NeXL Logo](NeXL_sm.png)Core
 
 ## Core X-ray Microanalysis Data and Algorithms
 | **Documentation**                        | **Build Status**                  |
@@ -12,21 +12,16 @@
 [travis-url]: https://travis-ci.com/usnistgov/NeXLCore.jl
 
 #### Installation
+`NeXLCore` and its dependencies are all available on the Julia registry.
 ```julia
-using Pkg
-# We need to first install three dependencies that aren't in the Julia registry (yet...)
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
-# Now install NeXLCore
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
+] add NeXLCore
 ```
 
 NeXLCore is part of the NeXL collection of Julia language packages.
-
-#### Stablizing (Nearing release status - &beta;ish)
+#### Released
   - [NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
   - [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
+#### Stablizing (Nearing release status - &beta;ish)
   - [NeXLSpectrum](https://github.com/NicholasWMRitchie/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
   - [NeXLMatrixCorrection](https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
 

@@ -644,7 +644,7 @@ Load the internal compositon library.
 function compositionlibrary()::Dict{String, Material}
     result = Dict{String, Material}()
     path = dirname(pathof(@__MODULE__))
-    df = CSV.File("$(path)\\..\\data\\composition.csv") |> DataFrame
+    df = CSV.File(joinpath(path,"..","data","composition.csv")) |> DataFrame
     for row in eachrow(df)
         name, density = row[1], row[2]
         elmc = collect(zip(element.(1:94), row[3:96])) # (i->getindex(row,i)).(3:96)))

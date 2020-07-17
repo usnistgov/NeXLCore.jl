@@ -6,19 +6,16 @@ using CSV
 using DataFrames
 using Statistics
 
-const NeXLPalette = Colorant[ RGB.(distinguishable_colors(
+const NeXLPalette = distinguishable_colors(
     66,
-    [RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
+    [ RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
     transform = deuteranopic,
-)[3:end])... ]
-const NeXLColorblind = Colorant[ distinguishable_colors(
+)[3:end]
+const NeXLColorblind = distinguishable_colors(
     66,
     Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
     transform = deuteranopic,
-)[3:end]... ]
-
-#using Compose
-Gadfly.parse_colorant(c::Array{Colorant,1}) = c
+)[3:end]
 
 """
     Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energy|:Weight, palette=NeXLPalette)
@@ -264,7 +261,7 @@ function Gadfly.plot(
     )
 end
 
-function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Missing}=missing, delta::Bool=false, label::AbstractString="Material")
+function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Missing}=missing, delta::Bool=false, label::AbstractString="Material", palette=NeXLPalette)
     allelms = collect(union(map(keys,mats)...))
     xs = [ name(mat) for mat in mats ]
     layers, names, colors = Layer[], String[], RGB{Float64}[]
@@ -277,7 +274,7 @@ function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Miss
                 layer(x=xs, y=[ value(mat[elm])-known[elm] for mat in mats],
                     ymin = [ value(mat[elm])-σ(mat[elm])-known[elm] for mat in mats],
                     ymax = [ value(mat[elm])+σ(mat[elm])-known[elm] for mat in mats],
-                    Gadfly.Theme(default_color = NeXLPalette[i]), Geom.errorbar, Geom.point
+                    Gadfly.Theme(default_color = palette[i]), Geom.errorbar, Geom.point
                 )
             )
         else
@@ -285,12 +282,12 @@ function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Miss
                 layer(x=xs, y=[ value(mat[elm]) for mat in mats],
                     ymin = [ value(mat[elm])-σ(mat[elm]) for mat in mats],
                     ymax = [ value(mat[elm])+σ(mat[elm]) for mat in mats],
-                    Gadfly.Theme(default_color = NeXLPalette[i]), Geom.errorbar, Geom.point
+                    Gadfly.Theme(default_color = palette[i]), Geom.errorbar, Geom.point
                 )
             )
         end
         push!(names, name(elm))
-        push!(colors, NeXLPalette[i])
+        push!(colors, palette[i])
     end
     lighten(col)=weighted_color_mean(0.2, RGB(col), colorant"white")
     if delta
@@ -307,9 +304,9 @@ function Gadfly.plot(mats::AbstractVector{Material}; known::Union{Material, Miss
     end
 end
 
-function plot2(mats::AbstractVector{Material}; known::Union{Material, Missing}=missing, label::AbstractString="Material")
+function plot2(mats::AbstractVector{Material}; known::Union{Material, Missing}=missing, label::AbstractString="Material", palette=NeXLPalette)
     allelms = sort(convert(Vector{Element},collect(union(map(keys,mats)...))))
-    elmcol = Dict(elm=>NeXLPalette[i] for (i, elm) in enumerate(allelms))
+    elmcol = Dict(elm=>palette[i] for (i, elm) in enumerate(allelms))
     xs, ymin, ymax, ygroups, colors = String[], Float64[], Float64[], Element[], Color[]
     for mat in mats
         append!(xs, [ name(mat) for elm in keys(mat) ])

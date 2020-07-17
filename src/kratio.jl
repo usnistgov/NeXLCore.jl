@@ -42,7 +42,7 @@ struct KRatio
         end
         if haskey(unkProps,:TakeOffAngle) && haskey(stdProps,:TakeOffAngle) &&
             (!isapprox(unkProps[:TakeOffAngle],stdProps[:TakeOffAngle],atol=deg2rad(0.1)))
-            @warn "The unknown and standard take-off angles do not match."
+            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
         end
         return new(elm, lines, copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
     end

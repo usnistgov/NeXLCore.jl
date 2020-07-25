@@ -196,4 +196,6 @@ export clearusermacs # Reset user macs
 export getcustommac # Retrieve a specific custom MAC value
 export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke1982, :Bastin19XX, etc. (see specialmacs.csv))
 export addcustommacs # Adds custom macs to user macs
+
+include("materials.jl")
 end

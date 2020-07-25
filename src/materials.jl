@@ -37,7 +37,6 @@ const mmm_chromite = parse(
 const mmm_cinnabar = parse(Material, "0.8529*Hg+0.1350*S", name = "MMM1 Cinnabar")
 const mmm_crocoite = parse(Material, "0.6914*PbO+0.3097*CrO₃+0.0009*SiO₂", name = "MMM1 Crocoite")
 const mmm_cryolite = parse(Material, "0.6*NaF+0.4*AlF3", name = "MMM1 Cryolite")
-const mmm_calcite = parse(Material, "CaF2", name = "MMM1 Calcite")
 const mmm_chromiumoxide = parse(Material, "Cr₂O₃", name = "MMM1 Chromium Oxide")
 const mmm_diopside =
     parse(Material, "0.0041*NaO+0.5534*SiO₂+0.1776*MgO+0.0062*Al₂O₃+0.0083*FeO+0.2480*CaO", name = "MMM1 Diopside")
@@ -58,9 +57,13 @@ const mmm_kaersutite = parse(
 )
 const mmm_kyanite = parse(Material, "0.6292*Al₂O₃+0.3708*SiO₂", name = "MMM1 Kyanite")
 
-const mmm_magentite = parse(Material, "0.0003*SiO₂+0.0024*MnO+0.9934*Fe₃O₄", name = "MMM Magnetite")
+const mmm_magnetite = parse(Material, "0.0003*SiO₂+0.0024*MnO+0.9934*Fe₃O₄", name = "MMM Magnetite")
 const mmm_mgalspinel = parse(Material, "0.2833*MgO+0.7167*Al₂O₃", name = "MMM Magnesium Aluminum Spinel")
-const mmm_manganotantalite = parse(Material, "0.1410*MnO+0.0560*Nb₂O₅+0.8060*Ta₂O₅", name = "MMM Manganotantalite")
+# The SPI book composition for Maganotantalite is clearly missing Fe and Ti
+# const mmm_maganotantalite = parse(Material, "0.1410*MnO+0.0560*Nb₂O₅+0.8060*Ta₂O₅", name = "MMM Manganotantalite") # Book value
+# This one is based on measurement by NWMR quantified using DTSA-II
+const mmm_maganotantalite = parse(Material, "0.2064*O+0.0035*Ti+0.1007*Mn+0.0185*Fe+0.0986*Nb+0.5744*Ta", name = "MMM Maganotantalite")
+
 const mmm_molybdenite = parse(Material, "0.3984*S+0.5929*Mo", name = "MMM Molybdenite")
 const mmm_monazite = parse(
     Material,
@@ -168,9 +171,9 @@ const mengason_mineral_mount1 = (
 )
 
 const mengason_mineral_mount2 = (
-    mmm_magentite,
+    mmm_magnetite,
     mmm_mgalspinel,
-    mmm_manganotantalite,
+    mmm_maganotantalite,
     mmm_molybdenite,
     mmm_monazite,
     mmm_obsidian,
@@ -198,7 +201,3 @@ const mengason_mineral_mount2 = (
     mmm_carbon,
     mmm_copper,
 )
-
-filter(m->haskey(m, elm),mats)
-
-which(n"Al",mengason_mineral_mount1)

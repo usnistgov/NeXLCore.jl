@@ -445,7 +445,7 @@ function Base.parse(
     # Parses expressions like 'Ca5(PO4)3⋅(OH)'
     function parseCompH2(expr::AbstractString)::Dict{PeriodicTable.Element, Int}
         # println("Parsing: $(expr)")
-        splt = split(expr, c->(c=='⋅') || (c=='.'))
+        splt = split(expr, c->(c in ( '⋅', '.','·')))
         if length(splt)>1
             return mapreduce(parseCompH2, (a,b)->merge(+,a,b), splt)
         end

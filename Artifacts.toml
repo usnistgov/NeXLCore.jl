@@ -1,0 +1,6 @@
+[mineral_data]
+git-tree-sha1 = "ed06939722e93727fcbf55bb44b91f0459e536de"
+lazy = true
+  [[mineral_data.download]]
+  url = "https://drive.google.com/uc?export=download&id=1Ackbz0YtaliQNCdZmPfj9uWTwhVNBzy8"
+  sha256 = "1078cc20fdb2d84e785166b51b54ca954d6908ed2d5f3624f1cb758f70ff295b"

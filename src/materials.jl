@@ -1,3 +1,5 @@
+using Pkg.Artifacts
+
 # Materials from the "Mengason Mineral Mount I" SPI # 1025-AB
 const mmm_albite = parse(Material, "0.1168*Na₂O+0.6876*SiO₂+0.1976*Al₂O₃+0.0017*K₂O+0.0023*CaO", name = "MMM1 Albite")
 const mmm_almadine = parse(
@@ -201,3 +203,42 @@ const mengason_mineral_mount2 = (
     mmm_carbon,
     mmm_copper,
 )
+
+function loadmineraldata(parse=false)::DataFrame
+    res = CSV.File(joinpath(artifact"mineral_data","RRUFF_Export_20191025_022204.csv")) |> DataFrame
+    if parse
+        function parseelm(str)
+            if str=="Ln" # Lanthanide
+                return Set{Element}( elements[z(n"La"):z(n"Lu")] )
+            elseif str=="An" # Actinide
+                return Set{Element}( elements[z(n"Ac"):z(n"U")] )
+            elseif str=="REE" # Rare-earth element
+                return Set{Element}( [ n"Ce", n"Dy", n"Er", n"Eu", n"Gd", n"Ho", n"La", n"Lu", n"Nd", n"Pr", n"Pm", n"Sm", n"Sc", n"Tb", n"Tm", n"Yb", n"Y" ] )
+            else
+                return Set{Element}( [parse(Element,str)] )
+            end
+        end
+        function parseelms(str)
+            if !ismissing(str)
+                return mapreduce(parseelm, union, filter(s->length(s)>0,split(str, c->isspace(c))), init=Set{Element}())
+            else
+                return Set{Element}()
+            end
+        end
+        function matormissing(str)
+            try
+                # The formula with '+' represent valences not sums
+                if isnothing(findfirst(c->c=='+',str))
+                    return parse(Material,str)
+                else
+                    return missing
+                end
+            catch
+                return missing
+            end
+        end
+        res[:, :Elements] .= parseelms.(res[:,"Chemistry Elements"])
+        res[:, :Material] .= matornothing.(res[:, "IMA Chemistry (plain)"])
+    end
+    return res
+end

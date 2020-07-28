@@ -1,23 +1,26 @@
-![](NeXL_sm.png)
+# ![](NeXL_sm.png)Core - Part of the NeXL X-ray Microanalysis Library
 
-# NeXLCore - Part of the NeXL X-ray Microanalysis Library
-NeXLCore and its dependencies [BoteSalvatICX](https://github.com/usnistgov/BoteSalvatICX.jl),
-[FFAST](https://github.com/usnistgov/FFAST.jl) and
-[NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) are not currently available in the
-Julia registry. So you must use the GitHub URL to install NeXLCore.
-```julia; eval=false;
-using Pkg
-# We need to first install three dependencies
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
-# Now install NeXLCore
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
+## Installing NeXLCore.jl
+
+NeXLCore is available throught the standard Julia registry and can be
+installed using the standard package manager.
+
+```julia
+julia> ]add NeXLCore
 ```
 
+or
+
+```julia
+julia> using Pkg
+julia> Pkg.add("NeXLCore")
+```
+
+## Using NeXLCore
+NeXLCore provides the core data and algorithms used throughout the NeXL
+libraries for elemental and X-ray-related data and calculations.
+
 #### Standards
-The core algorithms used throughout the NeXL libraries for elemental and X-ray
-related data and calculations.
 
 For consistency, function arguments and outputs will be use the following
 standard (unless otherwise mentioned.)

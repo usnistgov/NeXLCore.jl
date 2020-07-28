@@ -1,21 +1,8 @@
-# Getting Started With NeXLCore
-Nicholas W. M. Ritchie, 16-Apr-2020
+# ![](NeXL_sm.png)Core - Part of the NeXL X-ray Microanalysis Library
+
+## Getting Started With NeXLCore
 
 [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
-
-NeXLCore and its dependencies [BoteSalvatICX](https://github.com/usnistgov/BoteSalvatICX.jl),
-[FFAST](https://github.com/usnistgov/FFAST.jl) and
-[NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) are not currently available in the
-Julia registry. So you must use the GitHub URL to install NeXLCore.
-```julia; eval=false;
-using Pkg
-# We need to first install three dependencies
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
-# Now install NeXLCore
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
-```
 
 Primarily `NeXLCore` provides:
 

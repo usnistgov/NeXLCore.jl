@@ -123,16 +123,19 @@ atomicfraction(ss)[n"Fe"]
 `SubShell` objects are not often used directly but are occasionally returned by other methods so I'll just mention them
 in passing.  `SubShell` represent the notion of a sub-shell independent of which element it is associated with.  There
 are properties of sub-shells that don't depend on the element like the angular momentum quantum numbers.
-````julia; term=true
+
+```julia; term=true
 ss = n"L3"
 shell(ss) # Shells are identified by a Char
 NeXLCore.n(ss), NeXLCore.l(ss), NeXLCore.j(ss)
 allsubshells
 ksubshells, lsubshells, msubshells, nsubshells
 ```
+
 There is one gotcha with `SubShell`s and the `n"??"` notation.  What is `n"K"`? Potassium or the K-subshell?  The answer
 for `NeXL` is potassium.  The K-subshell is `n"K1"` like the first L-subshell is `n"L1"`.  (This is rarely ever an
 issue)
+
 ```julia; term=true;
 n"K1", n"K"
 ```

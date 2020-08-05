@@ -1,25 +1,8 @@
-# Getting Started With NeXLCore
-Nicholas W. M. Ritchie, 16-Apr-2020
+# ![](NeXL_sm.png)Core - Part of the NeXL X-ray Microanalysis Library
+
+## Getting Started With NeXLCore
 
 [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
-
-NeXLCore and its dependencies [BoteSalvatICX](https://github.com/usnistgov/BoteSalvatICX.jl),
-[FFAST](https://github.com/usnistgov/FFAST.jl) and
-[NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) are not currently available in the
-Julia registry. So you must use the GitHub URL to install NeXLCore.
-````julia
-
-using Pkg
-# We need to first install three dependencies
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/BoteSalvatICX.jl"))
-Pkg.add(PackageSpec(url="https://github.com/usnistgov/FFAST.jl"))
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl"))
-# Now install NeXLCore
-Pkg.add(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl"))
-````
-
-
-
 
 Primarily `NeXLCore` provides:
 
@@ -311,16 +294,33 @@ julia> atomicfraction(ss)[n"Fe"]
 `SubShell` objects are not often used directly but are occasionally returned by other methods so I'll just mention them
 in passing.  `SubShell` represent the notion of a sub-shell independent of which element it is associated with.  There
 are properties of sub-shells that don't depend on the element like the angular momentum quantum numbers.
-````julia; term=true
-ss = n"L3"
-shell(ss) # Shells are identified by a Char
-NeXLCore.n(ss), NeXLCore.l(ss), NeXLCore.j(ss)
-allsubshells
-ksubshells, lsubshells, msubshells, nsubshells
-```
+
+````julia
+julia> ss = n"L3"
+L3
+
+julia> shell(ss) # Shells are identified by a Char
+Shell[L]
+
+julia> NeXLCore.n(ss), NeXLCore.l(ss), NeXLCore.j(ss)
+(2, 1, 3//2)
+
+julia> allsubshells
+(K, L1, L2, L3, M1, M2, M3, M4, M5, N1, N2, N3, N4, N5, N6, N7, O1, O2, O3, O4, O5, O6, O7, O8, O9, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, Q1, Q2, Q3)
+
+julia> ksubshells, lsubshells, msubshells, nsubshells
+((K,), (L1, L2, L3), (M1, M2, M3, M4, M5), (N1, N2, N3, N4, N5, N6, N7))
+
+````
+
+
+
+
+
 There is one gotcha with `SubShell`s and the `n"??"` notation.  What is `n"K"`? Potassium or the K-subshell?  The answer
 for `NeXL` is potassium.  The K-subshell is `n"K1"` like the first L-subshell is `n"L1"`.  (This is rarely ever an
 issue)
+
 ````julia
 julia> n"K1", n"K"
 (K, Element(Potassium))
@@ -549,18 +549,18 @@ julia> mac( n"Ni", n"Fe K-L3") # In cm²/g
 
 julia> Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
 Dict{CharXRay,Tuple{Float64,Float64}} with 12 entries:
-  Ni L3-M4 => (1693.36, 0.0918605)
-  Ni L2-M1 => (2149.34, 0.0873993)
   Ni L2-M4 => (9677.04, 0.52428)
   Ni L1-M2 => (11241.6, 0.063308)
-  Ni L3-M3 => (1999.76, 0.0023918)
-  Ni L2-M3 => (1910.69, 0.00233952)
   Ni L1-M4 => (9496.52, 0.000227338)
+  Ni L3-M4 => (1693.36, 0.0918605)
+  Ni L1-M3 => (11241.6, 0.0969139)
+  Ni L2-M3 => (1910.69, 0.00233952)
   Ni L3-M1 => (2255.04, 0.170298)
-  Ni L3-M2 => (1999.76, 0.00246174)
   Ni L1-M5 => (9496.52, 0.000298443)
   Ni L3-M5 => (1693.36, 1.0)
-  Ni L1-M3 => (11241.6, 0.0969139)
+  Ni L2-M1 => (2149.34, 0.0873993)
+  Ni L3-M2 => (1999.76, 0.00246174)
+  Ni L3-M3 => (1999.76, 0.0023918)
 
 julia> mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
 12220.92856189755

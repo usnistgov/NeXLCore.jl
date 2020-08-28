@@ -89,7 +89,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
             end
         end
         artpath = downloadschoonjan()
-        csv = DataFrame!(CSV.File(joinpath(artpath,"radrate.dat"), delim = ' ', ignorerepeated = true, header = 0))
+        csv = CSV.read(joinpath(artpath,"radrate.dat"), DataFrame, delim = ' ', ignorerepeated = true, header = 0)
         insertcols!(csv, 3, Column2p = parse2.(csv[!, :Column2]))
         filter!(r -> (!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
         insertcols!(csv, 3, Column2pp = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2p])))
@@ -152,7 +152,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
     end
     if schoonjan
         artpath = downloadschoonjan()
-        csv = DataFrame!(CSV.File(joinpath(artpath,"fluor_yield.dat"), delim = ' ', ignorerepeated = true, header = 0))
+        csv = CSV.read(joinpath(artpath,"fluor_yield.dat"), DataFrame, delim = ' ', ignorerepeated = true, header = 0)
         sssname = [repr(ss) for ss in sss]
         filter!(r -> r[:Column2] in sssname, csv)
         insertcols!(csv, 3, Column2p = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2])))

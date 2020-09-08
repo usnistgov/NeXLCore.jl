@@ -41,16 +41,50 @@ struct KRatio
         if value(standard[elm]) <= 1.0e-6
             error("The standard $standard does not contain the element $(elm).")
         end
-        if haskey(unkProps,:TakeOffAngle) && haskey(stdProps,:TakeOffAngle) &&
-            (!isapprox(unkProps[:TakeOffAngle],stdProps[:TakeOffAngle],atol=deg2rad(0.1)))
+        if haskey(unkProps, :TakeOffAngle) &&
+           haskey(stdProps, :TakeOffAngle) &&
+           (!isapprox(unkProps[:TakeOffAngle], stdProps[:TakeOffAngle], atol = deg2rad(0.1)))
             @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
         end
         return new(elm, lines, copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
     end
 end
 
-NeXLCore.element(kr::KRatio) = kr.element
-nonnegk(kr::KRatio) = value(kr.kratio)<0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
+struct KRatios
+    element::Element
+    lines::Vector{CharXRay} # Which CharXRays were measured?
+    unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
+    stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
+    standard::Material
+    kratios::Array{<:AbstractFloat}
+
+    function KRatios(
+        lines::Vector{CharXRay},
+        unkProps::Dict{Symbol,<:Any},
+        stdProps::Dict{Symbol,<:Any},
+        standard::Material,
+        kratios::Array{<:AbstractFloat},
+    )
+        if length(lines) < 1
+            error("A k-ratio must specify at least one characteristic X-ray.")
+        end
+        elm = element(lines[1])
+        if !all(element(l) == elm for l in lines)
+            error("The characteristic X-rays in a k-ratio must all be from the same element.")
+        end
+        if value(standard[elm]) <= 1.0e-6
+            error("The standard $standard does not contain the element $(elm).")
+        end
+        if haskey(unkProps, :TakeOffAngle) &&
+           haskey(stdProps, :TakeOffAngle) &&
+           (!isapprox(unkProps[:TakeOffAngle], stdProps[:TakeOffAngle], atol = deg2rad(0.1)))
+            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
+        end
+        return new(elm, lines, copy(unkProps), copy(stdProps), standard, kratios)
+    end
+end
+
+nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
 
 Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(round(kr.kratio))")
 
@@ -88,6 +122,8 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
     )
 end
 
+NeXLCore.element(kr::Union{KRatio,KRatios}) = kr.element
+
 """
     elms(krs::Vector{KRatio})::Set{Element}
 
@@ -101,73 +137,31 @@ function elms(krs::Vector{<:Union{KRatio,KRatios}})::Set{Element}
     return res
 end
 
-
-struct KRatios
-    element::Element
-    lines::Vector{CharXRay} # Which CharXRays were measured?
-    unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
-    stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
-    standard::Material
-    kratios::Array{<:AbstractFloat}
-
-    function KRatios(
-        lines::Vector{CharXRay},
-        unkProps::Dict{Symbol,<:Any},
-        stdProps::Dict{Symbol,<:Any},
-        standard::Material,
-        kratios::Array{<:AbstractFloat},
-    )
-        if length(lines) < 1
-            error("A k-ratio must specify at least one characteristic X-ray.")
-        end
-        elm = element(lines[1])
-        if !all(element(l) == elm for l in lines)
-            error("The characteristic X-rays in a k-ratio must all be from the same element.")
-        end
-        if value(standard[elm]) <= 1.0e-6
-            error("The standard $standard does not contain the element $(elm).")
-        end
-        if haskey(unkProps,:TakeOffAngle) && haskey(stdProps,:TakeOffAngle) &&
-            (!isapprox(unkProps[:TakeOffAngle],stdProps[:TakeOffAngle],atol=deg2rad(0.1)))
-            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
-        end
-        return new(elm, lines, copy(unkProps), copy(stdProps), standard, kratios)
-    end
-end
-
 Base.show(io::IO, kr::KRatios) =
     print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]")
 
 Base.getindex(krs::KRatios, idx::Int...) = KRatio(lines, unkProps, stdProps, standard, getindex(krs.kratios, idx...))
 xrays(krs::KRatios) = lines
 Base.size(krs::KRatios) = size(krs.kratios)
-Base.size(krs::KRatios, idx::Int) = size(krs.kratios,idx)
-
-asimage(krs::KRatios; transform = identity) = Gray.(transform.(krs.kratios))
+Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 
 """
-    normalize(krs::AbstractVector{KRatios}, norm=1.0f)::Vector{Tuple{KRatio, Array}}
+    normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f, minsum::Union{Nothing,Real}=nothing)::Vector{Tuple{KRatio, Array}}
 
-Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array.
+Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array. `norm` specifies normalization
+constants other than 1.0 and `minsum` assigns the value NaN32 for all pixels where the sum is less than `minsum`. This
+is useful for holes, shadows and other artifacts which lead to low k-ratio totals.  The palettes below will plot
+NaN32 as yellow.
 """
-function normalize(krs::AbstractVector{KRatios}, norm=1.0f0)::Vector{Tuple{KRatios, Array}}
+function normalize(
+    krs::AbstractVector{KRatios};
+    norm::Float32 = 1.0f0,
+    minsum::Float32 = 0.0f0,
+)::Vector{Tuple{KRatios,Array}}
     sz = size(krs[1].kratios)
-    @assert all( (sz == size(kr.kratios) for kr in krs[2:end] ) )
-    s = [ sum(kr.kratios[ci] for kr in krs) for ci in CartesianIndices(krs[1].kratios) ]
-    return [ (kr, norm .* (kr.kratios ./ s)) for kr in krs ]
+    @assert all((sz == size(kr.kratios) for kr in krs[2:end]))
+    s = [sum(kr.kratios[ci] for kr in krs) for ci in CartesianIndices(krs[1].kratios)]
+    res = [(kr, norm .* (kr.kratios ./ s)) for kr in krs]
+    foreach(ci -> foreach(r -> r[2][ci] = NaN32, res), filter(ci -> s[ci] < minsum, CartesianIndices(s)))
+    return res
 end
-
-const Log3BandColorblind = begin
-    colors = (
-    colorant"rgb(0%,38%,100%)", # blue
-    colorant"rgb(0%,8%,20%)", # blue
-    colorant"rgb(75%,0%,0%)", # red
-    colorant"rgb(16%,0%,0%)", # red
-    colorant"rgb(100%,90%,0%)", # yellow
-    colorant"rgb(0%,0%,0%)", # black
-    )
-    f(x) = (log(10.0, x)+3.0)/3.0
-    reduce(append!, ( range(colors[1], stop=colors[2], length=85), range(colors[3], stop=colors[4], length=85), range(colors[5], stop=colors[6], length=86)))
-end
-
-Log3BandC(f::AbstractFloat)::Colorant = Log3BandColorblind[min(max(trunc(Int, 256.0*(log(10.0,max(f,1.0e-3))+3.0)/3.0),0),255)+1]

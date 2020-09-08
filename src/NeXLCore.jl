@@ -182,7 +182,7 @@ export KRatio # Represents a measured intensity ratio
 export KRatios # The array equivalent of KRatio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
-export Log3BandC
+export normalize
 
 include("properties.jl")
 # Methods for checking what properties are required for an algorithm.
@@ -200,4 +200,8 @@ export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke19
 export addcustommacs # Adds custom macs to user macs
 
 include("materials.jl")
+
+include("palettes.jl")
+export Log3BandC, Log3Band, LogScale, LinearScale # Converts [0.0,1.0] to a colored image.
+export loadlegend # Load a legend for one of the above scales
 end

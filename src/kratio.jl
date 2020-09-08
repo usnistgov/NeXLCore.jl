@@ -93,7 +93,7 @@ end
 
 Return a set containing the elements present in krs.
 """
-function elms(krs::Vector{KRatio})::Set{Element}
+function elms(krs::Vector{<:Union{KRatio,KRatios}})::Set{Element}
     res = Set{Element}()
     for kr in krs
         push!(res, kr.element)
@@ -111,7 +111,7 @@ struct KRatios
     kratios::Array{<:AbstractFloat}
 
     function KRatios(
-        lines::AbstractVector{CharXRay},
+        lines::Vector{CharXRay},
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,
@@ -138,9 +138,36 @@ end
 Base.show(io::IO, kr::KRatios) =
     print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]")
 
-Base.getindex(krs::KRatios, idx...) = getindex(krs.kratios, idx...)
+Base.getindex(krs::KRatios, idx::Int...) = KRatio(lines, unkProps, stdProps, standard, getindex(krs.kratios, idx...))
 xrays(krs::KRatios) = lines
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios,idx)
 
 asimage(krs::KRatios; transform = identity) = Gray.(transform.(krs.kratios))
+
+"""
+    normalize(krs::AbstractVector{KRatios}, norm=1.0f)::Vector{Tuple{KRatio, Array}}
+
+Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array.
+"""
+function normalize(krs::AbstractVector{KRatios}, norm=1.0f0)::Vector{Tuple{KRatios, Array}}
+    sz = size(krs[1].kratios)
+    @assert all( (sz == size(kr.kratios) for kr in krs[2:end] ) )
+    s = [ sum(kr.kratios[ci] for kr in krs) for ci in CartesianIndices(krs[1].kratios) ]
+    return [ (kr, norm .* (kr.kratios ./ s)) for kr in krs ]
+end
+
+const Log3BandColorblind = begin
+    colors = (
+    colorant"rgb(0%,38%,100%)", # blue
+    colorant"rgb(0%,8%,20%)", # blue
+    colorant"rgb(75%,0%,0%)", # red
+    colorant"rgb(16%,0%,0%)", # red
+    colorant"rgb(100%,90%,0%)", # yellow
+    colorant"rgb(0%,0%,0%)", # black
+    )
+    f(x) = (log(10.0, x)+3.0)/3.0
+    reduce(append!, ( range(colors[1], stop=colors[2], length=85), range(colors[3], stop=colors[4], length=85), range(colors[5], stop=colors[6], length=86)))
+end
+
+Log3BandC(f::AbstractFloat)::Colorant = Log3BandColorblind[min(max(trunc(Int, 256.0*(log(10.0,max(f,1.0e-3))+3.0)/3.0),0),255)+1]

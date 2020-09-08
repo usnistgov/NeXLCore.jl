@@ -182,7 +182,7 @@ export KRatio # Represents a measured intensity ratio
 export KRatios # The array equivalent of KRatio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
-export asimage # Converts a KRatios to an Gray-scale image
+export Log3BandC
 
 include("properties.jl")
 # Methods for checking what properties are required for an algorithm.

@@ -23,9 +23,9 @@ The 256ᵗʰ entry is yellow for an error condition.
 const Log3BandBright = reduce(
     append!,
     (
-        range(colorant"rgb(60,0,0)", stop = colorant"rgb(255,200,200)", length = 85), # 60–255/0–200/0–200
-        range(colorant"rgb(0,60,0)", stop = colorant"rgb(200,255,200)", length = 85), # 0–200/60–255/0–200
-        range(colorant"rgb(0,0,60)", stop = colorant"rgb(200,200,255)", length = 85), # 0–200/0–200/60–255
+        range(colorant"rgb(200,200,255)", stop = colorant"rgb(0,0,60)", length = 85), # 0–200/0–200/60–255
+        range(colorant"rgb(200,255,200)", stop = colorant"rgb(0,60,0)", length = 85), # 0–200/60–255/0–200
+        range(colorant"rgb(255,200,200)", stop = colorant"rgb(60,0,0)", length = 85), # 60–255/0–200/0–200
         [colorant"yellow"],
     ),
 )
@@ -34,7 +34,7 @@ const Log3BandBright = reduce(
 An RGB gray-scale palette with entry 256 being yellow.
 """
 const GrayScale =
-    reduce(append!, (range(colorant"rgb(255,255,255)", stop = colorant"rgb(0,0,0)", length = 255), [colorant"yellow"]))
+    reduce(append!, (range(colorant"rgb(0,0,0)", stop = colorant"rgb(255,255,255)", length = 255), [colorant"yellow"]))
 
 
 """

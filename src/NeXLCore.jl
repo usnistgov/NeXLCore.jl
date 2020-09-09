@@ -204,4 +204,5 @@ include("materials.jl")
 include("palettes.jl")
 export Log3BandC, Log3Band, LogScale, LinearScale # Converts [0.0,1.0] to a colored image.
 export loadlegend # Load a legend for one of the above scales
+
 end

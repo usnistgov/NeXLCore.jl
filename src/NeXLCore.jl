@@ -110,6 +110,7 @@ export NeXLPalette
 export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions
 export plotXrayWeights # Plot weights of lines
 export plotEdgeEnergies # Plot edge energies
+export plot2 # Alternative way to plot Material
 
 include("bremsstrahlung.jl")
 export NeXLBremsstrahlung # <: NeXLAlgorithm

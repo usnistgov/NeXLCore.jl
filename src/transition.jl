@@ -492,7 +492,7 @@ macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Uncerta
 The mass absorption coefficient for an X-ray of the specified energy (eV) in the
 specified element.
 """
-mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTMAC)::Float64 = mac(elm, energy, alg)
+mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = mac(elm, energy, alg)
 
 """
     macU(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::UncertainValue
@@ -500,7 +500,7 @@ mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTMAC)::Float
 The mass absorption coefficient (with uncertainty estimate) for an X-ray of the specified energy (eV) in the
 specified element.
 """
-macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTMAC)::UncertainValue = macU(elm, energy, alg)
+macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue = macU(elm, energy, alg)
 
 
 """

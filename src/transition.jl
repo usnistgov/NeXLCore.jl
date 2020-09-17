@@ -276,7 +276,7 @@ function ionizationfraction(z::Int, sh::Int, over = 4.0)
     function relativeTo(z, sh)
         nn = (1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4)
         # Find the largest available shell in shell
-        return findlast(ss -> (nn[ss] == nn[sh]) && FFAST.hasedge(FFASTMAC,z, ss), eachindex(nn))
+        return findlast(ss -> (nn[ss] == nn[sh]) && FFAST.hasedge(z, ss), eachindex(nn))
     end
     rel = relativeTo(z, sh)
     @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
@@ -471,7 +471,7 @@ function Base.show(io::IO, cxrs::AbstractVector{CharXRay})
 end
 
 """
-    mac(elm::Element, cxr::CharXRay, alg::Type{<:MACAlgorithm}=FFASTMAC)::Float64
+    mac(elm::Element, cxr::CharXRay, alg::Type{<:MACAlgorithm}=FFASTDB)::Float64
 
 The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
@@ -479,7 +479,7 @@ specified element.
 mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = mac(elm, energy(cxr), alg)
 
 """
-    macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::UncertainValue
+    macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::UncertainValue
 
 The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
@@ -487,7 +487,7 @@ specified element.
 macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue = macU(elm, energy(cxr), alg)
 
 """
-    mac(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::Float64
+    mac(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64
 
 The mass absorption coefficient for an X-ray of the specified energy (eV) in the
 specified element.
@@ -495,7 +495,7 @@ specified element.
 mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = mac(elm, energy, alg)
 
 """
-    macU(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTMAC)::UncertainValue
+    macU(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTDB)::UncertainValue
 
 The mass absorption coefficient (with uncertainty estimate) for an X-ray of the specified energy (eV) in the
 specified element.

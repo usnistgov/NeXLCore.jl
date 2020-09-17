@@ -1,6 +1,6 @@
 # Defines how various different algorithms are implemented
-using FFAST # for mass absorption coefficienct
-using BoteSalvatICX # For ionization crosssections
+import FFAST # for mass absorption coefficienct
+import BoteSalvatICX # For ionization crosssections
 
 const plancksConstant = 4.135667696e-15 # eV s
 const hc = 1.23984193e-4 # eV cm (plancks⋅speed-of-light)
@@ -25,7 +25,7 @@ struct FFASTDB <: NeXLAlgorithm end
 
 Compute the mass absorption coefficient for the specified energy X-ray (in eV) in the specified element (z=> atomic number).
 """
-mac(elm::Element, energy::Float64, ::Type{FFASTDB})::Float64 = FFAST.mac(FFASTMAC, PhotoElectricMAC, z(elm), energy)
+mac(elm::Element, energy::Float64, ::Type{FFASTDB})::Float64 = FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
 
 
 """
@@ -35,8 +35,8 @@ Compute the mass absorption coefficient (with estimate of uncertainty) for the s
 element (z=> atomic number).
 """
 function macU(elm::Element, energy::Float64, ::Type{FFASTDB})::UncertainValue
-    macv = FFAST.mac(FFASTMAC, PhotoElectricMAC, z(elm),energy)
-    return uv(macv, min(fractionaluncertainty(FFASTMAC, SolidLiquid, z(elm),energy)[1],0.9)*macv)
+    macv = FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
+    return uv(macv, min(FFAST.fractionaluncertainty(FFAST.SolidLiquid, z(elm), energy)[1],0.9)*macv)
 end
 
 """
@@ -44,23 +44,22 @@ end
 
 Return the minimum energy (in eV) necessary to ionize the specified sub-shell in the specified atom.
 """
-edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 = FFAST.edgeenergy(FFASTMAC, z, ss)
-edgeenergy(z::Int, ss::Int)::Float64 = NeXLCore.edgeenergy(z, ss, FFASTDB)
+edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 = FFAST.edgeenergy(z, ss)
+edgeenergy(z::Int, ss::Int) = edgeenergy(z, ss, FFASTDB)
 
 """
     eachelement() = 1:92
 
 Return the range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data
 """
-eachelement(::Type{FFASTDB}) = FFAST.eachelement(FFASTMAC)
+eachelement(::Type{FFASTDB}) = FFAST.eachelement()
 eachelement() = eachelement(FFASTDB)
-
 """
     subshellsindexes(z::Int)
 
 Return the shells occupied in a neutral, ground state atom of the specified atomic number.
 """
-subshellsindexes(z::Int, ::Type{FFASTDB}) = eachedge(FFASTMAC,z)
+subshellsindexes(z::Int, ::Type{FFASTDB}) = FFAST.eachedge(z)
 subshellsindexes(z::Int) = subshellsindexes(z::Int, FFASTDB)
 
 
@@ -70,7 +69,7 @@ subshellsindexes(z::Int) = subshellsindexes(z::Int, FFASTDB)
 Return energy (in eV) of the transition by specified inner and outer sub-shell index.
 """
 characteristicXRayEnergy(z::Int, inner::Int, outer::Int, ::Type{FFASTDB})::Float64 =
-    FFAST.edgeenergy(FFASTMAC,z,inner)-FFAST.edgeenergy(FFASTMAC,z,outer)
+    FFAST.edgeenergy(z,inner)-FFAST.edgeenergy(z,outer)
 
 struct Bote2009 <: NeXLAlgorithm end
 
@@ -81,7 +80,7 @@ Compute the absolute ionization crosssection (in cm²) for the specified element
 electon energy (in eV).
 """
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009}) =
-    BoteSalvatICX.hasedge(BoteSalvat2009, z, ss) ? BoteSalvatICX.ionizationcrosssection(BoteSalvat2009, z, ss, energy, NeXLCore.edgeenergy(z, ss, FFASTDB)) : 0.0
+    BoteSalvatICX.hasedge(z, ss) ? BoteSalvatICX.ionizationcrosssection(z, ss, energy, NeXLCore.edgeenergy(z, ss, FFASTDB)) : 0.0
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
     ionizationcrosssection(z, ss, energy, Bote2009)
 
@@ -91,7 +90,7 @@ ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
 Compute the jump ratio.
 """
 jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) =
-    FFAST.jumpratio(FFASTMAC, z, ss)
+    FFAST.jumpratio(z, ss)
 
 include("strength.jl")
 

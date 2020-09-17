@@ -21,7 +21,7 @@ function loadAltWeights()
            7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 )
     for row in CSV.File(joinpath("$(path)","..","data","relax.csv"))
         z, ionized, inner, outer, weight  = row.ZZ, row.II, row.NN, row.OO, row.PP
-        if (z<=92) && FFAST.hasedge(FFASTMAC, z, inner) && FFAST.hasedge(FFASTMAC, z, outer) && (nn[inner]!=nn[outer])
+        if (z<=92) && FFAST.hasedge(z, inner) && FFAST.hasedge(z, outer) && (nn[inner]!=nn[outer])
             if !haskey(xrw,(z, ionized))
                 xrw[(z,ionized)] = []
             end

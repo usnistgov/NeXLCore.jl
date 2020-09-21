@@ -204,8 +204,39 @@ const mengason_mineral_mount2 = (
     mmm_copper,
 )
 
+function createmineralartifact()
+    # This is the path to the Artifacts.toml we will manipulate
+    artifacts_toml = joinpath(@__DIR__, "Artifacts.toml")
+
+    # Query the `Artifacts.toml` file for the hash bound to the name "iris"
+    # (returns `nothing` if no such binding exists)
+    mineral_hash = artifact_hash("rplraw", artifacts_toml)
+
+    # If the name was not bound, or the hash it was bound to does not exist, create it!
+    if mineral_hash == nothing || !artifact_exists(mineral_hash)
+        # create_artifact() returns the content-hash of the artifact directory once we're finished creating it
+        mineral_hash = create_artifact() do artifact_dir
+            print("Downloading mineral database.")
+            tarball = joinpath(artifact_dir, "mineral.tar.gz")
+            download("https://drive.google.com/uc?export=download&id=1Ackbz0YtaliQNCdZmPfj9uWTwhVNBzy8", tarball)
+            Pkg.probe_platform_engines!()
+            Pkg.unpack(tarball, artifact_dir, verbose=true)
+            rm(tarball)
+        end
+        # Now bind that hash within our `Artifacts.toml`.  `force = true` means that if it already exists,
+        # just overwrite with the new content-hash.  Unless the source files change, we do not expect
+        # the content hash to change, so this should not cause unnecessary version control churn.
+        bind_artifact!(artifacts_toml, "rplraw", mineral_hash)
+    end
+
+    # Get the path of the iris dataset, either newly created or previously generated.
+    # this should be something like `~/.julia/artifacts/dbd04e28be047a54fbe9bf67e934be5b5e0d357a`
+    return artifact_path(mineral_hash)
+end
+
 function loadmineraldata(parse=false)::DataFrame
-    res = CSV.File(joinpath(artifact"mineral_data","RRUFF_Export_20191025_022204.csv")) |> DataFrame
+    minpath = createmineralartifact()
+    res = CSV.File(joinpath(minpath,"RRUFF_Export_20191025_022204.csv")) |> DataFrame
     if parse
         function parseelm(str)
             if str=="Ln" # Lanthanide

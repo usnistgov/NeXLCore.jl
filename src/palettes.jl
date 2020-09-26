@@ -9,8 +9,8 @@ A colorblind friendly palette suited to use with log base-10 transformed data on
 const Log3BandColorblind = reduce(
     append!,
     (
-        range(colorant"rgb(0%,38%,100%)", stop = colorant"white", length = 120)[1:85],
-        range(colorant"rgb(75%,0%,0%)", stop = colorant"white", length = 120)[1:85],
+        range(colorant"rgb(0%,38%,100%)", stop = colorant"white", length = 120)[85:-1:1],
+        range(colorant"rgb(75%,0%,0%)", stop = colorant"white", length = 120)[85:-1:1],
         range(colorant"rgb(100%,90%,0%)", stop = colorant"black", length = 85),
         [colorant"yellow"],
     ),
@@ -23,9 +23,9 @@ The 256ᵗʰ entry is yellow for an error condition.
 const Log3BandBright = reduce(
     append!,
     (
-        range(colorant"rgb(200,200,255)", stop = colorant"rgb(0,0,60)", length = 85), # 0–200/0–200/60–255
-        range(colorant"rgb(200,255,200)", stop = colorant"rgb(0,60,0)", length = 85), # 0–200/60–255/0–200
-        range(colorant"rgb(255,200,200)", stop = colorant"rgb(60,0,0)", length = 85), # 60–255/0–200/0–200
+        range(colorant"rgb(0,0,60)", stop = colorant"rgb(200,200,255)", length = 85), # 0–200/0–200/60–255
+        range(colorant"rgb(0,60,0)", stop = colorant"rgb(200,255,200)", length = 85), # 0–200/60–255/0–200
+        range(colorant"rgb(60,0,0)", stop = colorant"rgb(255,200,200)", length = 85), # 60–255/0–200/0–200
         [colorant"yellow"],
     ),
 )

@@ -411,6 +411,8 @@ Example:
 """
 characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6) =
     characteristic(elm, iter, cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE))
+characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6) =
+    characteristic(elm, iter, cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE))
 
 """
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)
@@ -423,6 +425,8 @@ Example:
     characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
 """
 characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)::Vector{CharXRay} =
+    map(tr -> characteristic(elm, tr), filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)))
+characteristic(elm::Element, iter::AbstractVector{Transition}, filterfunc::Function)::Vector{CharXRay} =
     map(tr -> characteristic(elm, tr), filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)))
 
 

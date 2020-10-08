@@ -86,16 +86,23 @@ end
 
 nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
 
-Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(round(kr.kratio))")
+"""
+    strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}
+
+Creates a new Vector{KRatio} containing all the KRatio objects in `krs` except those associated with the specified elements.
+"""
+Base.strip(krs::AbstractVector{KRatio}, els::Element...) where {N} = collect(filter(k->!(element(k) in els), krs))
+
+Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    elms, zs, lines, e0u = String[], Int[], Vector{CharXRay}[], Float64[]
+    elms, zs, lines, e0u = String[], Int[], String[], Float64[]
     e0s, toau, toas, mat = Float64[], Float64[], Float64[], String[]
     celm, dcelm, krv, dkrv = Float64[], Float64[], Float64[], Float64[]
     for kr in krs
         push!(elms, kr.element.symbol)
         push!(zs, z(kr.element))
-        push!(lines, kr.lines)
+        push!(lines, repr(kr.lines))
         push!(e0u, get(kr.unkProps, :BeamEnergy, -1.0))
         push!(e0s, get(kr.stdProps, :BeamEnergy, -1.0))
         push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))

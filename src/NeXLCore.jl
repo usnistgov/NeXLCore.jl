@@ -184,6 +184,7 @@ export KRatios # The array equivalent of KRatio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
 export normalize
+#export strip # Removes one or more elements from a Vector{KRatio}
 
 include("properties.jl")
 # Methods for checking what properties are required for an algorithm.

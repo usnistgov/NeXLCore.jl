@@ -50,40 +50,9 @@ struct KRatio
     end
 end
 
-struct KRatios
-    element::Element
-    lines::Vector{CharXRay} # Which CharXRays were measured?
-    unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
-    stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
-    standard::Material
-    kratios::Array{<:AbstractFloat}
-
-    function KRatios(
-        lines::Vector{CharXRay},
-        unkProps::Dict{Symbol,<:Any},
-        stdProps::Dict{Symbol,<:Any},
-        standard::Material,
-        kratios::Array{<:AbstractFloat},
-    )
-        if length(lines) < 1
-            error("A k-ratio must specify at least one characteristic X-ray.")
-        end
-        elm = element(lines[1])
-        if !all(element(l) == elm for l in lines)
-            error("The characteristic X-rays in a k-ratio must all be from the same element.")
-        end
-        if value(standard[elm]) <= 1.0e-6
-            error("The standard $standard does not contain the element $(elm).")
-        end
-        if haskey(unkProps, :TakeOffAngle) &&
-           haskey(stdProps, :TakeOffAngle) &&
-           (!isapprox(unkProps[:TakeOffAngle], stdProps[:TakeOffAngle], atol = deg2rad(0.1)))
-            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
-        end
-        return new(elm, lines, copy(unkProps), copy(stdProps), standard, kratios)
-    end
-end
-
+find(cxr::CharXRay, krs::AbstractVector{KRatio}) = krs[findfirst(kr -> cxr in kr.lines, krs)]
+NeXLUncertainties.value(kr::KRatio) = value(kr.kratio)
+NeXLUncertainties.σ(kr::KRatio) = σ(kr.kratio)
 nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
 
 """
@@ -91,7 +60,7 @@ nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.krati
 
 Creates a new Vector{KRatio} containing all the KRatio objects in `krs` except those associated with the specified elements.
 """
-Base.strip(krs::AbstractVector{KRatio}, els::Element...) where {N} = collect(filter(k->!(element(k) in els), krs))
+Base.strip(krs::AbstractVector{KRatio}, els::Element...) where {N} = collect(filter(k -> !(element(k) in els), krs))
 
 Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
 
@@ -127,6 +96,40 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         K = krv,
         ΔK = dkrv,
     )
+end
+
+struct KRatios
+    element::Element
+    lines::Vector{CharXRay} # Which CharXRays were measured?
+    unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
+    stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
+    standard::Material
+    kratios::Array{<:AbstractFloat}
+
+    function KRatios(
+        lines::Vector{CharXRay},
+        unkProps::Dict{Symbol,<:Any},
+        stdProps::Dict{Symbol,<:Any},
+        standard::Material,
+        kratios::Array{<:AbstractFloat},
+    )
+        if length(lines) < 1
+            error("A k-ratio must specify at least one characteristic X-ray.")
+        end
+        elm = element(lines[1])
+        if !all(element(l) == elm for l in lines)
+            error("The characteristic X-rays in a k-ratio must all be from the same element.")
+        end
+        if value(standard[elm]) <= 1.0e-6
+            error("The standard $standard does not contain the element $(elm).")
+        end
+        if haskey(unkProps, :TakeOffAngle) &&
+           haskey(stdProps, :TakeOffAngle) &&
+           (!isapprox(unkProps[:TakeOffAngle], stdProps[:TakeOffAngle], atol = deg2rad(0.1)))
+            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
+        end
+        return new(elm, lines, copy(unkProps), copy(stdProps), standard, kratios)
+    end
 end
 
 NeXLCore.element(kr::Union{KRatio,KRatios}) = kr.element

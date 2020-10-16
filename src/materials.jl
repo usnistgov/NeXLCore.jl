@@ -213,7 +213,7 @@ function createmineralartifact()
     mineral_hash = artifact_hash("rplraw", artifacts_toml)
 
     # If the name was not bound, or the hash it was bound to does not exist, create it!
-    if mineral_hash == nothing || !artifact_exists(mineral_hash)
+    if mineral_hash === nothing || !artifact_exists(mineral_hash)
         # create_artifact() returns the content-hash of the artifact directory once we're finished creating it
         mineral_hash = create_artifact() do artifact_dir
             print("Downloading mineral database.")

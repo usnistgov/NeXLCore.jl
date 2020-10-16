@@ -60,7 +60,7 @@ nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.krati
 
 Creates a new Vector{KRatio} containing all the KRatio objects in `krs` except those associated with the specified elements.
 """
-Base.strip(krs::AbstractVector{KRatio}, els::Element...) where {N} = collect(filter(k -> !(element(k) in els), krs))
+Base.strip(krs::AbstractVector{KRatio}, els::Element...) = collect(filter(k -> !(element(k) in els), krs))
 
 Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
 

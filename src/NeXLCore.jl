@@ -92,6 +92,7 @@ include("film.jl")
 export Film # A thin film of Material
 export transmission # Transmission fraction through a Film
 export thickness # Of Film in cm
+export massthickness # Of film in g/cm²
 
 # For DTSA-II interop
 export todtsa2comp    # Write a mass fraction (+opt density) to a string parsable by parsedtsa2comp

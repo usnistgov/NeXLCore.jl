@@ -52,5 +52,3 @@ name(elm::Element) = elm.name
 Return the nominal density for the element.
 """
 density(elm::Element) = elm.density / 1.0u"g/cm^3"
-
-Base.print(io::IO, elm::Element) = print(io, elm.symbol)

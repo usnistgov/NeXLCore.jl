@@ -122,7 +122,7 @@ end
 function downloadschoonjan()
     artifacts_toml = joinpath(@__DIR__, "Artifacts.toml")
     hash = artifact_hash("schoonjan", artifacts_toml)
-    if hash == nothing || !artifact_exists(hash)
+    if hash === nothing || !artifact_exists(hash)
         hash = create_artifact() do artifact_dir
             # We create the artifact by simply downloading a few files into the new artifact directory
             download("https://github.com/tschoonj/xraylib/blob/master/data/fluor_yield.dat?raw=true", joinpath(artifact_dir, "fluor_yield.dat"))

@@ -551,6 +551,6 @@ The fraction of relaxations from the specified shell that decay via radiative tr
 rather than electronic (Auger) transition.  Includes Coster-Kronig
 """
 function fluorescenceyieldcc(ass::AtomicSubShell, ::Type{NeXL})::Float64
-    f(ss) = sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, ss, s, NeXL), ss.index+1:length(allsubshells)))
+    f(ss) = sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL), ss.index+1:length(allsubshells)))
     return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
 end

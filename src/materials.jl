@@ -273,3 +273,46 @@ function loadmineraldata(parse=false)::DataFrame
     end
     return res
 end
+
+function loadsmithsoniandata(; clean=true)
+    tmp = CSV.File(joinpath(@__DIR__, "..", "data", "smithsonian_microbeam_standards.csv"), header=2) |> DataFrame
+    if clean
+        res = copy(tmp[:, 1:4])
+        colnames = propertynames(tmp)
+        val(i) = ismissing(i) ? 0.0 : (i isa String ? (startswith(i,"<") ? 0.0 : parse(Float64, i)) : i)
+        for i in 5:ncol(tmp)
+            res[:, colnames[i]] = val.(tmp[:, i])
+        end
+        return res
+    else
+        return tmp
+    end
+end
+
+function parsedsmithsoniandata()::Dict{String, Material}
+    data = loadsmithsoniandata(clean=true)
+    pm(cn) = cn=="H2O-" ? "H2O" : (cn=="nB2O5" ? "B2O5" : (cn=="REE2O3" ? "La2O3" : cn))
+    cols = Dict{String, String}( colname=>pm(colname) for colname in names(data)[5:67])
+    res = Dict{String, Material}()
+    for r in eachrow(data)
+        str=""
+        for (cn, mat) in cols
+            if r[cn]>0.0
+                str *= "+$(r[cn]/100.0)*$mat"
+            end
+        end
+        mat=parse(Material, str[2:end], name=r[:Name])
+        mat[:CatalogNumber] = r["Catalog Number"]
+        mat[:EZID] = r[:EZID]
+        mat[:ISGN] = r[:IGSN]
+        if r[:REE2O3]>0.0
+            mat[:Note] = "Ambiguous REE2O3 replaced with La2O3."
+        end
+        res[r[:Name]] = mat
+    end
+    return res
+end
+
+
+
+        

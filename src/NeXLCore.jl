@@ -203,6 +203,8 @@ export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke19
 export addcustommacs # Adds custom macs to user macs
 
 include("materials.jl")
+export loadsmithsoniandata, parsedsmithsoniandata
+export loadmineraldata
 
 include("palettes.jl")
 export Log3BandC, Log3Band, LogScale, LinearScale # Converts [0.0,1.0] to a colored image.

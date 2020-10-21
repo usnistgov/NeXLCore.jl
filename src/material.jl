@@ -658,6 +658,7 @@ function compositionlibrary()::Dict{String, Material}
     end
     return result
 end
+
 """
     z(mat::Material)
 
@@ -665,3 +666,12 @@ end
 Computes the mean atomic number for a material. (Naive algorithm.)
 """
 z(mat::Material) = sum(c*z for (z,c) in mat.massfraction)
+
+
+"""
+    z(mat::Material)
+
+
+Computes the mean atomic weight for a material. (Naive algorithm.)
+"""
+a(mat::Material) = sum(haskey(mat.a,z) ? mat.a[z] : a(elements[z])*c for (z,c) in mat.massfraction)

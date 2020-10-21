@@ -235,4 +235,14 @@ J(::Type{Berger1982}, z::Int) = (
 )[z]
 J(ty::Type{Berger1982}, elm::Element) = J(Berger1982, z(elm))
 J(ty::Type{<:NeXLMeanIonizationPotential}, elm::Element) = J(ty, convert(Float64, z(elm)))
-J(ty::Type{<:NeXLMeanIonizationPotential}, mat::Material) = sum(mat[elm]*J(ty, convert(Float64, z(elm))),keys(mat))
+
+"""
+    J(ty::Type{<:NeXLMeanIonizationPotential}, mat::Material)
+
+Computes the mean ionization potential for a material based on the formula in PaP1992 (Green Book)
+"""
+function J(ty::Type{<:NeXLMeanIonizationPotential}, mat::Material)
+  mk = keys(mat)
+  M = sum(nonneg(mat, elm) * z(elm) / a(elm, mat) for elm in mk)
+  exp(sum(nonneg(mat, elm) * (z(elm) / a(elm, mat)) * log(J(ty, elm)) for elm in mk) / M)
+end

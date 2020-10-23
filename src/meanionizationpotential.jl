@@ -127,8 +127,9 @@ struct Berger1982 <: NeXLMeanIonizationPotential end
 J(::Type{Bloch1933}, z::Real) = 13.5 * z
 J(::Type{Jensen1937}, z::Real) = 9.0 * z * (1.0 + 0.5 * z^(-2.0 / 3.0))
 J(::Type{Wilson1941}, z::Real) = 11.5 * z
-J(::Type{Sternheimer1964}, z::Real) = z >= 12 ? z * (9.76 + 58.82 * z^-1.19) : J(Bloch1933, z)
-J(::Type{Springer1967}, z::Real) = z * ((9.0 * (1.0 + z^(-2.0/3.0))) + (0.03 * z))
+J(::Type{Sternheimer1964}, z::Real) =
+    z >= 12 ? z * (9.76 + 58.82 * z^-1.19) : J(Bloch1933, z)
+J(::Type{Springer1967}, z::Real) = z * ((9.0 * (1.0 + z^(-2.0 / 3.0))) + (0.03 * z))
 J(::Type{Zeller1973}, z::Real) = z * (10.04 + 8.25 * exp(-z / 11.22))
 J(::Type{Brizuela1990}, z::Real) = 22.4 * z^0.828
 J(::Type{Berger1982}, z::Int) = (
@@ -242,7 +243,7 @@ J(ty::Type{<:NeXLMeanIonizationPotential}, elm::Element) = J(ty, convert(Float64
 Computes the mean ionization potential for a material based on the formula in PaP1992 (Green Book)
 """
 function J(ty::Type{<:NeXLMeanIonizationPotential}, mat::Material)
-  mk = keys(mat)
-  M = sum(nonneg(mat, elm) * z(elm) / a(elm, mat) for elm in mk)
-  exp(sum(nonneg(mat, elm) * (z(elm) / a(elm, mat)) * log(J(ty, elm)) for elm in mk) / M)
+    mk = keys(mat)
+    M = sum(nonneg(mat, elm) * z(elm) / a(elm, mat) for elm in mk)
+    exp(sum(nonneg(mat, elm) * (z(elm) / a(elm, mat)) * log(J(ty, elm)) for elm in mk) / M)
 end

@@ -11,46 +11,89 @@ using CSV
 
 function loadAltWeights()
     path = dirname(pathof(@__MODULE__))
-    xrw = Dict{Tuple{Int, Int},Vector{Tuple{Int, Int, Float64}}}()
-    nn = ( 1, # Shell index
-           2, 2, 2,
-           3, 3, 3, 3, 3,
-           4, 4, 4, 4, 4, 4, 4,
-           5, 5, 5, 5, 5, 5, 5, 5, 5,
-           6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-           7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 )
-    for row in CSV.File(joinpath("$(path)","..","data","relax.csv"))
-        z, ionized, inner, outer, weight  = row.ZZ, row.II, row.NN, row.OO, row.PP
-        if (z<=92) && FFAST.hasedge(z, inner) && FFAST.hasedge(z, outer) && (nn[inner]!=nn[outer])
-            if !haskey(xrw,(z, ionized))
-                xrw[(z,ionized)] = []
+    xrw = Dict{Tuple{Int,Int},Vector{Tuple{Int,Int,Float64}}}()
+    nn = (
+        1, # Shell index
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+    )
+    for row in CSV.File(joinpath("$(path)", "..", "data", "relax.csv"))
+        z, ionized, inner, outer, weight = row.ZZ, row.II, row.NN, row.OO, row.PP
+        if (z <= 92) &&
+           FFAST.hasedge(z, inner) &&
+           FFAST.hasedge(z, outer) &&
+           (nn[inner] != nn[outer])
+            if !haskey(xrw, (z, ionized))
+                xrw[(z, ionized)] = []
             end
             # There seems to be a problem with the L2-M1 and L3-M1 weights which I resolve with this ad-hoc fix.
-            if (outer==5) && ((inner==4)||(inner==3))
-                if z>=29
+            if (outer == 5) && ((inner == 4) || (inner == 3))
+                if z >= 29
                     weight *= max(0.1, 0.1 + ((0.9 * (z - 29.0)) / (79.0 - 29.0)))
                 else
-                    weight *= max(0.1, 0.2 - ((0.1 * (z - 22.0)) / (29.0 - 22.0)));
+                    weight *= max(0.1, 0.2 - ((0.1 * (z - 22.0)) / (29.0 - 22.0)))
                 end
             end
-            push!(xrw[(z,ionized)], (inner, outer, weight))
-            if !haskey(transitions,(inner,outer))
-                transitions[(inner,outer)]=1
+            push!(xrw[(z, ionized)], (inner, outer, weight))
+            if !haskey(transitions, (inner, outer))
+                transitions[(inner, outer)] = 1
             else
-                transitions[(inner,outer)]+=1
+                transitions[(inner, outer)] += 1
             end
         end
     end
     for (key, val) in xrw
-        xrayweights[key]=tuple(val...)
+        xrayweights[key] = tuple(val...)
     end
     # Add these which aren't in Cullen (The weights are WAGs)
-    extra = (
-        ( 3, 1, 1, 2, 0.00001),
-        ( 4, 1, 1, 2, 0.00005),
-        ( 5, 1, 1, 3, 0.0002) )
+    extra = ((3, 1, 1, 2, 0.00001), (4, 1, 1, 2, 0.00005), (5, 1, 1, 3, 0.0002))
     for x in extra
-        xrayweights[(x[1], x[2])] = ( ( x[3], x[4], x[5] ), )
+        xrayweights[(x[1], x[2])] = ((x[3], x[4], x[5]),)
     end
 end
 
@@ -58,7 +101,7 @@ end
 """
     xrayweights[ (z, ionized) ] = ( (inner1, outer1, weight1), ...., (innerN, outerN, weightN) )
 """
-const xrayweights = Dict{Tuple{Int, Int},Tuple{Vararg{Tuple{Int, Int, Float64}}}}()
+const xrayweights = Dict{Tuple{Int,Int},Tuple{Vararg{Tuple{Int,Int,Float64}}}}()
 
 """
     transitions[ (inner, outer) ] = N( (inner,outer) ) in xrayweights
@@ -75,7 +118,7 @@ The line weight for the transition `(inner,outer)` which results from an ionizat
 function nexlTotalWeight(z::Int, ionized::Int, inner::Int, outer::Int)
     trs = get(xrayweights, (z, ionized), nothing)
     if !isnothing(trs)
-        i=findfirst(tr->((tr[1]==inner)&&(tr[2]==outer)),trs)
+        i = findfirst(tr -> ((tr[1] == inner) && (tr[2] == outer)), trs)
         if !isnothing(i)
             return trs[i][3]
         end
@@ -92,5 +135,5 @@ result when the specified shell is ionized.
 nexlAllTotalWeights(z::Int, ionized::Int)::Vector{Tuple{Int,Int,Float64}} =
     return get(xrayweights, (z, ionized), Vector{Tuple{Int,Int,Float64}}())
 
-nexlIsAvailable(z::Int,inner::Int,outer::Int) =
+nexlIsAvailable(z::Int, inner::Int, outer::Int) =
     nexlTotalWeight(z, inner, inner, outer) > 0.0

@@ -38,9 +38,11 @@ Construct using SubShell(name::AbstractString) where name = "K", "L1"...,"P11"
 struct SubShell
     index::Int
     SubShell(idx::Int) =
-        ((idx >= 1) && (idx <= length(subshellnames))) ? new(idx) : error("Unknown sub-shell: Index = $(idx)")
+        ((idx >= 1) && (idx <= length(subshellnames))) ? new(idx) :
+        error("Unknown sub-shell: Index = $(idx)")
     SubShell(name::AbstractString) =
-        name in subshellnames ? new(findfirst(shn -> shn == name, subshellnames)) : error("Unknown sub-shell $(name)")
+        name in subshellnames ? new(findfirst(shn -> shn == name, subshellnames)) :
+        error("Unknown sub-shell $(name)")
 end
 
 Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
@@ -215,10 +217,8 @@ Example:
 """
 shell(sh::SubShell)::Shell = Shell(n(sh))
 
-firstsubshell(sh::Shell) =
-    allsubshells[findfirst(ss->n(ss)==n(sh), allsubshells)]
-lastsubshell(sh::Shell) =
-    allsubshells[findlast(ss->n(ss)==n(sh), allsubshells)]
+firstsubshell(sh::Shell) = allsubshells[findfirst(ss -> n(ss) == n(sh), allsubshells)]
+lastsubshell(sh::Shell) = allsubshells[findlast(ss -> n(ss) == n(sh), allsubshells)]
 
 """
     ksubshells
@@ -292,12 +292,14 @@ The Element associated with the specified sub-shell.
 """
 element(ass::AtomicSubShell) = element(ass.z)
 
-Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) = (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
+Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) =
+    (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
 
 Base.isless(ass1::AtomicSubShell, ass2::AtomicSubShell) =
     return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : isless(ass1.z, ass2.z)
 
-Base.show(io::IO, ass::AtomicSubShell) = print(io, "$(element(ass.z).symbol) $(ass.subshell)")
+Base.show(io::IO, ass::AtomicSubShell) =
+    print(io, "$(element(ass.z).symbol) $(ass.subshell)")
 
 """
     shell(ass::AtomicSubShell)
@@ -336,7 +338,8 @@ Example:
     julia> energy(n"Fe L3")
     708.0999999999999
  """
-energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = NeXLCore.edgeenergy(ass.z, ass.subshell.index, ty)
+energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    NeXLCore.edgeenergy(ass.z, ass.subshell.index, ty)
 
 """
     energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -348,7 +351,8 @@ Example:
    julia> energy(n"Fe", n"L3")
    708.0999999999999
 """
-energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = NeXLCore.edgeenergy(z(elm), ss.index, ty)
+energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    NeXLCore.edgeenergy(z(elm), ss.index, ty)
 
 """
      atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
@@ -369,7 +373,11 @@ Example:
      Fe M4
      Fe M2
  """
-function atomicsubshells(elm::Element, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm} = FFASTDB)::Vector{AtomicSubShell}
+function atomicsubshells(
+    elm::Element,
+    maxE = 1.0e6,
+    eety::Type{<:NeXLAlgorithm} = FFASTDB,
+)::Vector{AtomicSubShell}
     res = Vector{AtomicSubShell}()
     for sh in subshellsindexes(z(elm))
         if NeXLCore.edgeenergy(z(elm), sh, eety) < maxE
@@ -379,7 +387,11 @@ function atomicsubshells(elm::Element, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm}
     return res
 end
 
-atomicsubshells(ss::SubShell, maxE = 1.0e6, eety::Type{<:NeXLAlgorithm} = FFASTDB)::Vector{AtomicSubShell} =
+atomicsubshells(
+    ss::SubShell,
+    maxE = 1.0e6,
+    eety::Type{<:NeXLAlgorithm} = FFASTDB,
+)::Vector{AtomicSubShell} =
     [atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
 
 z(ass::AtomicSubShell) = ass.z
@@ -396,8 +408,11 @@ Example:
     julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
     0.5672910174711278
 """
-ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm} = Bote2009) =
-    ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
+ionizationcrosssection(
+    ass::AtomicSubShell,
+    energy::AbstractFloat,
+    ty::Type{<:NeXLAlgorithm} = Bote2009,
+) = ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
 
@@ -415,7 +430,11 @@ Example:
     > (/)(map(e->NeXLCore.relativeionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
     0.5982578301818324
 """
-function relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat, ::Type{Pouchou1991})
+function relativeionizationcrosssection(
+    ass::AtomicSubShell,
+    ev::AbstractFloat,
+    ::Type{Pouchou1991},
+)
     u = ev / energy(ass)
     ss = ass.subshell.index
     m = ss == 1 ? 0.86 + 0.12 * exp(-(0.2 * ass.z)^2) : (ss <= 4 ? 0.82 : 0.78)
@@ -533,7 +552,8 @@ function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
     )
     return fluorYields[z(elm)][n(sh)]
 end
-meanfluorescenceyield(elm::Element, sh::Shell) = meanfluorescenceyield(elm, sh, Bambynek1972)
+meanfluorescenceyield(elm::Element, sh::Shell) =
+    meanfluorescenceyield(elm, sh, Bambynek1972)
 
 """
     fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
@@ -541,8 +561,10 @@ meanfluorescenceyield(elm::Element, sh::Shell) = meanfluorescenceyield(elm, sh, 
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.  Does not include Coster-Kronig
 """
-fluorescenceyield(ass::AtomicSubShell, ::Type{NeXL})::Float64 =
-    sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL), ass.subshell.index+1:length(allsubshells)))
+fluorescenceyield(ass::AtomicSubShell, ::Type{NeXL})::Float64 = sum(map(
+    s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL),
+    ass.subshell.index+1:length(allsubshells),
+))
 
 """
     fluorescenceyieldcc(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
@@ -551,6 +573,9 @@ The fraction of relaxations from the specified shell that decay via radiative tr
 rather than electronic (Auger) transition.  Includes Coster-Kronig
 """
 function fluorescenceyieldcc(ass::AtomicSubShell, ::Type{NeXL})::Float64
-    f(ss) = sum(map(s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL), ss.index+1:length(allsubshells)))
+    f(ss) = sum(map(
+        s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL),
+        ss.index+1:length(allsubshells),
+    ))
     return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
 end

@@ -6,17 +6,53 @@ const plancksConstant = 4.135667696e-15 # eV s
 const hc = 1.23984193e-4 # eV cm (plancks⋅speed-of-light)
 const speedOfLight = 2.99792458e10 # cm/s
 
-const subshellnames = ( "K", "L1", "L2", "L3", "M1", "M2", "M3", "M4", "M5",
-    "N1", "N2", "N3", "N4", "N5", "N6", "N7", "O1", "O2", "O3",
-    "O4", "O5", "O6", "O7", "O8", "O9", "P1", "P2", "P3", "P4", "P5",
-    "P6", "P7", "P8", "P9", "P10", "P11", "Q1", "Q2", "Q3" )
+const subshellnames = (
+    "K",
+    "L1",
+    "L2",
+    "L3",
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "N1",
+    "N2",
+    "N3",
+    "N4",
+    "N5",
+    "N6",
+    "N7",
+    "O1",
+    "O2",
+    "O3",
+    "O4",
+    "O5",
+    "O6",
+    "O7",
+    "O8",
+    "O9",
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6",
+    "P7",
+    "P8",
+    "P9",
+    "P10",
+    "P11",
+    "Q1",
+    "Q2",
+    "Q3",
+)
 """
     subshellindex(ss::AbstractString)
 
 Map sub-shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, etc).
 """
-subshellindex(ssname::AbstractString) =
-    findfirst(name->ssname==name, subshellnames)
+subshellindex(ssname::AbstractString) = findfirst(name -> ssname == name, subshellnames)
 
 struct FFASTDB <: NeXLAlgorithm end
 
@@ -25,7 +61,8 @@ struct FFASTDB <: NeXLAlgorithm end
 
 Compute the mass absorption coefficient for the specified energy X-ray (in eV) in the specified element (z=> atomic number).
 """
-mac(elm::Element, energy::Float64, ::Type{FFASTDB})::Float64 = FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
+mac(elm::Element, energy::Float64, ::Type{FFASTDB})::Float64 =
+    FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
 
 
 """
@@ -36,7 +73,10 @@ element (z=> atomic number).
 """
 function macU(elm::Element, energy::Float64, ::Type{FFASTDB})::UncertainValue
     macv = FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
-    return uv(macv, min(FFAST.fractionaluncertainty(FFAST.SolidLiquid, z(elm), energy)[1],0.9)*macv)
+    return uv(
+        macv,
+        min(FFAST.fractionaluncertainty(FFAST.SolidLiquid, z(elm), energy)[1], 0.9) * macv,
+    )
 end
 
 """
@@ -69,7 +109,7 @@ subshellsindexes(z::Int) = subshellsindexes(z::Int, FFASTDB)
 Return energy (in eV) of the transition by specified inner and outer sub-shell index.
 """
 characteristicXRayEnergy(z::Int, inner::Int, outer::Int, ::Type{FFASTDB})::Float64 =
-    FFAST.edgeenergy(z,inner)-FFAST.edgeenergy(z,outer)
+    FFAST.edgeenergy(z, inner) - FFAST.edgeenergy(z, outer)
 
 struct Bote2009 <: NeXLAlgorithm end
 
@@ -80,7 +120,14 @@ Compute the absolute ionization crosssection (in cm²) for the specified element
 electon energy (in eV).
 """
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009}) =
-    BoteSalvatICX.hasedge(z, ss) ? BoteSalvatICX.ionizationcrosssection(z, ss, energy, NeXLCore.edgeenergy(z, ss, FFASTDB)) : 0.0
+    BoteSalvatICX.hasedge(z, ss) ?
+    BoteSalvatICX.ionizationcrosssection(
+        z,
+        ss,
+        energy,
+        NeXLCore.edgeenergy(z, ss, FFASTDB),
+    ) :
+    0.0
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
     ionizationcrosssection(z, ss, energy, Bote2009)
 
@@ -89,8 +136,7 @@ ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
 
 Compute the jump ratio.
 """
-jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) =
-    FFAST.jumpratio(z, ss)
+jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) = FFAST.jumpratio(z, ss)
 
 include("strength.jl")
 
@@ -121,4 +167,4 @@ characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{NeXL}):
 Is the weight associated with this transition greater than zero?
 """
 charactericXRayAvailable(z::Int, inner::Int, outer::Int, ::Type{NeXL})::Bool =
-    nexlIsAvailable(z,inner,outer)
+    nexlIsAvailable(z, inner, outer)

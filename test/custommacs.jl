@@ -8,14 +8,14 @@ using Test
     cust1 = getcustommacs(:Bastin1988, true)
     cust2 = getcustommacs(:Bastin1988, false)
 
-    @test !isnothing(findfirst(x->x==(n"Si", n"N K-L3", 17170.0), cust1))
-    @test !isnothing(findfirst(x->x==(n"Si", n"N K-L2", 17170.0), cust1))
-    @test isnothing(findfirst(x->x==(n"Si", n"N K-L2", 17170.0), cust2))
-    @test !isnothing(findfirst(x->x==(n"Zr", n"N K-L3", 24000.0), cust1))
+    @test !isnothing(findfirst(x -> x == (n"Si", n"N K-L3", 17170.0), cust1))
+    @test !isnothing(findfirst(x -> x == (n"Si", n"N K-L2", 17170.0), cust1))
+    @test isnothing(findfirst(x -> x == (n"Si", n"N K-L2", 17170.0), cust2))
+    @test !isnothing(findfirst(x -> x == (n"Zr", n"N K-L3", 24000.0), cust1))
 
     clearusermacs()
     addcustommacs(:Bastin1988, true)
-    
+
     @test mac(n"Si", n"N K-L3", UserMAC) == 17170.0
     @test mac(n"Zr", n"N K-L3", UserMAC) == 24000.0
     @test mac(n"Zr", n"O K-L3", UserMAC) == mac(n"Zr", n"O K-L3", FFASTDB)

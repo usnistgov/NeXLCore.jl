@@ -26,8 +26,7 @@ The implementation adapted to not return negative numbers for z<5.
 """
 struct Tomlin1963 <: BackscatterCoefficient end
 
-η(::Type{Tomlin1963}, elm::Element, e0::Float64) =
- 	log(max(5,z(elm)))/6.0 - 0.25
+η(::Type{Tomlin1963}, elm::Element, e0::Float64) = log(max(5, z(elm))) / 6.0 - 0.25
 
 """
 @article{Love_1978,
@@ -53,10 +52,10 @@ struct Tomlin1963 <: BackscatterCoefficient end
 struct LoveScott1978η <: BackscatterCoefficient end
 
 function η(::Type{LoveScott1978η}, elm::Element, e0::Float64)
-	η20(z) = (-52.3791 + z*(150.48371 + z*(-1.67373 + z*0.00716)))*1.0e-4
-	Goη20(z) = (-1112.8 + z*(30.289 + z* -0.15498))*1.0e-4
-	zz=convert(Float64, z(elm))
-	return η20(zz)*(1.0+Goη20(zz)*log(e0/20.0e3))
+    η20(z) = (-52.3791 + z * (150.48371 + z * (-1.67373 + z * 0.00716))) * 1.0e-4
+    Goη20(z) = (-1112.8 + z * (30.289 + z * -0.15498)) * 1.0e-4
+    zz = convert(Float64, z(elm))
+    return η20(zz) * (1.0 + Goη20(zz) * log(e0 / 20.0e3))
 end
 
 
@@ -64,15 +63,16 @@ end
 struct Pouchou1991η <: BackscatterCoefficient end
 
 η(::Type{Pouchou1991η}, elm::Element, e0::Float64) =
-	0.00175 * z(elm) + 0.37 * (1.0 - exp(-0.015 * z(elm)^1.3))
+    0.00175 * z(elm) + 0.37 * (1.0 - exp(-0.015 * z(elm)^1.3))
 
 
 struct August1989η <: BackscatterCoefficient end
 
 function η(::Type{August1989η}, elm::Element, e0::Float64)
-	lz = log(z(elm))
-	return (0.1904 + lz*(-0.2236 + lz*(0.1292 + lz*-0.01491))) * (2.167e-4 * z(elm) + 0.9987) *
-		(0.001*e0) ^ (0.1382 - 0.9211 / sqrt(z(elm)))
+    lz = log(z(elm))
+    return (0.1904 + lz * (-0.2236 + lz * (0.1292 + lz * -0.01491))) *
+           (2.167e-4 * z(elm) + 0.9987) *
+           (0.001 * e0)^(0.1382 - 0.9211 / sqrt(z(elm)))
 end
 
 """
@@ -97,9 +97,9 @@ Calculate the backscatter coefficient for a material using Armstrong's 1991 algo
 }
 """
 η(ty::Type{<:BackscatterCoefficient}, mat::Material, e0::Float64)::Float64 =
-	mapreduce(el->η(ty, el, e0)*elasticfraction(el, mat, e0), +, keys(mat))
+    mapreduce(el -> η(ty, el, e0) * elasticfraction(el, mat, e0), +, keys(mat))
 η(mat::Material, e0::Float64)::Float64 =
-	mapreduce(el->η(el, e0)*elasticfraction(el, mat, e0), +, keys(mat))
+    mapreduce(el -> η(el, e0) * elasticfraction(el, mat, e0), +, keys(mat))
 
 
 
@@ -118,15 +118,18 @@ Computes the fraction of the total scattering cross-section associated with `elm
 }
 """
 function elasticfraction(elm::Element, mat::Material, e0::Float64)::Float64
-	function elasticcrosssection(zz, ek)
-		αα, mc2 = 3.4e-3*zz^0.67/ek, 511.0
-		return 5.21e-21*((zz/ek)^2)*(4π/(αα*(1.0+αα)))*(((ek + mc2)/(ek+2mc2))^2)
-		# return ((511. + ek)*zz^1.33)/((1022. + ek)*(ek + 0.0034*zz^0.67))
-		# Which is very close to zz^1.33 for except for large z at low ek
-	end
-	aw, ek = atomicfraction(mat), 0.001*e0
-	den = mapreduce(el->aw[el]*elasticcrosssection(z(el), ek),+,keys(mat))
-	return get(aw,elm,0.0)*elasticcrosssection(z(elm),ek) / den
+    function elasticcrosssection(zz, ek)
+        αα, mc2 = 3.4e-3 * zz^0.67 / ek, 511.0
+        return 5.21e-21 *
+               ((zz / ek)^2) *
+               (4π / (αα * (1.0 + αα))) *
+               (((ek + mc2) / (ek + 2mc2))^2)
+        # return ((511. + ek)*zz^1.33)/((1022. + ek)*(ek + 0.0034*zz^0.67))
+        # Which is very close to zz^1.33 for except for large z at low ek
+    end
+    aw, ek = atomicfraction(mat), 0.001 * e0
+    den = mapreduce(el -> aw[el] * elasticcrosssection(z(el), ek), +, keys(mat))
+    return get(aw, elm, 0.0) * elasticcrosssection(z(elm), ek) / den
 end
 
 """
@@ -146,8 +149,8 @@ The electron fraction as defined in:
 }
 """
 function electronfraction(elm::Element, mat::Material)::Float64
-	aw = atomicfraction(mat)
-	return get(aw,elm,0.0)*z(elm) / mapreduce(el->aw[el]*z(el), +, keys(mat))
+    aw = atomicfraction(mat)
+    return get(aw, elm, 0.0) * z(elm) / mapreduce(el -> aw[el] * z(el), +, keys(mat))
 end
 
 """
@@ -181,4 +184,4 @@ or, equivalently,
 
 """
 zbar(mat::Material)::Float64 =
-	mapreduce(el->electronfraction(el, mat)*z(el),+,keys(mat))
+    mapreduce(el -> electronfraction(el, mat) * z(el), +, keys(mat))

@@ -48,7 +48,10 @@ outer(tr::Transition) = tr.outershell
 
 function everytransition(trs)
     lttr(tr1, tr2) = (tr1[1] == tr2[1] ? isless(tr1[2], tr2[2]) : isless(tr1[1], tr2[1]))
-    return map(tr -> Transition(SubShell(tr[1]), SubShell(tr[2])), sort([keys(trs)...], lt = lttr))
+    return map(
+        tr -> Transition(SubShell(tr[1]), SubShell(tr[2])),
+        sort([keys(trs)...], lt = lttr),
+    )
 end
 
 """
@@ -56,9 +59,11 @@ end
 
 A complete list of all the transitions present in one or more elements.
 """
-const alltransitions = tuple(filter(tr -> n(shell(tr)) <= 3, everytransition(transitions))...)
+const alltransitions =
+    tuple(filter(tr -> n(shell(tr)) <= 3, everytransition(transitions))...)
 
-const transitionnames = tuple(map(tr->"$(tr.innershell)-$(tr.outershell)", alltransitions)...)
+const transitionnames =
+    tuple(map(tr -> "$(tr.innershell)-$(tr.outershell)", alltransitions)...)
 
 """
     transition(str::AbstractString)::Transition
@@ -87,21 +92,24 @@ const ktransitions = tuple(filter(tr -> shell(tr) == Shell(1), collect(alltransi
 
 A list of K-L? transitions.
 """
-const kalpha = tuple(filter(tr -> shell(tr.outershell) == Shell(2), collect(ktransitions))...)
+const kalpha =
+    tuple(filter(tr -> shell(tr.outershell) == Shell(2), collect(ktransitions))...)
 
 """
     kbeta
 
 A list of K-M? transitions.
 """
-const kbeta = tuple(filter(tr -> shell(tr.outershell) == Shell(3), collect(ktransitions))...)
+const kbeta =
+    tuple(filter(tr -> shell(tr.outershell) == Shell(3), collect(ktransitions))...)
 
 """
     kother
 
 A list of K-!L? transitions.
 """
-const kother = tuple(filter(tr -> shell(tr.outershell) ≠ Shell(2), collect(ktransitions))...)
+const kother =
+    tuple(filter(tr -> shell(tr.outershell) ≠ Shell(2), collect(ktransitions))...)
 
 """
     ltransitions
@@ -110,8 +118,8 @@ A complete list of all the L-shell transitions.
 """
 const ltransitions = tuple(filter(tr -> shell(tr) == Shell(2), collect(alltransitions))...)
 
-const lalpha = transition.( ( "L3-M4", "L3-M5" ))
-const lbeta = transition.( ( "L2-M4", "L1-M2", "L1-M3", "L3-N4", "L3-N5", "L3-N1", "L3-O1" ))
+const lalpha = transition.(("L3-M4", "L3-M5"))
+const lbeta = transition.(("L2-M4", "L1-M2", "L1-M3", "L3-N4", "L3-N5", "L3-N1", "L3-O1"))
 
 """
     mtransitions
@@ -120,8 +128,8 @@ A complete list of all the M-shell transitions.
 """
 const mtransitions = tuple(filter(tr -> shell(tr) == Shell(3), collect(alltransitions))...)
 
-const malpha = transition.( ("M5-N6", "M5-N7") )
-const mbeta = transition.( ( "M4-N6", ))
+const malpha = transition.(("M5-N6", "M5-N7"))
+const mbeta = transition.(("M4-N6",))
 """
     ntransitions
 
@@ -176,15 +184,15 @@ const transitionsbyshell = Dict(
     Shell(5) => otransitions,
 )
 
-const transitionsbysubshell = Dict(
-    ss=>filter(tr->tr.innershell==ss,alltransitions) for ss in allsubshells)
+const transitionsbysubshell =
+    Dict(ss => filter(tr -> tr.innershell == ss, alltransitions) for ss in allsubshells)
 
 Base.isequal(tr1::Transition, tr2::Transition) =
     isequal(tr1.innershell, tr2.innershell) && isequal(tr1.outershell, tr2.outershell)
 
 function Base.isless(tr1::Transition, tr2::Transition)
-    return isequal(tr1.innershell, tr2.innershell) ? isless(tr1.outershell, tr2.outershell) :
-           isless(tr1.innershell, tr2.innershell)
+    return isequal(tr1.innershell, tr2.innershell) ?
+           isless(tr1.outershell, tr2.outershell) : isless(tr1.innershell, tr2.innershell)
 end
 
 """
@@ -194,7 +202,10 @@ Return a Transition structure from an inner and outer shell. This function tests
 to ensure that the Transition is a known transition.
 """
 function transition(inner::SubShell, outer::SubShell)::Transition
-    ff = findfirst(tr -> (tr.innershell == inner) && (tr.outershell == outer), alltransitions)
+    ff = findfirst(
+        tr -> (tr.innershell == inner) && (tr.outershell == outer),
+        alltransitions,
+    )
     @assert !isnothing(ff) "$(inner)-$(outer) does not represent a known Transition."
     alltransitions[ff]
 end
@@ -205,7 +216,10 @@ end
 Does a transition exist in our database for this pair of shells?
 """
 exists(inner::SubShell, outer::SubShell)::Bool =
-    !isnothing(findfirst(tr -> (tr.innershell == inner) && (tr.outershell == outer), alltransitions))
+    !isnothing(findfirst(
+        tr -> (tr.innershell == inner) && (tr.outershell == outer),
+        alltransitions,
+    ))
 
 Base.show(io::IO, tr::Transition) = print(io, tr.innershell, "-", tr.outershell)
 
@@ -219,13 +233,19 @@ struct CharXRay
     z::Int
     transition::Transition
     function CharXRay(z::Int, transition::Transition)
-        @assert charactericXRayAvailable(z, transition.innershell.index, transition.outershell.index, NeXL) "$z $transition unknown!"
+        @assert charactericXRayAvailable(
+            z,
+            transition.innershell.index,
+            transition.outershell.index,
+            NeXL,
+        ) "$z $transition unknown!"
         "$(symbol(element(z))) $(transition) does not occur."
         return new(z, transition)
     end
 end
 
-Base.isequal(cxr1::CharXRay, cxr2::CharXRay) = isequal(cxr1.z, cxr2.z) && isequal(cxr1.transition, cxr2.transition)
+Base.isequal(cxr1::CharXRay, cxr2::CharXRay) =
+    isequal(cxr1.z, cxr2.z) && isequal(cxr1.transition, cxr2.transition)
 
 Base.isless(cxr1::CharXRay, cxr2::CharXRay) =
     isequal(cxr1.z, cxr2.z) ? isless(cxr1.transition, cxr2.transition) : cxr1.z < cxr2.z
@@ -281,7 +301,8 @@ function ionizationfraction(z::Int, sh::Int, over = 4.0)
     rel = relativeTo(z, sh)
     @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
     ee = over * NeXLCore.edgeenergy(z, rel)
-    return rel == sh ? 1.0 : ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
+    return rel == sh ? 1.0 :
+           ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
 end
 
 """
@@ -290,7 +311,7 @@ end
 Return the nominal line strenth for the specified transition in the specified element.
 The strength differs from the weight by the fluorescence yield.  Assumes an overvoltage of 4.0
 """
-strength(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64 =
+strength(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm} = NeXL)::Float64 =
     ionizationfraction(z(elm), tr.innershell.index, 4.0) *
     fluorescenceyield(z(elm), tr.innershell.index, tr.outershell.index, ty)
 
@@ -309,7 +330,12 @@ normweight(elm::Element, tr::Transition, overvoltage = 4.0) =
 The energy in eV for the specified CharXRay (characteristic X-ray)
 """
 energy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
-    characteristicXRayEnergy(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index, ty)
+    characteristicXRayEnergy(
+        cxr.z,
+        cxr.transition.innershell.index,
+        cxr.transition.outershell.index,
+        ty,
+    )
 
 """
     energy(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -342,7 +368,8 @@ wavenumber(energy::Real) = 1.0 / λ(energy)
 
 Ionization edge energy for the specified X-ray.
 """
-NeXLCore.edgeenergy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB) = NeXLCore.edgeenergy(cxr.z, cxr.transition.innershell.index, ty)
+NeXLCore.edgeenergy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB) =
+    NeXLCore.edgeenergy(cxr.z, cxr.transition.innershell.index, ty)
 
 """
     weight(cxr::CharXRay)
@@ -352,7 +379,8 @@ same shell.  The most intense line is normalized to unity.
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
     safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-    return strength(cxr) / maximum(safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
+    return strength(cxr) /
+           maximum(safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
 end
 
 """
@@ -364,7 +392,10 @@ weights in a subshell equals to unity.
 function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0, elm = overvoltage * energy(inner(cxr)), element(cxr)
     safeSS(z, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-    return strength(cxr) / sum(safeSS(element(cxr), tr2) for tr2 in transitionsbysubshell[cxr.transition.innershell])
+    return strength(cxr) / sum(
+        safeSS(element(cxr), tr2)
+        for tr2 in transitionsbysubshell[cxr.transition.innershell]
+    )
 end
 
 """
@@ -409,10 +440,26 @@ Example:
 
     characteristic(n"Fe",ltransitions,0.01)
 """
-characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6) =
-    characteristic(elm, iter, cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE))
-characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6) =
-    characteristic(elm, iter, cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE))
+characteristic(
+    elm::Element,
+    iter::Tuple{Vararg{Transition}},
+    minweight = 0.0,
+    maxE = 1.0e6,
+) = characteristic(
+    elm,
+    iter,
+    cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE),
+)
+characteristic(
+    elm::Element,
+    iter::AbstractVector{Transition},
+    minweight = 0.0,
+    maxE = 1.0e6,
+) = characteristic(
+    elm,
+    iter,
+    cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE),
+)
 
 """
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)
@@ -424,10 +471,22 @@ Example:
 
     characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
 """
-characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)::Vector{CharXRay} =
-    map(tr -> characteristic(elm, tr), filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)))
-characteristic(elm::Element, iter::AbstractVector{Transition}, filterfunc::Function)::Vector{CharXRay} =
-    map(tr -> characteristic(elm, tr), filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)))
+characteristic(
+    elm::Element,
+    iter::Tuple{Vararg{Transition}},
+    filterfunc::Function,
+)::Vector{CharXRay} = map(
+    tr -> characteristic(elm, tr),
+    filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
+)
+characteristic(
+    elm::Element,
+    iter::AbstractVector{Transition},
+    filterfunc::Function,
+)::Vector{CharXRay} = map(
+    tr -> characteristic(elm, tr),
+    filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
+)
 
 
 """
@@ -480,7 +539,8 @@ end
 The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
 """
-mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = mac(elm, energy(cxr), alg)
+mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    mac(elm, energy(cxr), alg)
 
 """
     macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::UncertainValue
@@ -488,7 +548,8 @@ mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 
 The mass absorption coefficient for the specified characteristic X-ray in the
 specified element.
 """
-macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue = macU(elm, energy(cxr), alg)
+macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue =
+    macU(elm, energy(cxr), alg)
 
 """
     mac(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64
@@ -496,7 +557,8 @@ macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Uncerta
 The mass absorption coefficient for an X-ray of the specified energy (eV) in the
 specified element.
 """
-mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 = mac(elm, energy, alg)
+mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    mac(elm, energy, alg)
 
 """
     macU(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm}=FFASTDB)::UncertainValue
@@ -504,7 +566,8 @@ mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float6
 The mass absorption coefficient (with uncertainty estimate) for an X-ray of the specified energy (eV) in the
 specified element.
 """
-macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue = macU(elm, energy, alg)
+macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue =
+    macU(elm, energy, alg)
 
 
 """
@@ -512,7 +575,8 @@ macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Uncer
 
 Calculates the fractional shift of an x-ray of the specified energy scattered at the specified angle.
 """
-comptonShift(θ::AbstractFloat, energy::AbstractFloat) = 1.0 / (1.0 + ((energy / 0.511e6) * (1.0 - cos(θ))))
+comptonShift(θ::AbstractFloat, energy::AbstractFloat) =
+    1.0 / (1.0 + ((energy / 0.511e6) * (1.0 - cos(θ))))
 
 
 struct DTSA <: NeXLAlgorithm end
@@ -534,7 +598,9 @@ function mac(elm::Element, ev::Float64, ::Type{DTSA})::Float64
     if (zz < 3) || (zz > 95)
         return 0.001
     end
-    ee = collect(has(elm, sh) ? energy(AtomicSubShell(zz, sh)) : 0.0 for sh in allsubshells[1:10])
+    ee = collect(
+        has(elm, sh) ? energy(AtomicSubShell(zz, sh)) : 0.0 for sh in allsubshells[1:10]
+    )
     # formula  in eV units
     nm, cc, az, bias = 0.0, 0.0, 0.0, 0.0
     if ev > ee[1] # ev is above the K edge.
@@ -546,8 +612,10 @@ function mac(elm::Element, ev::Float64, ::Type{DTSA})::Float64
         else
             cc =
                 1.0E-5 * (
-                    (((525.3 + (133.257 * zz)) - (7.5937 * zz * zz)) + (0.169357 * zz * zz * zz)) -
-                    (0.0013975 * zz * zz * zz * zz)
+                    (
+                        ((525.3 + (133.257 * zz)) - (7.5937 * zz * zz)) +
+                        (0.169357 * zz * zz * zz)
+                    ) - (0.0013975 * zz * zz * zz * zz)
                 )
             az = ((((-0.152624 * zz) + 6.52) * zz) + 47) * zz
             nm = 3.112 - (0.0121 * zz)
@@ -560,7 +628,11 @@ function mac(elm::Element, ev::Float64, ::Type{DTSA})::Float64
         end
     elseif ev > ee[4]
         # ev is below K-edge & above L3-edge
-        c = 0.001 * (((-0.0924 + (0.141478 * zz)) - (0.00524999 * zz * zz)) + (9.85296E-5 * zz * zz * zz))
+        c =
+            0.001 * (
+                ((-0.0924 + (0.141478 * zz)) - (0.00524999 * zz * zz)) +
+                (9.85296E-5 * zz * zz * zz)
+            )
         c = (c - (9.07306E-10 * zz * zz * zz * zz)) + (3.19245E-12 * zz * zz * zz * zz * zz)
         cc = c
         az = ((((((-0.000116286 * zz) + 0.01253775) * zz) + 0.067429) * zz) + 17.8096) * zz
@@ -575,16 +647,40 @@ function mac(elm::Element, ev::Float64, ::Type{DTSA})::Float64
         # ev is below L3 and above M1
         nm = (((((4.4509E-6 * zz) - 0.00108246) * zz) + 0.084597) * zz) + 0.5385
         if zz < 30
-            c = (((((((0.072773258 * zz) - 11.641145) * zz) + 696.02789) * zz) - 18517.159) * zz) + 188975.7
+            c =
+                (
+                    (
+                        (((((0.072773258 * zz) - 11.641145) * zz) + 696.02789) * zz) -
+                        18517.159
+                    ) * zz
+                ) + 188975.7
         else
-            c = (((((((0.001497763 * zz) - 0.40585911) * zz) + 40.424792) * zz) - 1736.63566) * zz) + 30039
+            c =
+                (
+                    (
+                        (((((0.001497763 * zz) - 0.40585911) * zz) + 40.424792) * zz) -
+                        1736.63566
+                    ) * zz
+                ) + 30039
         end
         cc = 1.0E-7 * c
-        az = ((((((-0.00018641019 * zz) + 0.0263199611) * zz) - 0.822863477) * zz) + 10.2575657) * zz
+        az =
+            (
+                (((((-0.00018641019 * zz) + 0.0263199611) * zz) - 0.822863477) * zz) +
+                10.2575657
+            ) * zz
         if zz < 61
-            bias = ((((((-0.0001683474 * zz) + 0.018972278) * zz) - 0.536839169) * zz) + 5.654) * zz
+            bias =
+                (
+                    (((((-0.0001683474 * zz) + 0.018972278) * zz) - 0.536839169) * zz) +
+                    5.654
+                ) * zz
         else
-            bias = ((((((0.0031779619 * zz) - 0.699473097) * zz) + 51.114164) * zz) - 1232.4022) * zz
+            bias =
+                (
+                    (((((0.0031779619 * zz) - 0.699473097) * zz) + 51.114164) * zz) -
+                    1232.4022
+                ) * zz
         end
     elseif ev >= ee[9]
         az = (4.62 - (0.04 * zz)) * zz

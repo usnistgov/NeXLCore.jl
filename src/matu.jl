@@ -12,8 +12,11 @@ abstract type MaterialLabel <: Label end
 
 Useful for extracting the MaterialLabel[s] associated with a single material.
 """
-materiallabels(ty::Type{<:MaterialLabel}, material::String, luvs::Union{LabeledValues,UncertainValues}) =
-    filter(l-> ( l isa ty) && (l.material==material), labels(luvs))
+materiallabels(
+    ty::Type{<:MaterialLabel},
+    material::String,
+    luvs::Union{LabeledValues,UncertainValues},
+) = filter(l -> (l isa ty) && (l.material == material), labels(luvs))
 
 struct MassFractionLabel <: MaterialLabel
     material::String
@@ -42,13 +45,19 @@ prefix(awl::AtomicWeightLabel) = "Az"
 Base.isequal(el1::MaterialLabel, el2::MaterialLabel) =
     isequal(typeof(el1), typeof(el2)) &&
     isequal(prefix(el1), prefix(el2)) && #
-    isequal(el1.element, el2.element) && isequal(el1.material, el2.material)
+    isequal(el1.element, el2.element) &&
+    isequal(el1.material, el2.material)
 
-Base.isless(el1::MaterialLabel, el2::MaterialLabel) = isequal(prefix(el1), prefix(el2)) ?
-(isequal(el1.material, el2.material) ? isless(el1.element, el2.element) : isless(el1.material, el2.material)) :
-isless(prefix(el1), prefix(el2))
+Base.isless(el1::MaterialLabel, el2::MaterialLabel) =
+    isequal(prefix(el1), prefix(el2)) ?
+    (
+        isequal(el1.material, el2.material) ? isless(el1.element, el2.element) :
+        isless(el1.material, el2.material)
+    ) :
+    isless(prefix(el1), prefix(el2))
 
-Base.show(io::IO, el::MaterialLabel) = print(io, "$(prefix(el))[$(el.element.symbol),$(el.material)]")
+Base.show(io::IO, el::MaterialLabel) =
+    print(io, "$(prefix(el))[$(el.element.symbol),$(el.material)]")
 
 """
     MaterialFraction
@@ -61,13 +70,18 @@ struct MaterialFractionLabel <: Label
     constituent::String
 end
 
-Base.show(io::IO, mf::MaterialFractionLabel) = print(io, "f[",mf.material,",",mf.constituent,"]")
+Base.show(io::IO, mf::MaterialFractionLabel) =
+    print(io, "f[", mf.material, ",", mf.constituent, "]")
 
 struct MFtoAF <: MeasurementModel
     material::String
 end
 
-function NeXLUncertainties.compute(ma::MFtoAF, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    ma::MFtoAF,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     mfls = materiallabels(MassFractionLabel, ma.material, inputs)
     awls = map(mfl -> AtomicWeightLabel(ma.material, mfl.element), mfls)
     scoa = sum(i -> inputs[mfls[i]] / inputs[awls[i]], eachindex(mfls))
@@ -80,11 +94,15 @@ function NeXLUncertainties.compute(ma::MFtoAF, inputs::LabeledValues, withJac::B
             for j in eachindex(mfls)
                 if i == j
                     @assert outputs[i].element == mfls[j].element
-                    jac[i, indexin(mfls[i], inputs)] = results[i] * (1.0 - results[i]) / inputs[mfls[i]]
-                    jac[i, indexin(awls[i], inputs)] = results[i] * (results[i] - 1.0) / inputs[awls[i]]
+                    jac[i, indexin(mfls[i], inputs)] =
+                        results[i] * (1.0 - results[i]) / inputs[mfls[i]]
+                    jac[i, indexin(awls[i], inputs)] =
+                        results[i] * (results[i] - 1.0) / inputs[awls[i]]
                 else
-                    jac[i, indexin(mfls[j], inputs)] = -results[i] * results[j] / inputs[mfls[j]]
-                    jac[i, indexin(awls[j], inputs)] = results[i] * results[j] / inputs[awls[j]]
+                    jac[i, indexin(mfls[j], inputs)] =
+                        -results[i] * results[j] / inputs[mfls[j]]
+                    jac[i, indexin(awls[j], inputs)] =
+                        results[i] * results[j] / inputs[awls[j]]
                 end
             end
         end
@@ -101,11 +119,18 @@ struct MFtoNMF <: MeasurementModel
     material::String
 end
 
-function NeXLUncertainties.compute(ma::MFtoNMF, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    ma::MFtoNMF,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     # Extract the elements for which there is mass-fraction data associated with ma.material
     elms = map(
         il -> il.element,
-        filter(l -> (l isa MassFractionLabel) && isequal(ma.material, l.material), labels(inputs)),
+        filter(
+            l -> (l isa MassFractionLabel) && isequal(ma.material, l.material),
+            labels(inputs),
+        ),
     )
     outputs = map(elm -> NormMassFractionLabel(ma.material, elm), elms)
     mfls = map(elm -> MassFractionLabel(ma.material, elm), elms)
@@ -117,9 +142,11 @@ function NeXLUncertainties.compute(ma::MFtoNMF, inputs::LabeledValues, withJac::
             for j in eachindex(elms)
                 if i == j
                     @assert outputs[i].element == elms[j]
-                    jac[i, indexin(mfls[i], inputs)] = results[i] * (1.0 - results[i]) / inputs[mfls[i]]
+                    jac[i, indexin(mfls[i], inputs)] =
+                        results[i] * (1.0 - results[i]) / inputs[mfls[i]]
                 else
-                    jac[i, indexin(mfls[j], inputs)] = -results[i] * results[j] / inputs[mfls[j]]
+                    jac[i, indexin(mfls[j], inputs)] =
+                        -results[i] * results[j] / inputs[mfls[j]]
                 end
             end
         end
@@ -137,15 +164,22 @@ struct AFtoNMF <: MeasurementModel
     material::String
 end
 
-function NeXLUncertainties.compute(atm::AFtoNMF, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    atm::AFtoNMF,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     # Extract the elements for which there is atomic-fraction data associated with atm.material
     elms = map(
         il -> il.element,
-        filter(l -> (l isa AtomicFractionLabel) && isequal(atm.material, l.material), labels(inputs)),
+        filter(
+            l -> (l isa AtomicFractionLabel) && isequal(atm.material, l.material),
+            labels(inputs),
+        ),
     )
     outputs = vcat(
         map(elm -> NormMassFractionLabel(atm.material, elm), elms),
-        map(elm -> MassFractionLabel(atm.material, elm), elms)
+        map(elm -> MassFractionLabel(atm.material, elm), elms),
     )
     afls = map(elm -> AtomicFractionLabel(atm.material, elm), elms)
     awls = map(elm -> AtomicWeightLabel(atm.material, elm), elms)
@@ -160,14 +194,18 @@ function NeXLUncertainties.compute(atm::AFtoNMF, inputs::LabeledValues, withJac:
                 if i == j
                     @assert outputs[i].element == elms[j]
                     ii = indexin(afls[i], inputs)
-                    jac[i+off, ii] = (jac[i, ii] = results[i] * (1.0 - results[i]) / inputs[afls[i]])
+                    jac[i+off, ii] =
+                        (jac[i, ii] = results[i] * (1.0 - results[i]) / inputs[afls[i]])
                     ii = indexin(awls[i], inputs)
-                    jac[i+off, ii] = (jac[i, ii] = results[i] * (1.0 - results[i]) / inputs[awls[i]])
+                    jac[i+off, ii] =
+                        (jac[i, ii] = results[i] * (1.0 - results[i]) / inputs[awls[i]])
                 else
                     ij = indexin(afls[j], inputs)
-                    jac[i+off, ij] = (jac[i, ij] = -results[i] * results[j] / inputs[afls[j]])
+                    jac[i+off, ij] =
+                        (jac[i, ij] = -results[i] * results[j] / inputs[afls[j]])
                     ij = indexin(awls[j], inputs)
-                    jac[i+off, ij] = (jac[i, ij] = -results[i] * results[j] / inputs[awls[j]])
+                    jac[i+off, ij] =
+                        (jac[i, ij] = -results[i] * results[j] / inputs[awls[j]])
                 end
             end
         end
@@ -187,18 +225,25 @@ end
 struct MeanZ <: Label
     material::String
 end
-Base.show(io::IO, mz::MeanZ) = print(io, "MeanZ[",mz.material,"]")
+Base.show(io::IO, mz::MeanZ) = print(io, "MeanZ[", mz.material, "]")
 
 struct MeanAz <: Label
     material::String
 end
 Base.show(io::IO, maz::MeanAz) = print(io, "MeanAz[$(maz.material)]")
 
-function NeXLUncertainties.compute(ma::MatStats, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    ma::MatStats,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     # Extract the elements for which there is atomic-fraction data associated with ma.material
     elms = map(
         il -> il.element,
-        filter(l -> (l isa MassFractionLabel) && isequal(ma.material, l.material), labels(inputs)),
+        filter(
+            l -> (l isa MassFractionLabel) && isequal(ma.material, l.material),
+            labels(inputs),
+        ),
     )
     outputs = [MeanZ(ma.material), MeanAz(ma.material)]
     mfls = map(elm -> MassFractionLabel(ma.material, elm), elms)
@@ -236,7 +281,7 @@ function af2comp(material::String, stoic::Dict{Element,Int})::UncertainValues
     lbls, vals = Vector{Label}(), Vector{Float64}()
     for (elm, n) in stoic
         push!(lbls, AtomicFractionLabel(material, elm))
-        push!(vals, convert(Float64,n))
+        push!(vals, convert(Float64, n))
         push!(lbls, AtomicWeightLabel(material, elm))
         push!(vals, a(elm))
     end
@@ -255,9 +300,16 @@ struct ElementByDifference <: MeasurementModel
     element::Element
 end
 
-function NeXLUncertainties.compute(ebd::ElementByDifference, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    ebd::ElementByDifference,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     # Extract the elements for which there is mass-fraction data associated with ebd.material
-    mfls = filter(l -> (l isa MassFractionLabel) && isequal(ebd.material, l.material), labels(inputs))
+    mfls = filter(
+        l -> (l isa MassFractionLabel) && isequal(ebd.material, l.material),
+        labels(inputs),
+    )
     outputs = [MassFractionLabel(ebd.material, ebd.element)]
     s = sum(mf -> inputs[mf] for mf in mfls)
     results = [s < 1.0 ? 1.0 - s : 0.0]
@@ -280,24 +332,35 @@ elements in the material.
 struct ElementByStoichiometry <: MeasurementModel
     material::String
     element::Element
-    valence
+    valence::Any
 
-    ElementByStoichiometry(mat::String, elm::Element = n"O", valences = valence) = new(mat, elm, valences)
+    ElementByStoichiometry(mat::String, elm::Element = n"O", valences = valence) =
+        new(mat, elm, valences)
 end
 
-function NeXLUncertainties.compute(ebs::ElementByStoichiometry, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    ebs::ElementByStoichiometry,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     v(elm) = ebs.valence[elm.number]
     # Extract the elements for which there is mass-fraction data associated with ebd.material
     elms = map(
         il -> il.element,
-        filter(l -> (l isa MassFractionLabel) && isequal(ebs.material, l.material), labels(inputs))
+        filter(
+            l -> (l isa MassFractionLabel) && isequal(ebs.material, l.material),
+            labels(inputs),
+        ),
     )
     mfls = map(elm -> MassFractionLabel(ebs.material, elm), elms)
     awls = map(elm -> AtomicWeightLabel(ebs.material, elm), elms)
     outputs = [MassFractionLabel(ebd.material, ebs.element)]
     awe = AtomicWeightLabel(ebs.material, ebs.element)
     aN, vN = inputs[awe], v(ebs.element)
-    results = [(-aN / vN) * sum((inputs[mfls[i]] * v(elms[i])) / inputs[awls[i]] for i in eachindex(elms))]
+    results = [
+        (-aN / vN) *
+        sum((inputs[mfls[i]] * v(elms[i])) / inputs[awls[i]] for i in eachindex(elms)),
+    ]
     jac = withJac ? zeros(Float64, 1, length(inputs)) : missing
     if withJac
         jac[1, indexin(awe, inputs)] = results[1] / aN
@@ -314,7 +377,11 @@ struct MaterialMixture <: MeasurementModel
     material::String
 end
 
-function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    mm::MaterialMixture,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     isconstitmf(mat, lbl) = (lbl isa MassFractionLabel) && isequal(mat, lbl.material)
     isconstitmf(mat, lbl, elm) = isconstitmf(mat, lbl) && (lbl.element == elm)
     isconstit(mat, lbl) = (lbl isa MaterialFractionLabel) && isequal(mat, lbl.material)
@@ -325,7 +392,7 @@ function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, w
         # How much of this constituent???
         f = inputs[constitlbl]
         # Convert this into element mass fractions
-        for mfl in filter(lbl->isconstitmf(constitlbl.constituent, lbl), labels(inputs))
+        for mfl in filter(lbl -> isconstitmf(constitlbl.constituent, lbl), labels(inputs))
             @assert mfl isa MassFractionLabel
             resmf[mfl.element] = get(resmf, mfl.element, 0.0) + f * inputs[mfl]
             awl = AtomicWeightLabel(constitlbl.constituent, mfl.element)
@@ -334,10 +401,11 @@ function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, w
     end
     elms = sort(collect(keys(resmf))) # Put them in z order for convenience...
     # Construct `outputs` and `results`
-    outputs, results = Array{Label}(undef, 2*length(elms)), zeros(Float64, 2*length(elms))
-    jac = withJac ? zeros(Float64, 2*length(elms), length(inputs)) : missing
+    outputs, results =
+        Array{Label}(undef, 2 * length(elms)), zeros(Float64, 2 * length(elms))
+    jac = withJac ? zeros(Float64, 2 * length(elms), length(inputs)) : missing
     for (i, elm) in enumerate(elms)
-        mfi, awi = 2i-1, 2i
+        mfi, awi = 2i - 1, 2i
         outputs[mfi] = MassFractionLabel(mm.material, elm)
         results[mfi] = resmf[elm]
         outputs[awi] = AtomicWeightLabel(mm.material, elm)
@@ -351,9 +419,10 @@ function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, w
                     cjz, ajz, cMz = inputs[mf], inputs[awl], resmf[elm]
                     jac[mfi, indexin(mf, inputs)] = Mjz # Ok
                     jac[mfi, indexin(constitlbl, inputs)] = cjz # Ok
-                    jac[awi, indexin(constitlbl, inputs)] = (cjz / cMz)*(aMz-aMz^2/ajz) # 23.1
-                    jac[awi, indexin(mf, inputs)] = (Mjz/cMz)*(aMz-aMz^2/ajz)
-                    jac[awi, indexin(awl, inputs)] = (cMz*(aMz^2))/ajz
+                    jac[awi, indexin(constitlbl, inputs)] =
+                        (cjz / cMz) * (aMz - aMz^2 / ajz) # 23.1
+                    jac[awi, indexin(mf, inputs)] = (Mjz / cMz) * (aMz - aMz^2 / ajz)
+                    jac[awi, indexin(awl, inputs)] = (cMz * (aMz^2)) / ajz
                 end
             end
         end
@@ -361,18 +430,15 @@ function NeXLUncertainties.compute(mm::MaterialMixture, inputs::LabeledValues, w
     return (LabeledValues(outputs, results), jac)
 end
 
-function mixture(
-    mat::String,
-    mix::Pair{UncertainValues, UncertainValue}...,
-)
+function mixture(mat::String, mix::Pair{UncertainValues,UncertainValue}...)
     function nameofmat(uvs)
         lbls = labels(uvs)
-        lbl = lbls[findfirst(lbl->lbl isa MassFractionLabel, labels(uvs))]
-        @assert all(l->l.material==lbl.material, lbls)
+        lbl = lbls[findfirst(lbl -> lbl isa MassFractionLabel, labels(uvs))]
+        @assert all(l -> l.material == lbl.material, lbls)
         return lbl.material
     end
-    mixes = uvs(Dict( MaterialFractionLabel(mat, nameofmat(uvs))=>uv for (uvs, uv) in mix))
-    return propagate(MaterialMixture(mat), cat(mixes, (uvs for (uvs,uv) in mix)...))
+    mixes = uvs(Dict(MaterialFractionLabel(mat, nameofmat(uvs)) => uv for (uvs, uv) in mix))
+    return propagate(MaterialMixture(mat), cat(mixes, (uvs for (uvs, uv) in mix)...))
 end
 
 struct μoρElementLabel <: Label
@@ -392,16 +458,23 @@ struct μoρMaterial <: MeasurementModel
     xray::CharXRay
 end
 
-function NeXLUncertainties.compute(mm::μoρMaterial, inputs::LabeledValues, withJac::Bool)::MMResult
+function NeXLUncertainties.compute(
+    mm::μoρMaterial,
+    inputs::LabeledValues,
+    withJac::Bool,
+)::MMResult
     mfls = materiallabels(MassFractionLabel, mm.material, inputs)
-    emacls = [ μoρElementLabel(mfl.element, mm.xray) for mfl in mfls ]
-    emacs, mfs = [ inputs[emacl] for emacl in emacls ], [ inputs[mfl] for mfl in mfls ]
-    vals = LabeledValues( [ μoρLabel(mm.material, mm.xray) ], [ sum(emacs[i]*mfs[i] for i in eachindex(mfls)) ])
+    emacls = [μoρElementLabel(mfl.element, mm.xray) for mfl in mfls]
+    emacs, mfs = [inputs[emacl] for emacl in emacls], [inputs[mfl] for mfl in mfls]
+    vals = LabeledValues(
+        [μoρLabel(mm.material, mm.xray)],
+        [sum(emacs[i] * mfs[i] for i in eachindex(mfls))],
+    )
     jac = withJac ? zeros(Float64, length(vals), length(inputs)) : missing
     if withJac
         for i in eachindex(mfls)
-            jac[1, indexin(mfls[i],inputs)] = emacs[i]
-            jac[1, indexin(emacls[i],inputs)] = mfs[i]
+            jac[1, indexin(mfls[i], inputs)] = emacs[i]
+            jac[1, indexin(emacls[i], inputs)] = mfs[i]
         end
     end
     return (vals, jac)

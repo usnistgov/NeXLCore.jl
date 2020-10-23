@@ -12,11 +12,13 @@ minproperties(::Type{Any}) =
 
 Does this spectrum have the minimal set of required properties?
 """
-hasminrequired(ty::Type, dict::Dict{Symbol,Any}) = all(haskey(dict, a) for a in minproperties(ty))
+hasminrequired(ty::Type, dict::Dict{Symbol,Any}) =
+    all(haskey(dict, a) for a in minproperties(ty))
 
 """
     requiredbutmissing(ty::Type, item::Union{Spectrum,Dict{Symbol,Any}})
 
 List any required but missing properties.
 """
-requiredbutmissing(ty::Type, dict::Dict{Symbol,Any}) = filter(a -> !haskey(dict, a), minproperties(ty))
+requiredbutmissing(ty::Type, dict::Dict{Symbol,Any}) =
+    filter(a -> !haskey(dict, a), minproperties(ty)) = filter(a -> !haskey(dict, a), minproperties(ty))

@@ -2,28 +2,26 @@
 using Unitful
 using Pkg
 
- """
-     configuration(elm::Element)
+"""
+    configuration(elm::Element)
 
- The configuration of the shell occupancy in a specific ground-state element.
- """
- configuration(elm::Element) =
-     elm.el_config
+The configuration of the shell occupancy in a specific ground-state element.
+"""
+configuration(elm::Element) = elm.el_config
 
 """
     element(z::Int)::PeriodicTable.Element
 
 Covert an atomic number into a PeriodicTable.Element
 """
-element(z::Integer) =
-    PeriodicTable.elements[z]
+element(z::Integer) = PeriodicTable.elements[z]
 
 """
     a(elm::Element)
 
 Return the mean atomic weight of the Element.
 """
-a(elm::Element) = elm.atomic_mass/1.0u"u"
+a(elm::Element) = elm.atomic_mass / 1.0u"u"
 
 """
     z(elm::Element)

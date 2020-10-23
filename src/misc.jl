@@ -31,8 +31,7 @@ end
 Linewidth of the K shell according to Bambynek'1974 errata to Bambynek 1972.
 Shown to be reliable for Z>36 or so.
 """
-klinewidths(elm::Element) =
-   1.73e-6*z(elm)^3.93
+klinewidths(elm::Element) = 1.73e-6 * z(elm)^3.93
 
 struct Burhop1965 <: NeXLAlgorithm end
 
@@ -44,8 +43,7 @@ E.H.S Burhop, J. Phys. Radium, 16, 625 (1965)
 """
 function fluorescenceyield(z::Int, ::Type{Burhop1965})
     d = -0.044 + 0.0346z - 1.35e-6z^3
-    return d^4/(1.0+d^4)
+    return d^4 / (1.0 + d^4)
 end
 
-fluorescenceyield(z::Int) =
-    fluorescenceyield(z, Burhop1965)
+fluorescenceyield(z::Int) = fluorescenceyield(z, Burhop1965)

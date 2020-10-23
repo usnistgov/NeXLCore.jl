@@ -43,14 +43,28 @@ struct KRatio
         end
         if haskey(unkProps, :TakeOffAngle) &&
            haskey(stdProps, :TakeOffAngle) &&
-           (!isapprox(unkProps[:TakeOffAngle], stdProps[:TakeOffAngle], atol = deg2rad(0.1)))
+           (
+               !isapprox(
+                   unkProps[:TakeOffAngle],
+                   stdProps[:TakeOffAngle],
+                   atol = deg2rad(0.1),
+               )
+           )
             @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
         end
-        return new(elm, lines, copy(unkProps), copy(stdProps), standard, convert(UncertainValue, kratio))
+        return new(
+            elm,
+            lines,
+            copy(unkProps),
+            copy(stdProps),
+            standard,
+            convert(UncertainValue, kratio),
+        )
     end
 end
 
-find(cxr::CharXRay, krs::AbstractVector{KRatio}) = krs[findfirst(kr -> cxr in kr.lines, krs)]
+find(cxr::CharXRay, krs::AbstractVector{KRatio}) =
+    krs[findfirst(kr -> cxr in kr.lines, krs)]
 NeXLUncertainties.value(kr::KRatio) = value(kr.kratio)
 NeXLUncertainties.σ(kr::KRatio) = σ(kr.kratio)
 nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
@@ -60,9 +74,11 @@ nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.krati
 
 Creates a new Vector{KRatio} containing all the KRatio objects in `krs` except those associated with the specified elements.
 """
-Base.strip(krs::AbstractVector{KRatio}, els::Element...) = collect(filter(k -> !(element(k) in els), krs))
+Base.strip(krs::AbstractVector{KRatio}, els::Element...) =
+    collect(filter(k -> !(element(k) in els), krs))
 
-Base.show(io::IO, kr::KRatio) = print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
+Base.show(io::IO, kr::KRatio) =
+    print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
     elms, zs, lines, e0u = String[], Int[], String[], Float64[]
@@ -125,7 +141,13 @@ struct KRatios
         end
         if haskey(unkProps, :TakeOffAngle) &&
            haskey(stdProps, :TakeOffAngle) &&
-           (!isapprox(unkProps[:TakeOffAngle], stdProps[:TakeOffAngle], atol = deg2rad(0.1)))
+           (
+               !isapprox(
+                   unkProps[:TakeOffAngle],
+                   stdProps[:TakeOffAngle],
+                   atol = deg2rad(0.1),
+               )
+           )
             @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
         end
         return new(elm, lines, copy(unkProps), copy(stdProps), standard, kratios)
@@ -147,10 +169,13 @@ function elms(krs::Vector{<:Union{KRatio,KRatios}})::Set{Element}
     return res
 end
 
-Base.show(io::IO, kr::KRatios) =
-    print(io, "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]")
+Base.show(io::IO, kr::KRatios) = print(
+    io,
+    "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]",
+)
 
-Base.getindex(krs::KRatios, idx::Int...) = KRatio(lines, unkProps, stdProps, standard, getindex(krs.kratios, idx...))
+Base.getindex(krs::KRatios, idx::Int...) =
+    KRatio(lines, unkProps, stdProps, standard, getindex(krs.kratios, idx...))
 xrays(krs::KRatios) = lines
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
@@ -172,6 +197,9 @@ function normalize(
     @assert all((sz == size(kr.kratios) for kr in krs[2:end]))
     s = [sum(kr.kratios[ci] for kr in krs) for ci in CartesianIndices(krs[1].kratios)]
     res = [(kr, norm .* (kr.kratios ./ s)) for kr in krs]
-    foreach(ci -> foreach(r -> r[2][ci] = NaN32, res), filter(ci -> s[ci] < minsum, CartesianIndices(s)))
+    foreach(
+        ci -> foreach(r -> r[2][ci] = NaN32, res),
+        filter(ci -> s[ci] < minsum, CartesianIndices(s)),
+    )
     return res
 end

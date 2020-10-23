@@ -33,8 +33,13 @@ const Log3BandBright = reduce(
 """
 An RGB gray-scale palette with entry 256 being yellow.
 """
-const GrayScale =
-    reduce(append!, (range(colorant"rgb(0,0,0)", stop = colorant"rgb(255,255,255)", length = 255), [colorant"yellow"]))
+const GrayScale = reduce(
+    append!,
+    (
+        range(colorant"rgb(0,0,0)", stop = colorant"rgb(255,255,255)", length = 255),
+        [colorant"yellow"],
+    ),
+)
 
 
 """
@@ -42,28 +47,35 @@ Tranforms numbers on the range [1.0e-3, 1.0] into a colorblind friendly palette 
 NaNs are plotted in yellow.
 """
 Log3BandC(f::AbstractFloat)::Colorant = Log3BandColorblind[isnan(f) ? 256 :
-                       min(max(trunc(Int, 255.0 * (log(10.0, max(f, 1.0e-3)) + 3.0) / 3.0), 0), 254) + 1]
+                   min(
+    max(trunc(Int, 255.0 * (log(10.0, max(f, 1.0e-3)) + 3.0) / 3.0), 0),
+    254,
+) + 1]
 
 """
 Tranforms numbers on the range [1.0e-3, 1.0] into David Bright's Log3-band palette using a log base-10 transform.
 NaNs are plotted in yellow.
 """
-Log3Band(f::AbstractFloat)::Colorant =
-    Log3BandBright[isnan(f) ? 256 : min(max(trunc(Int, 255.0 * (log(10.0, max(f, 1.0e-3)) + 3.0) / 3.0), 0), 254) + 1]
+Log3Band(f::AbstractFloat)::Colorant = Log3BandBright[isnan(f) ? 256 :
+               min(
+    max(trunc(Int, 255.0 * (log(10.0, max(f, 1.0e-3)) + 3.0) / 3.0), 0),
+    254,
+) + 1]
 
 """
 Tranforms numbers on the range [1.0e-3, 1.0] onto a Log base-10 gray scale palette. NaNs are plotted in yellow.
 """
-LogScale(f::AbstractFloat)::Colorant =
-    GrayScale[isnan(f) ? 256 : min(max(trunc(Int, 255.0 * (log(10.0, max(f, 1.0e-3)) + 3.0) / 3.0), 0), 254) + 1]
+LogScale(f::AbstractFloat)::Colorant = GrayScale[isnan(f) ? 256 :
+          min(max(trunc(Int, 255.0 * (log(10.0, max(f, 1.0e-3)) + 3.0) / 3.0), 0), 254) + 1]
 
 """
 Tranforms numbers on the range [0.0, 1.0] onto a linear gray scale palette. NaNs are plotted in yellow.
 """
-LinearScale(f::AbstractFloat)::Colorant = GrayScale[isnan(f) ? 256 : min(254, max(0, trunc(Int, 254.0 * f))) + 1]
+LinearScale(f::AbstractFloat)::Colorant =
+    GrayScale[isnan(f) ? 256 : min(254, max(0, trunc(Int, 254.0 * f))) + 1]
 
 """
 Loads a legend image from the package source directory. Some legends include "LinearScale.png", "LogScale.png",
 "Log3BandBright.png", "Log3BancColorblind.png".
 """
-loadlegend(fn::String) = FileIO.load(joinpath(dirname(pathof(@__MODULE__)),fn))
+loadlegend(fn::String) = FileIO.load(joinpath(dirname(pathof(@__MODULE__)), fn))

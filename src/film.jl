@@ -13,20 +13,23 @@ struct Film
     end
 end
 
-Base.isequal(f1::Film, f2::Film) = isequal(f1.material, f2.material) && isequal(f1.thickness,f2.thickness)
+Base.isequal(f1::Film, f2::Film) =
+    isequal(f1.material, f2.material) && isequal(f1.thickness, f2.thickness)
 
-Base.isapprox(f1::Film, f2::Film) = isequal(f1.material, f2.material) && isapprox(f1.thickness, f2.thickness, rtol=1.0e5)
+Base.isapprox(f1::Film, f2::Film) =
+    isequal(f1.material, f2.material) && isapprox(f1.thickness, f2.thickness, rtol = 1.0e5)
 
 Base.show(io::IO, flm::Film) =
-    flm.thickness < 1.0e-4 ? print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material)) : #
-        print(io, 1.0e4 * flm.thickness, " μm of ", name(flm.material))
+    flm.thickness < 1.0e-4 ?
+    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material)) : #
+    print(io, 1.0e4 * flm.thickness, " μm of ", name(flm.material))
 
 """
     massthickness(flm::Film)
 
 The mass-thickness of the film in g/cm².
 """
-massthickness(flm::Film) = flm.thickness*flm.material[:Density]
+massthickness(flm::Film) = flm.thickness * flm.material[:Density]
 
 
 """
@@ -34,9 +37,15 @@ massthickness(flm::Film) = flm.thickness*flm.material[:Density]
 
 Compute the transmission fraction of an X-ray at the specified angle through a Film.
 """
-transmission(flm::Film, xrayE::AbstractFloat, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
-    flm.thickness > 0.0 ? exp(-mac(flm.material, xrayE, alg) * csc(θ) * massthickness(flm)) : 1.0
-transmission(flm::Film, xrayE::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB) =
+transmission(
+    flm::Film,
+    xrayE::AbstractFloat,
+    θ::AbstractFloat,
+    alg::Type{<:NeXLAlgorithm} = FFASTDB,
+) =
+    flm.thickness > 0.0 ?
+    exp(-mac(flm.material, xrayE, alg) * csc(θ) * massthickness(flm)) : 1.0
+transmission(flm::Film, xrayE::AbstractFloat, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
     flm.thickness > 0.0 ? exp(-mac(flm.material, xrayE, alg) * massthickness(flm)) : 1.0
 
 """
@@ -44,8 +53,7 @@ transmission(flm::Film, xrayE::AbstractFloat, alg::Type{<:NeXLAlgorithm}=FFASTDB
 
 Compute the transmission fraction of an X-ray at the specified angle through a Film.
 """
-transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
-    transmission(flm, energy(cxr), θ)
+transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) = transmission(flm, energy(cxr), θ)
 
 material(film::Film) = film.material
 thickness(film::Film) = film.thickness

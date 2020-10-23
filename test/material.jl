@@ -10,7 +10,7 @@ using NeXLCore
             n"Si" => 0.253817,
             n"Ca" => 0.110563,
             n"Fe" => 0.112087,
-            properties=Dict{Symbol, Any}(:Density=>3.5)
+            properties = Dict{Symbol,Any}(:Density => 3.5),
         )
 
         @test k411[n"Ca"] == 0.110563
@@ -37,9 +37,13 @@ using NeXLCore
 
         k411_2 = material(
             "K411",
-            n"O" => 0.423667, n"Mg" => 0.0884654, n"Si" => 0.253817, n"Ca" => 0.110563, n"Fe" => 0.112087,
-            atomicweights=Dict(n"Ca" => 41.0, n"O" => 16.1),
-            properties=Dict{Symbol, Any}(:Density=>3.5)
+            n"O" => 0.423667,
+            n"Mg" => 0.0884654,
+            n"Si" => 0.253817,
+            n"Ca" => 0.110563,
+            n"Fe" => 0.112087,
+            atomicweights = Dict(n"Ca" => 41.0, n"O" => 16.1),
+            properties = Dict{Symbol,Any}(:Density => 3.5),
         )
 
         @test a(n"Ca", k411) == a(n"Ca")
@@ -95,71 +99,102 @@ using NeXLCore
         m = parse(Material, "0.6*SiO2+0.4*Al2O3")
         @test isapprox(m[n"Si"], 0.6 * mat"SiO2"[n"Si"], atol = 1.0e-6)
         @test isapprox(m[n"Al"], 0.4 * mat"Al2O3"[n"Al"], atol = 1.0e-6)
-        @test isapprox(m[n"O"], 0.6 * mat"SiO2"[n"O"] + 0.4 * mat"Al2O3"[n"O"], atol = 1.0e-6)
+        @test isapprox(
+            m[n"O"],
+            0.6 * mat"SiO2"[n"O"] + 0.4 * mat"Al2O3"[n"O"],
+            atol = 1.0e-6,
+        )
 
-        @test isapprox(parse(Material, "Ba(Al2Si2O8)", name = "Paracelsian"), mat"Ba(Al2Si2O8)", atol = 1.0e-8)
+        @test isapprox(
+            parse(Material, "Ba(Al2Si2O8)", name = "Paracelsian"),
+            mat"Ba(Al2Si2O8)",
+            atol = 1.0e-8,
+        )
         @test isapprox(mat"Ba(Al2Si2O8)"[n"Ba"], 0.36576, atol = 0.00001)
 
         para = material(
             "Paracelsian",
-            n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727,
-            properties = Dict{Symbol,Any}(:Density=>3.5)
+            n"O" => 0.340906,
+            n"Ba" => 0.36576,
+            n"Si" => 0.149607,
+            n"Al" => 0.143727,
+            properties = Dict{Symbol,Any}(:Density => 3.5),
         )
-        @test isapprox(para, mat"Ba(Al2Si2O8)",atol=1.0e-5)
+        @test isapprox(para, mat"Ba(Al2Si2O8)", atol = 1.0e-5)
         para = material(
             "Paracelsian",
-            n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727,
-            properties=Dict{Symbol,Any}(:Density=>3.5)
+            n"O" => 0.340906,
+            n"Ba" => 0.36576,
+            n"Si" => 0.149607,
+            n"Al" => 0.143727,
+            properties = Dict{Symbol,Any}(:Density => 3.5),
         )
-        @test isapprox(para, mat"Ba(Al2Si2O8)",atol=1.0e-5)
+        @test isapprox(para, mat"Ba(Al2Si2O8)", atol = 1.0e-5)
 
         para = material(
             "Paracelsian",
-            n"O" => 0.340906, n"Ba" => 0.36576, n"Si" => 0.149607, n"Al" => 0.143727,
-            properties=Dict{Symbol,Any}(:Density=>3.5, :Description => "Barium-rich feldspar")
+            n"O" => 0.340906,
+            n"Ba" => 0.36576,
+            n"Si" => 0.149607,
+            n"Al" => 0.143727,
+            properties = Dict{Symbol,Any}(
+                :Density => 3.5,
+                :Description => "Barium-rich feldspar",
+            ),
         )
-        @test isapprox(para, mat"Ba(Al2Si2O8)",atol=1.0e-5)
+        @test isapprox(para, mat"Ba(Al2Si2O8)", atol = 1.0e-5)
         # Define a couple of additional properties...
-        para[:Color]="Colorless to white, light yellow tint"
-        para[:System]=:Monoclinic
-        @test para[:Description]=="Barium-rich feldspar"
-        @test para[:Density]==3.5
-        @test density(para)==3.5
-        @test para[:Color]=="Colorless to white, light yellow tint"
-        @test para[:System]==:Monoclinic
+        para[:Color] = "Colorless to white, light yellow tint"
+        para[:System] = :Monoclinic
+        @test para[:Description] == "Barium-rich feldspar"
+        @test para[:Density] == 3.5
+        @test density(para) == 3.5
+        @test para[:Color] == "Colorless to white, light yellow tint"
+        @test para[:System] == :Monoclinic
     end
     @testset "K412 w. uncertainty" begin
-        k412u = material("K412",
-                    n"Fe" => uv(0.0774, 0.0014),
-                    n"Al" => uv(0.0491, 0.0010),
-                    n"O"  => uv(0.4276, 0.0006),
-                    n"Ca" => parse(UncertainValue, "0.1090-+0.0012"),
-                    n"Si" => parse(UncertainValue, "0.2120+-0.0005"),
-                    n"Mg" => parse(UncertainValue, "0.1166±0.0010"),
-                    density=3.45,
-                    pedigree="NIST SRM-470",
-                    conductivity=:Insulator,
-                    description="NIST SRM glass - olivine simulant"
-                )
-        @test isapprox(value(k412u[n"O"]), 0.4276, atol=0.00001)
-        @test isapprox(σ(k412u[n"O"]), 0.0006, atol=0.00001)
-        @test isapprox(k412u[n"O"], uv(0.4276,0.0006), atol=0.00001)
-        @test isapprox(value(k412u[n"Si"]), 0.2120, atol=0.00001)
-        @test isapprox(σ(k412u[n"Si"]), 0.0005, atol=0.00001)
-        @test isapprox(analyticaltotal(k412u), 0.9917, atol=0.00005)
-        @test k412u[:Density]==3.45
-        @test startswith(k412u[:Pedigree],"NIST SRM")
-        @test k412u[:Conductivity]==:Insulator
-        @test startswith(k412u[:Description],"NIST SRM glass")
+        k412u = material(
+            "K412",
+            n"Fe" => uv(0.0774, 0.0014),
+            n"Al" => uv(0.0491, 0.0010),
+            n"O" => uv(0.4276, 0.0006),
+            n"Ca" => parse(UncertainValue, "0.1090-+0.0012"),
+            n"Si" => parse(UncertainValue, "0.2120+-0.0005"),
+            n"Mg" => parse(UncertainValue, "0.1166±0.0010"),
+            density = 3.45,
+            pedigree = "NIST SRM-470",
+            conductivity = :Insulator,
+            description = "NIST SRM glass - olivine simulant",
+        )
+        @test isapprox(value(k412u[n"O"]), 0.4276, atol = 0.00001)
+        @test isapprox(σ(k412u[n"O"]), 0.0006, atol = 0.00001)
+        @test isapprox(k412u[n"O"], uv(0.4276, 0.0006), atol = 0.00001)
+        @test isapprox(value(k412u[n"Si"]), 0.2120, atol = 0.00001)
+        @test isapprox(σ(k412u[n"Si"]), 0.0005, atol = 0.00001)
+        @test isapprox(analyticaltotal(k412u), 0.9917, atol = 0.00005)
+        @test k412u[:Density] == 3.45
+        @test startswith(k412u[:Pedigree], "NIST SRM")
+        @test k412u[:Conductivity] == :Insulator
+        @test startswith(k412u[:Description], "NIST SRM glass")
 
         k412x = mat"0.4535⋅SiO2+0.0996⋅FeO+0.1933⋅MgO+0.1525⋅CaO+0.0927⋅Al2O3"
-        k412y = parse(Material, "0.4535*SiO2+0.0996*FeO+0.1933*MgO+0.1525*CaO+0.0927*Al2O3",name="K412")
-        @test isapprox(k412x, k412u, atol=0.0001)
-        @test isapprox(k412x, k412y, atol=0.0001)
-        @test name(k412y)=="K412"
-        q = parse(Material,"SiO2", name="Quartz", density=2.32, pedigree="Stoichiometric")
-        @test q[:Density]==2.32
-        @test q[:Pedigree]=="Stoichiometric"
-        @test name(q)=="Quartz"
+        k412y = parse(
+            Material,
+            "0.4535*SiO2+0.0996*FeO+0.1933*MgO+0.1525*CaO+0.0927*Al2O3",
+            name = "K412",
+        )
+        @test isapprox(k412x, k412u, atol = 0.0001)
+        @test isapprox(k412x, k412y, atol = 0.0001)
+        @test name(k412y) == "K412"
+        q = parse(
+            Material,
+            "SiO2",
+            name = "Quartz",
+            density = 2.32,
+            pedigree = "Stoichiometric",
+        )
+        @test q[:Density] == 2.32
+        @test q[:Pedigree] == "Stoichiometric"
+        @test name(q) == "Quartz"
     end
 end

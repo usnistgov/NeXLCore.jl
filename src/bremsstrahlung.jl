@@ -106,49 +106,102 @@ struct Castellano2004a <: NeXLBremsstrahlung end
 struct Castellano2004b <: NeXLBremsstrahlung end
 
 bremsstrahlung(::Type{Kramers1923}, e::AbstractFloat, e0::AbstractFloat, elm::Element) =
-    e < e0 ? z(elm)*(e0-e)/e : 0.0
+    e < e0 ? z(elm) * (e0 - e) / e : 0.0
 
-bremsstrahlung(::Type{Lifshin1974}, e::AbstractFloat, e0::AbstractFloat, elm::Element; a=0.0001) =
-    bremsstrahlung(Kramers1923,e,e0,elm)*(1.0-1.0e-3*a*(e0-e))
+bremsstrahlung(
+    ::Type{Lifshin1974},
+    e::AbstractFloat,
+    e0::AbstractFloat,
+    elm::Element;
+    a = 0.0001,
+) = bremsstrahlung(Kramers1923, e, e0, elm) * (1.0 - 1.0e-3 * a * (e0 - e))
 
-bremsstrahlung(::Type{Reed1975}, e::AbstractFloat, e0::AbstractFloat, elm::Element; b=0.0001) =
-    e < e0 ? z(elm)*(1.0e-3*(e0-e))/((1.0e-3*e)^(1.0+b)) : 0.0
+bremsstrahlung(
+    ::Type{Reed1975},
+    e::AbstractFloat,
+    e0::AbstractFloat,
+    elm::Element;
+    b = 0.0001,
+) = e < e0 ? z(elm) * (1.0e-3 * (e0 - e)) / ((1.0e-3 * e)^(1.0 + b)) : 0.0
 
-function bremsstrahlung(::Type{Smith1975}, e::AbstractFloat, e0::AbstractFloat, elm::Element)
-    n(e,z) = 1.0e-3*e*(0.0739 - 0.0051*log(z)) + 1.6561 - 0.115*log(z)
-    x(e,z) = 1.76 - 0.00145*z/(1.0e-3*e)
+function bremsstrahlung(
+    ::Type{Smith1975},
+    e::AbstractFloat,
+    e0::AbstractFloat,
+    elm::Element,
+)
+    n(e, z) = 1.0e-3 * e * (0.0739 - 0.0051 * log(z)) + 1.6561 - 0.115 * log(z)
+    x(e, z) = 1.76 - 0.00145 * z / (1.0e-3 * e)
     zz = convert(Float64, z(elm))
-    return ((e0-e)/e)^x(e,zz)*zz^n(e,zz)
+    return ((e0 - e) / e)^x(e, zz) * zz^n(e, zz)
 end
 
-function bremsstrahlung(::Type{Small1987}, e::AbstractFloat, e0::AbstractFloat, elm::Element)
-    M(e0) = 0.00599e-3*e0 + 1.05
-    B(e0) = -0.0322e-3*e0
-    return e < e0 ? (z(elm)*((e0-e)/e))^M(e0)*(1.0e-3*e)^B(e0) : 0.0
+function bremsstrahlung(
+    ::Type{Small1987},
+    e::AbstractFloat,
+    e0::AbstractFloat,
+    elm::Element,
+)
+    M(e0) = 0.00599e-3 * e0 + 1.05
+    B(e0) = -0.0322e-3 * e0
+    return e < e0 ? (z(elm) * ((e0 - e) / e))^M(e0) * (1.0e-3 * e)^B(e0) : 0.0
 end
 
 bremsstrahlung(::Type{Trincavelli1997}, e::AbstractFloat, e0::AbstractFloat, elm::Element) =
     e < e0 ?
-        (sqrt(z(elm))*(e0-e)/e)*(-54.86 - 1.072e-3*e + 0.2835e-3*e0 +30.4*log(z(elm)) + 875.0/(z(elm)^2*(1.0e-3*e0)^0.08)) :
-        0.0
+    (sqrt(z(elm)) * (e0 - e) / e) * (
+        -54.86 - 1.072e-3 * e +
+        0.2835e-3 * e0 +
+        30.4 * log(z(elm)) +
+        875.0 / (z(elm)^2 * (1.0e-3 * e0)^0.08)
+    ) :
+    0.0
 
 
 bremsstrahlung(::Type{Castellano2004a}, e::AbstractFloat, e0::AbstractFloat, elm::Element) =
-    e < e0 ? (sqrt(z(elm))*(e0-e)/e)*(-73.90 - 1.2446*(1.0e-3*e) + 36.502*log(z(elm)) + (148.5*(1.0e-3*e0)^0.1239)/z(elm))* #
-            (1.0 + (-0.006624 + 0.0002906*(1.0e-3*e0))*z(elm)/(1.0e-3*e)) : 0.0
+    e < e0 ?
+    (sqrt(z(elm)) * (e0 - e) / e) *
+    (
+        -73.90 - 1.2446 * (1.0e-3 * e) +
+        36.502 * log(z(elm)) +
+        (148.5 * (1.0e-3 * e0)^0.1239) / z(elm)
+    ) * #
+    (1.0 + (-0.006624 + 0.0002906 * (1.0e-3 * e0)) * z(elm) / (1.0e-3 * e)) :
+    0.0
 
-function bremsstrahlung(::Type{Castellano2004b}, e::AbstractFloat, e0::AbstractFloat, elm::Element)
-    zz, E0, E = z(elm), e0/1000.0, e/1000.0
-    return e < e0 ? ((-E + E0)*sqrt(zz)*(1.0 + ((-0.006626 + 0.0002906*E0)*zz)/E)*
-            (-77.28317356370013 + (148.5*E0^0.1293)/zz + 36.502*log(zz)))/E : 0.0
+function bremsstrahlung(
+    ::Type{Castellano2004b},
+    e::AbstractFloat,
+    e0::AbstractFloat,
+    elm::Element,
+)
+    zz, E0, E = z(elm), e0 / 1000.0, e / 1000.0
+    return e < e0 ?
+           (
+        (-E + E0) *
+        sqrt(zz) *
+        (1.0 + ((-0.006626 + 0.0002906 * E0) * zz) / E) *
+        (-77.28317356370013 + (148.5 * E0^0.1293) / zz + 36.502 * log(zz))
+    ) / E :
+           0.0
 end
 
 bremsstrahlung(e::AbstractFloat, e0::AbstractFloat, elm::Element) =
     bremsstrahlung(Castellano2004a, e, e0, elm)
 
-function bremsstrahlung(ty::Type{<:NeXLBremsstrahlung}, e::AbstractFloat, e0::AbstractFloat, mat::Material; kwargs...)
-    af=atomicfraction(mat) # According to Trincavelli1997
-    return mapreduce(elm->af[elm]*bremsstrahlung(ty,e,e0,elm; kwargs...),+,keys(af))
+function bremsstrahlung(
+    ty::Type{<:NeXLBremsstrahlung},
+    e::AbstractFloat,
+    e0::AbstractFloat,
+    mat::Material;
+    kwargs...,
+)
+    af = atomicfraction(mat) # According to Trincavelli1997
+    return mapreduce(
+        elm -> af[elm] * bremsstrahlung(ty, e, e0, elm; kwargs...),
+        +,
+        keys(af),
+    )
 end
 
 

@@ -1,5 +1,7 @@
 """
-η(::Type{<:BackscatterCoefficient}, elm::Element, e0::Real)
+    η(::Type{<:BackscatterCoefficient}, elm::Element, e0::Real)
+
+Abstract type to represent backscatter coefficient algorithms.
 """
 abstract type BackscatterCoefficient <: NeXLAlgorithm end
 

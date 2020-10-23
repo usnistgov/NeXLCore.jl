@@ -61,6 +61,25 @@ Base.isequal(m1::Material, m2::Material) =
 
 Base.:+(mat1::Material, mat2::Material)::Material = sum(mat1, mat2)
 
+
+"""
+    Base.sum(
+        mat1::Material,
+        mat2::Material;
+        name::Union{AbstractString,Missing} = missing,
+        properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+        density::Union{Missing,AbstractFloat} = missing,
+        description::Union{Missing,AbstractString} = missing,
+        pedigree::Union{Missing,AbstractString} = missing,
+        conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
+    )::Material
+
+
+Construct a Material that represents the mass-fraction sum of mat1 and mat2. This function 
+is often used along with Base.:*(k::AbstractFloat, mat::Material)::Material to construct
+mixtures of compounds.  Ultimately, expressions like `mat"0.5*Al2O3+0.5*MgO"` are computed
+using `sum(...)`.
+"""
 function Base.sum(
     mat1::Material,
     mat2::Material;
@@ -278,6 +297,12 @@ function asnormalized(mat::Material, n = 1.0)
     end
 end
 
+
+"""
+    Base.isapprox(mat1::Material, mat2::Material; atol = 0.0, rtol = 1.0e-4)
+
+Are these Material(s) equivalent (approximately).
+"""
 function Base.isapprox(mat1::Material, mat2::Material; atol = 0.0, rtol = 1.0e-4)
     for elm in union(keys(mat1), keys(mat2))
         if !isapprox(value(mat1[elm]), value(mat2[elm]), atol = atol, rtol = rtol)
@@ -814,4 +839,5 @@ z(mat::Material) = sum(c * z for (z, c) in mat.massfraction)
 Computes the mean atomic weight for a material. (Naive algorithm.)
 """
 a(mat::Material) =
-    sum(haskey(mat.a, z) ? mat.a[z] : a(elements[z]) * c for (z, c) in mat.massfraction)key(mat.a,z) ? mat.a[z] : a(elements[z])*c for (z,c) in mat.massfraction)
+    sum(haskey(mat.a, z) ? mat.a[z] : a(elements[z]) * c for (z, c) in mat.massfraction)
+    

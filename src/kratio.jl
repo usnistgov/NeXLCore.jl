@@ -114,6 +114,11 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
     )
 end
 
+"""
+`KRatios` represents the hyper-spectral equivalent of the KRatio type.  Each pixel in the `KRatios` object
+must be characterized by the same unknown and standard properties, the same X-ray lines and the other
+properties.
+"""
 struct KRatios
     element::Element
     lines::Vector{CharXRay} # Which CharXRays were measured?

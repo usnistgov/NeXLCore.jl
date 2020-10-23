@@ -1,5 +1,5 @@
 """
-    A structure defining a thin film of Material.
+    A structure defining a thin film or layer of a Material.
 """
 struct Film
     material::Material

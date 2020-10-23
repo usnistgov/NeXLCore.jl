@@ -1,3 +1,7 @@
+
+"""
+Implements a user-customizable set of mass-absorption cofficients.
+"""
 struct CustomMAC <: NeXLAlgorithm end
 
 # The file '../data/specialmacs.csv' is the place to add custom MACs from any source.
@@ -7,7 +11,6 @@ let custommacs = nothing
         if isnothing(custommacs)
             @info "Loading custom MACs."
             custommacs = Dict{Tuple{Symbol,Int,CharXRay},Float64}()
-            #for row in CSV.File("C:\\Users\\nicho\\.julia\\dev\\NeXLCore\\data\\specialmacs.csv", header=1)
             for row in CSV.File(
                 joinpath(dirname(pathof(@__MODULE__)), "..", "data", "specialmacs.csv"),
                 header = 1,

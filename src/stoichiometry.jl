@@ -171,4 +171,4 @@ obystoichiometry(elms::Pair{Element,<:AbstractFloat}...; valences = valences) = 
 )
 obystoichiometry(elms::Dict{Element,<:AbstractFloat}; valences = valences) = sum(
     f * (-valences[z(elm)] * a(n"O")) / (a(elm) * valences[z(n"O")]) for (elm, f) in elms
-)   sum(f*(-valences[z(elm)]*a(n"O"))/(a(elm)*valences[z(n"O")]) for (elm,f) in elms)
+) 

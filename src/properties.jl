@@ -21,4 +21,4 @@ hasminrequired(ty::Type, dict::Dict{Symbol,Any}) =
 List any required but missing properties.
 """
 requiredbutmissing(ty::Type, dict::Dict{Symbol,Any}) =
-    filter(a -> !haskey(dict, a), minproperties(ty)) = filter(a -> !haskey(dict, a), minproperties(ty))
+    filter(a -> !haskey(dict, a), minproperties(ty))

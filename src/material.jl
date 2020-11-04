@@ -273,10 +273,11 @@ Return the normalized mass fraction as a Dict{Element, AbstractFloat}.  Negative
 are set to zero.
 """
 function normalizedmassfraction(mat::Material)::Dict{Element,AbstractFloat}
-    n = sum(nonneg(mat, elm) for elm in keys(mat))
+    n = analyticaltotal(mat)
     return Dict((elm, nonneg(mat, elm) / n) for elm in keys(mat))
 end
 
+normalized(mat::Material, elm::Element) = nonneg(mat,elm)/analyticaltotal(mat) 
 """
     asnormalized(mat::Material, n=1.0)::Material
 

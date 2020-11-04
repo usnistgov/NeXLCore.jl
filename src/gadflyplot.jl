@@ -6,16 +6,13 @@ using CSV
 using DataFrames
 using Statistics
 
-const NeXLPalette = distinguishable_colors(
+const NeXLPalette = convert.(RGB{Colors.N0f8}, distinguishable_colors(
     66,
     [RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
     transform = deuteranopic,
-)[3:end]
-const NeXLColorblind = distinguishable_colors(
-    66,
-    Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
-    transform = deuteranopic,
-)[3:end]
+)[3:end])
+
+const NeXLColorblind = NeXLPalette
 
 """
     Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energy|:Weight, palette=NeXLPalette)

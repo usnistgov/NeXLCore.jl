@@ -232,6 +232,13 @@ struct MeanAz <: Label
 end
 Base.show(io::IO, maz::MeanAz) = print(io, "MeanAz[$(maz.material)]")
 
+struct AnalyticalTotal <: Label
+    material::String
+end
+Base.show(io::IO, maz::AnalyticalTotal) = print(io, "Σ[$(maz.material)]")
+
+const MatStatTypes = ( MeanZ, MeanAz, AnalyticalTotal )
+
 function NeXLUncertainties.compute(
     ma::MatStats,
     inputs::LabeledValues,
@@ -245,12 +252,13 @@ function NeXLUncertainties.compute(
             labels(inputs),
         ),
     )
-    outputs = [MeanZ(ma.material), MeanAz(ma.material)]
+    outputs = [MeanZ(ma.material), MeanAz(ma.material), AnalyticalTotal(ma.material)]
     mfls = map(elm -> MassFractionLabel(ma.material, elm), elms)
     awls = map(elm -> AtomicWeightLabel(ma.material, elm), elms)
     results = [
         sum(inputs[mfls[i]] * elms[i].number for i in eachindex(elms)),
         sum(inputs[mfls[i]] * inputs[awls[i]] for i in eachindex(elms)),
+        sum(inputs[mfls[i]] for i in eachindex(elms)),
     ]
     jac = withJac ? zeros(Float64, length(outputs), length(inputs)) : missing
     if withJac
@@ -258,6 +266,7 @@ function NeXLUncertainties.compute(
             jac[1, indexin(mfls[j], inputs)] = elms[j].number
             jac[2, indexin(mfls[j], inputs)] = inputs[awls[j]]
             jac[2, indexin(awls[j], inputs)] = inputs[mfls[j]]
+            jac[3, indexin(mfls[j], inputs)] = 1.0
         end
     end
     return (LabeledValues(outputs, results), jac)
@@ -266,13 +275,23 @@ end
 
 """
     mf2comp(material::String, mfs::UncertainValues)::UncertainValues
+    mf2comp(mat::Material)::UncertainValues
 
 Converts a material composition expressed in the `mfs` UncertainValues struct into a handful
 of common representations including normalized mass fraction, atomic fraction, mean Z and
-mean atomic number.
+mean atomic number.  The second form converts a Material into UncertainValues form.
 """
 mf2comp(material::String, mfs::UncertainValues)::UncertainValues =
     propagate(AllInputs() | MFtoAF(material) | MFtoNMF(material) | MatStats(material), mfs)
+
+function NeXLCore.mf2comp(mat::Material)::UncertainValues
+    dlu = Dict{Label, UncertainValue}()
+    for elm in keys(mat)
+        dlu[MassFractionLabel(name(mat),elm)]=mat[elm]
+        dlu[AtomicWeightLabel(name(mat),elm)]=a(elm, mat)
+    end
+    return mf2comp(name(mat), uvs(dlu))
+end
 
 af2comp(material::String, afs::UncertainValues)::UncertainValues =
     propagate((MatStats(material) | AllInputs()) ∘ (AFtoNMF(material) | AllInputs()), afs)
@@ -430,6 +449,19 @@ function NeXLUncertainties.compute(
     return (LabeledValues(outputs, results), jac)
 end
 
+"""
+    mixture(mat::String, mix::Pair{UncertainValues,UncertainValue}...)::UncertainValues
+    mixture(mat::String, mix::Pair{Material, UncertainValue}...)::UncertainValues
+
+Converts a mixture of materials into a material.
+In the first case, the input materials are in UncertainValues representation.
+In the second case, the Material instances are converted to the UncertainValues representation.
+In each case, the first item in the Pair represents a material and the second the mass fraction of that material in the mixture.
+"""
+function mixture(mat::String, mix::Pair{Material, UncertainValue}...)
+    mixture(mat, (mf2comp(mat)=>uv for (mat, uv) in mix)...)
+end
+
 function mixture(mat::String, mix::Pair{UncertainValues,UncertainValue}...)
     function nameofmat(uvs)
         lbls = labels(uvs)
@@ -438,7 +470,7 @@ function mixture(mat::String, mix::Pair{UncertainValues,UncertainValue}...)
         return lbl.material
     end
     mixes = uvs(Dict(MaterialFractionLabel(mat, nameofmat(uvs)) => uv for (uvs, uv) in mix))
-    return propagate(MaterialMixture(mat), cat(mixes, (uvs for (uvs, uv) in mix)...))
+    return propagate(AllInputs() | MaterialMixture(mat), cat(mixes, (uvs for (uvs, uv) in mix)...))
 end
 
 struct μoρElementLabel <: Label

@@ -168,6 +168,9 @@ export MassFractionLabel
 export NormMassFractionLabel
 export AtomicFractionLabel
 export AtomicWeightLabel
+export MaterialFractionLabel
+export MatStatTypes
+export MeanAz, MeanZ, AnalyticalTotal
 export μoρElementLabel
 export μoρLabel
 export μoρMaterial # MeasurementModel

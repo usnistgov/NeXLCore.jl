@@ -1,3 +1,4 @@
+using DataFrames
 
 # import Base.isequal, Base.show, Base.isless, Base.parse
 
@@ -204,6 +205,17 @@ j(ss::SubShell) = (
     1 // 2,
     3 // 2,
 )[ss.index]
+
+
+function NeXLUncertainties.asa(::Type{DataFrame}, ss::SubShell)
+    return DataFrame(
+        SubShell = [ repr(ss) ],
+        n = [ n(ss) ],
+        l = [ l(ss) ],
+        j = [ j(ss) ],
+        capacity = [ capacity(ss) ]
+    )
+end
 
 """
     shell(sh::SubShell)
@@ -414,6 +426,18 @@ ionizationcrosssection(
     ty::Type{<:NeXLAlgorithm} = Bote2009,
 ) = ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
 
+
+function NeXLUncertainties.asa(::Type{DataFrame}, ass::AtomicSubShell)
+    return DataFrame(
+        Name = [ repr(ass) ],
+        SubShell = [ subshell(ass) ],
+        Energy = [ energy(ass) ],
+        ICX_U2 = [ ionizationcrosssection(ass, 2.0*energy(ass)) ],
+        JumpRatio = [ jumpratio(ass) ],
+        FluorYield = [ fluorescenceyield(ass) ]
+    )
+end
+
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
 
 struct Pouchou1991 <: NeXLAlgorithm end
@@ -556,7 +580,7 @@ meanfluorescenceyield(elm::Element, sh::Shell) =
     meanfluorescenceyield(elm, sh, Bambynek1972)
 
 """
-    fluorescenceyield(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
+    fluorescenceyield(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64
 
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.  Does not include Coster-Kronig
@@ -567,7 +591,7 @@ fluorescenceyield(ass::AtomicSubShell, ::Type{NeXL})::Float64 = sum(map(
 ))
 
 """
-    fluorescenceyieldcc(ass::AtomicSubShell, ::Type{FFASTDB})::Float64
+    fluorescenceyieldcc(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64
 
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.  Includes Coster-Kronig

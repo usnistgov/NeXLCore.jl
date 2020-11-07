@@ -646,15 +646,10 @@ material name, element abbreviation, atomic number, atomic weight, mass fraction
 normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
 function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
-    res = DataFrame(
-        Material = Vector{String}(),
-        Element = Vector{String}(),
-        AtomicNumber = Vector{Int}(),
-        AtomicWeight = Vector{AbstractFloat}(),
-        MassFraction = Vector{AbstractFloat}(),
-        NormalizedMassFraction = Vector{AbstractFloat}(),
-        AtomicFraction = Vector{AbstractFloat}(),
-    )
+    res = DataFrame( Material = Vector{String}(), Element = Vector{String}(),
+                Z = Vector{Int}(), A = Vector{AbstractFloat}(),
+                MassFrac = Vector{AbstractFloat}(), NormMass = Vector{AbstractFloat}(),
+                AtomFrac = Vector{AbstractFloat}() )
     af, tot = atomicfraction(mat), analyticaltotal(mat)
     for elm in sort(collect(keys(mat)))
         push!(

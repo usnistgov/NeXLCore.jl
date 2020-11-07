@@ -533,6 +533,17 @@ function Base.show(io::IO, cxrs::AbstractVector{CharXRay})
     print(io, name(cxrs))
 end
 
+function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay})
+    return DataFrame(
+        XRay = copy(cxrs),
+        Inner = inner.(cxrs),
+        Outer = outer.(cxrs),
+        Energy = energy.(cxrs),
+        Strength = strength.(cxrs),
+		Weight = weight.(cxrs)
+    )
+end
+
 """
     mac(elm::Element, cxr::CharXRay, alg::Type{<:MACAlgorithm}=FFASTDB)::Float64
 

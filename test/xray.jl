@@ -99,9 +99,13 @@ using NeXLCore
         @test isless(n"Ca L3", n"Ca L1")
         @test isless(n"Ca K", n"Fe K")
         @test !isless(n"Fe K", n"Fe K")
-        @test isless(n"Fe K-L3", n"Fe K-L2")
-        @test !isless(n"Fe K-L3", n"Fe K-L3")
-        @test !isless(n"Fe K-L2", n"Fe K-L3")
+ 
+        # Check that these funtions are defined for all available AtomicSubShell
+        @test all(energy.(atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(fluorescenceyield.(atomicsubshells(el), NeXL) ≠ 0.0 for el in elements[eachelement()])
+        @test all(map(sh->ionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(map(sh->relativeionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(all(map(ass->parse(AtomicSubShell,repr(ass)) == ass, atomicsubshells(el))) for el in elements[eachelement()])
     end
 
     @testset "Transitions" begin
@@ -168,7 +172,15 @@ using NeXLCore
         @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6
         @test length(characteristic(n"Fe", ltransitions, 0.01)) == 7
 
-        # @test_logs (:warn, "The sum mass fraction is 80.0 which is much larger than unity.")  mat"80*Fe+15*Ni+4*Cr"
+        @test isless(n"Fe K-L3", n"Fe K-L2")
+        @test !isless(n"Fe K-L3", n"Fe K-L3")
+        @test !isless(n"Fe K-L2", n"Fe K-L3")
+
+        # Check that these funtions are defined for all available transitions
+        @test all(energy.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(weight.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(strength.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(all(map(cxr->parse(CharXRay,repr(cxr)) == cxr, characteristic(el,alltransitions))) for el in elements[eachelement()])
     end
     @testset "Other" begin
         @test firstsubshell(Shell(3)) == n"M1"

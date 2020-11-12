@@ -180,7 +180,7 @@ Base.show(io::IO, kr::KRatios) = print(
 )
 
 Base.getindex(krs::KRatios, idx::Int...) =
-    KRatio(lines, unkProps, stdProps, standard, getindex(krs.kratios, idx...))
+    KRatio(krs.lines, krs.unkProps, krs.stdProps, krs.standard, getindex(krs.kratios, idx...))
 xrays(krs::KRatios) = lines
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)

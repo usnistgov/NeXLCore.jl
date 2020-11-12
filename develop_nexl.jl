@@ -1,5 +1,0 @@
-Pkg.develop(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLUncertainties.jl.git"))
-Pkg.develop(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLCore.jl.git"))
-Pkg.develop(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl.git"))
-Pkg.develop(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLSpectrum.jl.git"))
-Pkg.develop(PackageSpec(url="https://github.com/NicholasWMRitchie/NeXLParticle.jl.git"))

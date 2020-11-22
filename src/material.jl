@@ -127,6 +127,19 @@ density(mat::Material) = property(mat, :Density)
 description(mat::Material) = property(mat, :Description)
 pedigree(mat::Material) = property(mat, :Pedigree)
 
+"""
+    atoms_per_cm³(mat::Material, elm::Element) =
+
+Number of atoms per cm³ of the specified Element in the specified Material.  The Material must define
+the `:Density` property.
+
+    atoms_per_cm³(mat::Material)
+
+Total number of atoms per cm³ for all elements in mat. 
+"""
+atoms_per_cm³(mat::Material, elm::Element) = mat[:Density]*mat[elm]*6.0221366516752e23 / a(elm, mat)
+atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat,elm) for elm in keys(mat))
+
 property(mat::Material, sym::Symbol) = get(mat.properties, sym, missing)
 
 

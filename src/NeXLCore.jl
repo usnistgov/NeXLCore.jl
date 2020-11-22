@@ -87,6 +87,7 @@ export name # Material name
 export compare # Compare compositions as a DataFrame
 export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
+export atoms_per_cm³ # Returns the number of atoms in one cm² of the Material
 export @mat_str
 
 include("film.jl")
@@ -153,6 +154,11 @@ export JoyLuo # <: BetheEnergyLoss
 export dEds
 export Kanaya1972
 
+include("electron.jl")
+export λₑ # Wavelength of an electron
+export kₑ # Wave number of an electron
+export mₑ # mass of an electron in MeV
+
 include("misc.jl")
 export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
@@ -182,6 +188,16 @@ export AFtoMF # MeasurementModel
 export MatStats # MeasurementModel
 export mf2comp
 export materiallabels
+
+include("scattering.jl")
+export ElasticScatteringCrossSection # abstract 
+export ScreenedRutherfordType # abstract
+export ScreenedRutherford
+export Liljequist1989
+export Browning1991
+export Browning1994
+export λ, λₜᵣ  # Mean free path and transport mean free path
+export σₜ # total scattering cross section
 
 include("kratio.jl")
 export KRatio # Represents a measured intensity ratio

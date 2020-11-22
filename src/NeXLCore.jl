@@ -198,6 +198,8 @@ export Browning1991
 export Browning1994
 export λ, λₜᵣ  # Mean free path and transport mean free path
 export σₜ # total scattering cross section
+export δσδΩ # The differential cross section
+export Rₐ # Classical atomic scattering radius
 
 include("kratio.jl")
 export KRatio # Represents a measured intensity ratio

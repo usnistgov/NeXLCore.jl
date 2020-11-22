@@ -17,10 +17,5 @@ using NeXLCore
     @test isapprox(kₑ(200.0), 0.01*sqrt(2.0*9.109e-31*1.602e-19*200.0)/1.05457e-34,rtol=1.0e-3)
     @test isapprox(kₑ(2000.0), 0.01*sqrt(2.0*9.109e-31*1.602e-19*2000.0)/1.05457e-34,rtol=1.0e-3)
 
-    @test isapprox(Rₐ(n"Po"), 0.1208*1.0e-8, atol=0.0001*1.0e-8)
-    @test isapprox(Rₐ(n"H"), 0.529*1.0e-8, atol=0.0001*1.0e-8)
-    @test isapprox(Rₐ(n"Fe"), 0.1786*1.0e-8, atol=0.0001*1.0e-8)
-
     @test isapprox(mₑ, 0.511e6, atol= 0.001e6)  # Must be in eV!!!!
-    @test isapprox(qₑ, 1.602e-19, atol= 0.001e-19)  # C 
 end

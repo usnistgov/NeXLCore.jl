@@ -133,14 +133,14 @@ function σₜ(::Type{Browning1994}, elm::Element, E::Float64)
 end
 
 """
-    σ(::Type{ScreenedRutherford}, θ::Float64, elm::Element, E::Float64)::Float64
+    δσδΩ(::Type{ScreenedRutherford}, θ::Float64, elm::Element, E::Float64)::Float64
 
 The *differential* screened Rutherford cross-section per atom. 
 """
-function σ(::Type{ScreenedRutherford}, θ::Float64, elm::Element, E::Float64)::Float64
+function δσδΩ(::Type{ScreenedRutherford}, θ::Float64, elm::Element, E::Float64)::Float64
     return ξ(ScreenedRutherford, elm,E)*(1.0-cos(θ)+ϵ(ScreenedRutherford, elm, E)^-1)^-2
 end
-function σ(::Type{Liljequist1989}, θ::Float64, elm::Element, E::Float64)::Float64
+function δσδΩ(::Type{Liljequist1989}, θ::Float64, elm::Element, E::Float64)::Float64
     return σ(ScreenedRutherford, θ, elm, E) / LiljequistCorrection[z(elm)](E)
 end
 

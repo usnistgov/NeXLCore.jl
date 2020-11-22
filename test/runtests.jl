@@ -13,7 +13,7 @@ using NeXLCore
     include("bethe.jl")
     include("meanionizationpotential.jl")
     include("electron.jl")
-    include("scatter.jl")
+    include("scattering.jl")
 end
 
 # To test coverage (from NWMR's Win10 box)

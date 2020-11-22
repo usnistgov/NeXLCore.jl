@@ -19,7 +19,7 @@ struct Shell
 end
 
 name(sh::Shell) = "$('J'+sh.n)"
-Base.show(io::IO, sh::Shell) = print(io, "Shell[$(name(sh))]")
+Base.show(io::IO, sh::Shell) = print(io, name(sh))
 n(sh::Shell) = sh.n
 Base.isequal(sh1::Shell, sh2::Shell) = sh1.n == sh2.n
 Base.isless(sh1::Shell, sh2::Shell) = sh1.n > sh2.n # In binding energy order
@@ -32,7 +32,8 @@ const NShell = Shell(4)
 """
     SubShell
 
-Represents one of the various differentsub subshells in an atom.
+Represents one of the various subshells in an atom.  (See `AtomicSubShell` to combine
+the element with a `SubShell`.)
 Member data items are index::Int where 1=>K, 2=>L1, ..., 36=>P11.
 Construct using SubShell(name::AbstractString) where name = "K", "L1"...,"P11"
 """
@@ -49,7 +50,7 @@ end
 Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
 
 Base.isequal(sh1::SubShell, sh2::SubShell) = sh1.index == sh2.index
-Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Energy order
+Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Outer to inner, approx E order
 
 """
     allsubshells
@@ -206,14 +207,15 @@ j(ss::SubShell) = (
     3 // 2,
 )[ss.index]
 
-
-function NeXLUncertainties.asa(::Type{DataFrame}, ss::SubShell)
+function NeXLUncertainties.asa(::Type{DataFrame}, vss::AbstractVector{SubShell})
+    css = sort(vss)
     return DataFrame(
-        SubShell = [ repr(ss) ],
-        n = [ n(ss) ],
-        l = [ l(ss) ],
-        j = [ j(ss) ],
-        capacity = [ capacity(ss) ]
+        SubShell = css,
+        Shell = shell.(css),
+        n = n.(css),
+        𝓁 = l.(css),
+        j = j.(css),
+        Capacity = capacity.(css)
     )
 end
 
@@ -427,14 +429,15 @@ ionizationcrosssection(
 ) = ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
 
 
-function NeXLUncertainties.asa(::Type{DataFrame}, ass::AtomicSubShell)
+function NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSubShell})
+    cva = sort(vass)
     return DataFrame(
-        Name = [ repr(ass) ],
-        SubShell = [ subshell(ass) ],
-        Energy = [ energy(ass) ],
-        ICX_U2 = [ ionizationcrosssection(ass, 2.0*energy(ass)) ],
-        JumpRatio = [ jumpratio(ass) ],
-        FluorYield = [ fluorescenceyield(ass) ]
+        Shell = cva,
+        SubShell = subshell.(cva),
+        Energy = energy.(cva),
+        ICX_U2 = map(a->ionizationcrosssection(a, 2.0*energy(a)), cva),
+        JumpRatio = jumpratio.(cva),
+        FluorYield = fluorescenceyield.(cva)
     )
 end
 
@@ -590,6 +593,8 @@ fluorescenceyield(ass::AtomicSubShell, ::Type{NeXL})::Float64 = sum(map(
     ass.subshell.index+1:length(allsubshells),
 ))
 
+fluorescenceyield(ass::AtomicSubShell) = fluorescenceyield(ass, NeXL)
+
 """
     fluorescenceyieldcc(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64
 
@@ -603,3 +608,5 @@ function fluorescenceyieldcc(ass::AtomicSubShell, ::Type{NeXL})::Float64
     ))
     return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
 end
+
+fluorescenceyieldcc(ass::AtomicSubShell) = fluorescenceyieldcc(ass, NeXL)

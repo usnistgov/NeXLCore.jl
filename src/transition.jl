@@ -432,13 +432,6 @@ has(elm::Element, tr::Transition)::Bool =
 """
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
 
-The collection of available CharXRay for the specified element.
-  * ` maxE` is compared to the edge energy.
-  * `minWeight` is compared to the weight
-
-Example:
-
-    characteristic(n"Fe",ltransitions,0.01)
 """
 characteristic(
     elm::Element,
@@ -463,13 +456,20 @@ characteristic(
 
 """
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)
+    characteristic(elm::Element, iter::AbstractVector{Transition}, filterfunc::Function)
+    characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6)
+    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6)
+    characteristic(ass::AtomicSubShell)
 
-The collection of available CharXRay for the specified element.  `filterfunc(...)`
-is a function taking a single CharXRay argument.
-
+The collection of available CharXRay for the specified `Element` or `AtomicSubShell`.  `filterfunc(...)`
+    * ` maxE` is compared to the edge energy.
+    * `minWeight` is compared to the weight
+      
 Example:
-
+      
+    characteristic(n"Fe",ltransitions,0.01)
     characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
+    characteristic(n"Fe L3")
 """
 characteristic(
     elm::Element,
@@ -487,6 +487,9 @@ characteristic(
     tr -> characteristic(elm, tr),
     filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
 )
+
+characteristic(ass::AtomicSubShell) = 
+    characteristic(element(ass), filter(tr->inner(tr)==ass.subshell, alltransitions))
 
 
 """
@@ -534,13 +537,14 @@ function Base.show(io::IO, cxrs::AbstractVector{CharXRay})
 end
 
 function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay})
+    cc = sort(cxrs)
     return DataFrame(
-        XRay = copy(cxrs),
-        Inner = inner.(cxrs),
-        Outer = outer.(cxrs),
-        Energy = energy.(cxrs),
-        Strength = strength.(cxrs),
-		Weight = weight.(cxrs)
+        XRay = cc,
+        Inner = inner.(cc),
+        Outer = outer.(cc),
+        Energy = energy.(cc),
+        Strength = strength.(cc),
+		Weight = weight.(cc)
     )
 end
 

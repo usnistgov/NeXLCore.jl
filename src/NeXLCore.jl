@@ -232,4 +232,13 @@ include("palettes.jl")
 export Log3BandC, Log3Band, LogScale, LinearScale # Converts [0.0,1.0] to a colored image.
 export loadlegend # Load a legend for one of the above scales
 
+
+include("mc.jl")
+export Position
+export Particle, Electron
+export Shape, RectangularShape, SphericalShape
+export scatter # The Particle transport function 
+export chamber, gun
+export trajectory # 
+
 end

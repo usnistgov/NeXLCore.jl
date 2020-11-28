@@ -207,7 +207,7 @@ function childmost_region(reg::Region, pos::AbstractArray{Float64})::Region
 end
 
 """
-    take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float64)::Tuple{T, Region} where { T<: Particle}
+    take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float64)::Tuple{T, Region, Bool} where { T<: Particle}
 
 Returns a `Tuple` containing a new `Particle` and the child-most `Region` in which the new `Particle` is found based
 on a scatter event consisting a translation of up to `𝜆` mean-free path along a new direction given relative
@@ -215,17 +215,41 @@ to the current direction of `p` via the scatter angles `𝜃` and `𝜑`.
 
 Returns the updated `Particle` reflecting the last trajectory step and the Region for the next step.
 """
-function take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float64, ΔE::Float64, ϵ::Float64 = 1.0e-12)::Tuple{T, Region} where {T <: Particle }
+function take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float64, ΔE::Float64, ϵ::Float64 = 1.0e-12)::Tuple{T, Region, Bool} where {T <: Particle }
     newP, nextReg = T(p, 𝜆, 𝜃, 𝜑, ΔE), reg
     t = min( 
         intersection(reg.shape, newP), # Leave this Region
         (intersection(ch.shape, newP) for ch in reg.children)... # Enter a new child Region
     )
-    if t <= 1.0
+    scatter = t > 1.0
+    if !scatter
         newP = T(p, (t+ϵ)*𝜆, 𝜃, 𝜑, (t+ϵ)*ΔE)
         nextReg = childmost_region(ismissing(reg.parent) ? reg : reg.parent, position(newP))
     end
-    return (newP, nextReg)
+    return (newP, nextReg, scatter)
+end
+
+"""
+trajectory(p::T, reg::Region, scf::Function=transport, minE::Float64=50.0) where {T <: Particle}
+
+Run a single particle trajectory from `p` to `minE` or until the particle exits `reg`.
+
+  * `eval(part::T, region::Region)` a function evaluated at each scattering point
+  * `p` defines the initial position, direction and energy of the particle (often created with `gun(T, ...)`)
+  * `reg` The outer-most region for the trajectory (usually created with `chamber()`)
+  * `scf` A function from (<:Particle, Material) -> ( λ, θ, ϕ, ΔE ) that implements the transport dynamics
+  * `minE` Stopping criterion
+"""
+function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat), minE::Float64=50.0) where { T <: Particle }
+    (pc, nextr) = (p, childmost_region(reg, position(p))) 
+    θ, ϕ = 0.0, 0.0
+    while (pc.energy > minE) && isinside(reg.shape, position(pc))
+        prevr = nextr
+        (λ, θₙ, ϕₙ, ΔZ) = scf(pc, nextr.material)
+        (pc, nextr, scatter) = take_step(pc, nextr, λ, θ, ϕ, ΔZ)
+        ( θ, ϕ ) = scatter ? ( θₙ, ϕₙ ) : ( 0.0, 0.0 )
+        eval(pc, prevr)
+    end
 end
 
 """
@@ -294,29 +318,6 @@ function thinfilm(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Mate
         Region(RectangularShape([-1.0, -1.0, t],[2.0,2.0,2.0-t]), substrate, c)
     end
     return c
-end
-
-"""
-trajectory(p::T, reg::Region, scf::Function=transport, minE::Float64=50.0) where {T <: Particle}
-
-Run a single particle trajectory from `p` to `minE` or until the particle exits `reg`.
-
-  * `eval(part::T, region::Region)` a function evaluated at each scattering point
-  * `p` defines the initial position, direction and energy of the particle (often created with `gun(T, ...)`)
-  * `reg` The outer-most region for the trajectory (usually created with `chamber()`)
-  * `scf` A function from (<:Particle, Material) -> ( λ, θ, ϕ, ΔE ) that implements the transport dynamics
-  * `minE` Stopping criterion
-"""
-function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat), minE::Float64=50.0) where { T <: Particle }
-    (pc, nextr) = (p, childmost_region(reg, position(p))) 
-    θ, ϕ = 0.0, 0.0
-    while (pc.energy > minE) && isinside(reg.shape, position(pc))
-        prevr = nextr
-        (λ, θₙ, ϕₙ, ΔZ) = scf(pc, nextr.material)
-        (pc, nextr) = take_step(pc, nextr, λ, θ, ϕ, ΔZ)
-        θ, ϕ = θₙ, ϕₙ
-        eval(pc, prevr)
-    end
 end
 
 """

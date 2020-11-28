@@ -1,13 +1,16 @@
+using GeometryBasics
 using LinearAlgebra
-using StaticArrays
+using Colors
 
 """
 `Position` : A point in 3-D.
 """
-const Position = SVector{3,Float64}
+const Position = Point{3, Float64}
 
 """
-`Shape` is an abstract type that implements three methods.
+The MonteCarlo uses the shapes defined in GeometryBasics basics as the foundation for its 
+sample construction mechanisms.  However, GeometryBasics basics does not provide all the 
+necessary methods.  Three additional methods are 
 
     isinside(r::Shape, pos::Position)
 
@@ -15,53 +18,32 @@ Is `pos` strictly inside `r`?
 
     intersection(r::Shape, pos0::Particle, pos1::Particle)::Float64
 
-Return a number `f` which represent the fraction of the distance between `pos0` and `pos1` that
+Return a number `f` which represent the fraction of the distance from `pos0` to `pos1` that
 first intersects the `Shape` `r`.  The intersection point will equal `pos0 .+ f*(pos1 .- pos0)`.
 If `f` is between 0.0 and 1.0 then the intersection is on the interval between `pos0` and `pos1`.
 If the ray from `pos0` towards `pos2` does not intersect `r` then this function returns Inf64.
-
-
-    random_point_inside(sr::Shape)::Position
-
-Generate a randomized point within the shape to permit a stochastic test of whether
-a child region is fully contained within a parent region. 
 """
-abstract type Shape end
+const RectangularShape = Rect{3, Float64}
 
-"""
-    RectangularShape <: Shape
+isinside(rr::RectangularShape, pos::AbstractArray{Float64}) = all(pos .> minimum(rr)) && all(pos .< maximum(rr))
 
-A rectangular region oriented with the coordinate axes.
-"""
-struct RectangularShape <: Shape
-    corner1::Position
-    corner2::Position
-
-    RectangularShape(c1::Position, c2::Position) = new(min.(c1,c2), max.(c1,c2))
-end
-
-Base.show(io::IO, rs::RectangularShape) = print(io, "Rect[$(rs.corner1), $(rs.corner2)]")
-
-function isinside(rr::RectangularShape, pos::Position)
-    all(pos[i] > rr.corner1[i] && pos[i] < rr.corner2[i] for i in eachindex(pos))
-end
-
-function intersection(rr::RectangularShape, pos1::Position, pos2::Position)::Float64
+function intersection(rr::RectangularShape, pos1::AbstractArray{Float64}, pos2::AbstractArray{Float64})::Float64
     _between(a, b, c)  = (a>b) && (a<c)
     t = Inf64
+    corner1, corner2 = minimum(rr), maximum(rr)
     for i in eachindex(pos1)
         j, k = i % 3 + 1, (i + 1) % 3 + 1
         if pos2[i] != pos1[i]
-            u = (rr.corner1[i] - pos1[i]) / (pos2[i] - pos1[i])
+            u = (corner1[i] - pos1[i]) / (pos2[i] - pos1[i])
             if (u > 0.0) && (u <= t) && #
-                _between(pos1[j] + u * (pos2[j] - pos1[j]), rr.corner1[j], rr.corner2[j]) && # 
-                _between(pos1[k] + u * (pos2[k] - pos1[k]), rr.corner1[k], rr.corner2[k])
+                _between(pos1[j] + u * (pos2[j] - pos1[j]), corner1[j], corner2[j]) && # 
+                _between(pos1[k] + u * (pos2[k] - pos1[k]), corner1[k], corner2[k])
                 t = u
             end
-            u = (rr.corner2[i] - pos1[i]) / (pos2[i] - pos1[i])
+            u = (corner2[i] - pos1[i]) / (pos2[i] - pos1[i])
             if (u > 0.0) && (u <= t) && #
-                _between(pos1[j] + u * (pos2[j] - pos1[j]), rr.corner1[j], rr.corner2[j]) && # 
-                _between(pos1[k] + u * (pos2[k] - pos1[k]), rr.corner1[k], rr.corner2[k])
+                _between(pos1[j] + u * (pos2[j] - pos1[j]), corner1[j], corner2[j]) && # 
+                _between(pos1[k] + u * (pos2[k] - pos1[k]), corner1[k], corner2[k])
                 t = u
             end
         end
@@ -69,29 +51,14 @@ function intersection(rr::RectangularShape, pos1::Position, pos2::Position)::Flo
     return t
 end
 
-function random_point_inside(rr::RectangularShape)
-    return Position( (rr.corner1 .+ rand(Float64, (3)) .* (rr.corner2 .- rr.corner1))...)
-end
+const SphericalShape = HyperSphere{3,Float64}
 
+isinside(sr::SphericalShape, pos::AbstractArray{Float64}) = norm(pos .- origin(sr)) < radius(sr)
 
-"""
-    SphericalShape <: Shape
-
-A spherical region.
-"""
-struct SphericalShape <: Shape
-    center::Position
-    radius::Float64
-
-    SphericalShape(center::Position, radius::Float64) = new(center, abs(radius))
-end
-
-isinside(sr::SphericalShape, pos::Position) = norm(pos-sr.center) < sr.radius
-
-function intersection(sr::SphericalShape, pos0::Position, pos1::Position)::Float64
-    d, m = pos1 .- pos0, pos0 .- sr.center
+function intersection(sr::SphericalShape, pos0::AbstractArray{Float64}, pos1::AbstractArray{Float64})::Float64
+    d, m = pos1 .- pos0, pos0 .- origin(sr)
     ma2, b = -2.0 * dot(d, d), 2.0 * dot(m, d)
-    f = b^2 + ma2 * 2.0 * (dot(m, m) - sr.radius^2)
+    f = b^2 + ma2 * 2.0 * (dot(m, m) - radius(sr)^2)
     if f >= 0.0 
        up, un = (b + sqrt(f)) / ma2, (b - sqrt(f)) / ma2
        return min(up < 0.0 ? Inf64 : up, un < 0.0 ? Inf64 : un)
@@ -99,12 +66,17 @@ function intersection(sr::SphericalShape, pos0::Position, pos1::Position)::Float
     return Inf64
 end
 
-function random_point_inside(sr::SphericalShape)
-    p = 2.0 * rand(Float64, (3)) .- ( 1.0, 1.0 ,1.0 )
-    while norm(p) >= 1.0
-        p = 2.0 * rand(Float64, (3)) .- ( 1.0, 1.0 ,1.0 )
+"""
+    random_point_inside(shape)
+
+Generate a randomized point that is guaranteed to be in the interior of the shape.
+"""
+function random_point_inside(shape)::Position
+    res = origin(shape) .+ rand(Position) .* widths(shape)
+    while !isinside(shape, res)
+        res = origin(shape) .+ rand(Position) .* widths(shape)
     end
-    return Position( (sr.center + sr.radius*p)...)
+    return res
 end
 
 """
@@ -141,23 +113,24 @@ struct Electron <: Particle
 Create a new `Electron` from this one in which the new `Electron` is a distance `𝜆` from the
 first along a trajectory that is `𝜃` and `𝜑` off the current trajectory.
 """
-    Electron(prev::Position, curr::Position, energy::Float64) = new(prev,curr,energy)   
+    Electron(prev::AbstractArray{Float64}, curr::AbstractArray{Float64}, energy::Float64) = new(prev,curr,energy)   
+    
     function Electron(el::Electron, 𝜆::Float64, 𝜃::Float64, 𝜑::Float64, ΔE::Float64)
         (u,v,w) = LinearAlgebra.normalize(position(el) .- previous(el))
         sc =  1.0 - abs(w) > 1.0e-8 ? #
-            SA_F64[ #
+            Position( #
                 u*cos(𝜃)+sin(𝜃)*(u*w*cos(𝜑)-v*sin(𝜑))/sqrt(1.0 - w^2), #
-                v*cos(𝜃)+sin(𝜃)*(u*w*cos(𝜑)+v*sin(𝜑))/sqrt(1.0 - w^2), #
+                v*cos(𝜃)+sin(𝜃)*(v*w*cos(𝜑)+u*sin(𝜑))/sqrt(1.0 - w^2), #
                 w*cos(𝜃)-sqrt(1.0 - w^2)*sin(𝜃)*cos(𝜑) # 
-            ] : SA_F64[ #
+             ) : Position( #
                 sign(w)*sin(𝜃)*cos(𝜑), #
                 sign(w)*sin(𝜃)*sin(𝜑), #
-                sign(w)*cos(𝜃) ]
-        return new(el.current, el.current .+ 𝜆*sc, el.energy + ΔE)
+                sign(w)*cos(𝜃) )
+        return new(position(el), position(el) .+ 𝜆*sc, el.energy + ΔE)
     end
 end
 
-Base.show(io::IO, el::Electron) = print(io, "Electron[$current, $energy eV]")
+Base.show(io::IO, el::Electron) = print(io, "Electron[$(position(el)), $(energy(el)) eV]")
 position(el::Particle) = el.current
 previous(el::Particle) = el.previous
 energy(el::Particle) = el.energy
@@ -172,20 +145,19 @@ angle and `ΔE` is the energy loss for transport over the distance `λ`.
 """
 function transport(pc::Electron, mat::Material, ecx=Liljequist1989, bethe=JoyLuo)::NTuple{4, Float64}
     ( elm, 𝜆 ) = λ(ecx, mat, pc.energy)
-    𝜆′=-𝜆*log(rand())
-    𝜃 = acos(2.0*rand() - 1.0)
+    𝜆′, ϕ = -𝜆*log(rand()), 2.0*π*rand()
     dE = 𝜆′ * dEds(bethe, pc.energy, elm, mat[:Density]*mat[elm])
-    return ( 𝜆′, rand(ecx, elm, pc.energy), 𝜃, dE ) 
+    return ( 𝜆′, rand(ecx, elm, pc.energy), ϕ, dE ) 
 end
 
 """
-    gun(::Type{T}, energy::Float64, width::Float64=1.0e-7, initial::Position=SA_F64[0.0,0.0,-10.0], direction=SA_F64[0.0,0.0,1.0])::T where {T <: Particle}
+    gun(::Type{T}, energy::Float64, width::Float64=1.0e-7, initial::Position=Position(0.0,0.0,-10.0), direction=Position(0.0,0.0,1.0)::T where {T <: Particle}
 
 A helper to construct the initial `Particle` in a randomized Gaussian distribution.
 """
-function gun(::Type{T}, energy::Float64, width::Float64=1.0e-7, initial::Position=SA_F64[0.0,0.0,-10.0], direction=SA_F64[0.0,0.0,1.0])::T where {T <: Particle}
+function gun(::Type{T}, energy::Float64, width::Float64=1.0e-7, initial::Position=Position(0.0,0.0,-10.0), direction=Position(0.0,0.0,1.0))::T where {T <: Particle}
     r, th = sqrt(-2.0 * log(rand())) * width, 2.0π*rand()
-    st = initial .+ SA_F64[ r*cos(th), r*sin(th), 0 ]
+    st = initial .+ Position( r*cos(th), r*sin(th), 0.0 )
     return T(st .- direction, st, energy)
 end
 
@@ -196,21 +168,21 @@ Length of the line segment represented by `el`.
 """
 pathlength(el::Particle) = norm(position(el) .- previous(el))
 
-intersection(r::Shape, p::Particle) = intersection(r, previous(p), position(p))
+intersection(r, p::Particle) = intersection(r, previous(p), position(p))
 
 
 """
     Region
 
-A `Region` combines a `Shape` and a `Material` (with `:Density` property) and may fully contain zero or more child `Region`s.
+A `Region` combines a geometric primative and a `Material` (with `:Density` property) and may fully contain zero or more child `Region`s.
 """
-struct Region 
-    shape::Shape
+struct Region
+    shape
     material::Material
     parent::Union{Missing,Region}
     children::Vector{Region}
 
-    function Region(sh::Shape, mat::Material, parent::Union{Missing,Region}, ntests=1000) 
+    function Region(sh::T, mat::Material, parent::Union{Missing,Region}, ntests=1000) where { T }
         @assert mat[:Density] > 0.0
         res = new(sh, mat, parent, Region[])
         if !ismissing(parent)
@@ -224,21 +196,14 @@ end
 
 Base.show(io::IO, reg::Region) = print(io, "Region[$(reg.shape), $(reg.material), $(length(reg.children)) children]")
 
-function parent(reg::Region)::Region
-    ismissing(reg.parent) ? reg : reg.parent
-end
-
 """
-    childmost_region(reg::Region, pos::Position)
+    childmost_region(reg::Region, pos::Position)::Region
 
 Find the inner-most `Region` within `reg` containing the point `pos`.
 """
-function childmost_region(reg::Region, pos::Position)
-    res = findfirst(ch->isinside(ch.shape,pos), reg.children)
-    if !isnothing(res)
-        return childmost_region(res, pos)
-    end
-    return reg
+function childmost_region(reg::Region, pos::AbstractArray{Float64})::Region
+    res = findfirst(ch->isinside(ch.shape, pos), reg.children)
+    return !isnothing(res) ? childmost_region(reg.children[res], pos) : reg
 end
 
 """
@@ -258,7 +223,7 @@ function take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float6
     )
     if t <= 1.0
         newP = T(p, (t+ϵ)*𝜆, 𝜃, 𝜑, (t+ϵ)*ΔE)
-        nextReg = childmost_region(parent(reg), position(newP))
+        nextReg = childmost_region(ismissing(reg.parent) ? reg : reg.parent, position(newP))
     end
     return (newP, nextReg)
 end
@@ -269,10 +234,70 @@ end
 Construct a high vacuum chamber to act as the outer-most Region.
 """
 chamber(dim=100.0) = #
-    Region(RectangularShape(SA_F64[-dim,-dim,-dim],SA_F64[dim,dim,dim]), parse(Material,"H",density=5.0e-11), missing, 0)
+    Region(RectangularShape([-dim,-dim,-dim],2.0*[dim,dim,dim]), parse(Material,"H",density=5.0e-11), missing, 0)
 
 """
-trajectory(p::T, reg::Region, scf::Function=transport, minE::Float64=50.0)
+    bulk(mat::Material)
+
+Construct a bulk homogeneous sample at the origin.
+"""
+function bulk(mat::Material)
+    c = chamber()
+    Region(RectangularShape([-1.0,-1.0,0.0],[2.0,2.0,2.0]), mat, c)
+    return c
+end
+
+"""
+    particle(mat::Material, radius::Float64, substrate::Union{Nothing,Material} = nothing)
+
+Construct a spherical particle at the origin with an optional bulk substrate.
+"""
+function particle(mat::Material, radius::Float64, substrate::Union{Nothing,Material} = nothing)
+    c = chamber()
+    Region(SphericalShape([0.0, 0.0, -radius], radius), mat, c)
+    if !isnothing(substrate)
+        Region(RectangularShape([-1.0, -1.0, 0.0],[2.0,2.0,2.0]), substrate, c)
+    end
+    return c
+end
+
+
+"""
+    coated_particle(mat::Material, radius::Float64, coating::Material, thickness::Float64, substrate::Union{Nothing,Material} = nothing)
+
+Construct a coated particle on an optional substrate.
+"""
+function coated_particle(mat::Material, radius::Float64, coating::Material, thickness::Float64, substrate::Union{Nothing,Material} = nothing)
+    c = chamber()
+    cr = Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius+thickness), coating, c)
+    Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius), mat, cr)
+    if !isnothing(substrate)
+        Region(RectangularShape([-1.0, -1.0, 0.0],[2.0,2.0,2.0]), substrate, c)
+    end
+    return c
+end
+
+
+"""
+    thinfilm(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Material} = nothing)
+
+Construct sample consisting of one or more thin films on an optional bulk substrate.
+"""
+function thinfilm(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Material} = nothing)
+    c = chamber()
+    t = 0.0
+    for (mat, thick) in prs
+        Region(RectangularShape([-1.0,-1.0,t],[2.0,2.0,t+thick]), mat, c)
+        t+=thick
+    end
+    if !isnothing(substrate)
+        Region(RectangularShape([-1.0, -1.0, t],[2.0,2.0,2.0-t]), substrate, c)
+    end
+    return c
+end
+
+"""
+trajectory(p::T, reg::Region, scf::Function=transport, minE::Float64=50.0) where {T <: Particle}
 
 Run a single particle trajectory from `p` to `minE` or until the particle exits `reg`.
 
@@ -283,11 +308,42 @@ Run a single particle trajectory from `p` to `minE` or until the particle exits 
   * `minE` Stopping criterion
 """
 function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat), minE::Float64=50.0) where { T <: Particle }
-    (pc, nextr) = (p, childmost_region(reg, current(p))) 
+    (pc, nextr) = (p, childmost_region(reg, position(p))) 
+    θ, ϕ = 0.0, 0.0
     while (pc.energy > minE) && isinside(reg.shape, position(pc))
         prevr = nextr
-        (pc, nextr) = take_step(pc, nextr, scf(pc, nextr.material)...)
+        (λ, θₙ, ϕₙ, ΔZ) = scf(pc, nextr.material)
+        (pc, nextr) = take_step(pc, nextr, λ, θ, ϕ, ΔZ)
+        θ, ϕ = θₙ, ϕₙ
         eval(pc, prevr)
     end
 end
 
+"""
+    allmaterials(reg::Region)
+
+Generates a list of all the unique materials in a sample Region. 
+"""
+function allmaterials(reg::Region)
+    res = [ reg.material ]
+    for ch in reg.children
+        append!(res, allmaterials(ch))
+    end
+    return unique(res)
+end
+
+"""
+    colorize(reg::Region)::Dict{Material, Color}
+
+Generate a `Dict{Material, Color}` for all the `Materials` in the specified `Region`.
+Designed for distinctive but not necessarily attractive colors.
+"""
+function colorize(reg::Region)::Dict{Material, Color}
+    mats = allmaterials(reg)
+    colors = distinguishable_colors(
+        length(mats)+2,
+        [RGB(0.12, 0.14, 0.47), RGB(0.42, 0.63, 0.85), RGB(0.9,0.9,0.9)],
+        transform = deuteranopic,
+    )[3:end]
+    return Dict( mat=>col for (mat,col) in zip(mats, colors))
+end

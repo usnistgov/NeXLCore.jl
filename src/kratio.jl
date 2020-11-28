@@ -186,14 +186,14 @@ Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 
 """
-    normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f, minsum::Union{Nothing,Real}=nothing)::Vector{Tuple{KRatio, Array}}
+    LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f, minsum::Union{Nothing,Real}=nothing)::Vector{Tuple{KRatio, Array}}
 
 Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array. `norm` specifies normalization
 constants other than 1.0 and `minsum` assigns the value NaN32 for all pixels where the sum is less than `minsum`. This
 is useful for holes, shadows and other artifacts which lead to low k-ratio totals.  The palettes below will plot
 NaN32 as yellow.
 """
-function normalize(
+function LinearAlgebra.normalize(
     krs::AbstractVector{KRatios};
     norm::Float32 = 1.0f0,
     minsum::Float32 = 0.0f0,

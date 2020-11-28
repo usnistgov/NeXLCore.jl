@@ -209,6 +209,14 @@ material(
     conductivity = conductivity,
 )
 
+
+"""
+     material(str::String, density::Float64)
+
+Similar to `mat"..."` except requires you to specify a density.
+"""
+material(str::String, density::Float64) = parse(Material, str, density=density)
+
 """
     pure(elm::Element)
 

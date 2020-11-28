@@ -2,6 +2,7 @@ module NeXLCore
 
 using Requires
 using Reexport
+using LinearAlgebra
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
@@ -206,7 +207,6 @@ export KRatio # Represents a measured intensity ratio
 export KRatios # The array equivalent of KRatio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
-export normalize
 #export strip # Removes one or more elements from a Vector{KRatio}
 
 include("properties.jl")
@@ -236,9 +236,13 @@ export loadlegend # Load a legend for one of the above scales
 include("mc.jl")
 export Position
 export Particle, Electron
-export Shape, RectangularShape, SphericalShape
+export RectangularShape, SphericalShape # aliases for 3D GeometryBasics shapes
+export Region # A shape and a material
 export scatter # The Particle transport function 
-export chamber, gun
-export trajectory # 
+export gun # A source of starter Particle objects
+export trajectory # Calculates Point and Region pairs as the Particle traverses the sample
+export intersection # Compute how far along a ray, the ray intersects a shape.
+export chamber, particle, bulk, thinfilm, coated_particle
+export colorize # Maps Material to Color for all Material in a Region
 
 end

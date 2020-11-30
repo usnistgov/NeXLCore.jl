@@ -155,19 +155,22 @@ end
 function λ(ty::Type{<:ScreenedRutherfordType}, mat::Material, elm::Element, E::Float64)
     return λ(ty, elm, E, atoms_per_cm³(mat, elm))
 end
-function λ(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::Tuple{Element, Float64}
-    res = ( elements[119], 1.0e308 )
+
+
+"""
+    rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
+
+    Pick a randomized mean-free path and scatter angles.
+"""
+function Base.rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
+    elm′, λ′ = elements[119], 1.0e308
     for elm in keys(mat)
-        l = λ(ty, mat, elm, E)
-        if l < res[2]
-            res = ( elm, l )
-        end
+        l = -λ(ty, mat, elm, E) * log(rand())
+        (elm′, λ′) = l < λ′ ? ( elm, l ) : (elm′, λ′)
     end
-    @assert res[1] != elements[119] "Are there any elements in $mat?  Is the density ($(mat[:Density])) too low?"
-    return res
+    @assert elm′ != elements[119] "Are there any elements in $mat?  Is the density ($(mat[:Density])) too low?"
+    return ( λ′, rand(ty, elm′, E), 2.0*π*rand())
 end
-
-
 
 """
     λₜᵣ(ty::Type{<:ElasticScatteringCrossSection}, θ::Float64, elm::Element, E::Float64)::Float64

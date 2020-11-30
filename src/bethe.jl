@@ -45,13 +45,15 @@ function dEds(
     return ((-785.0e8 * ρ * z(elm)) / (a(elm) * e)) * log(1.166 * e / jp)
 end
 
-dEds(
+function dEds(
     ty::Type{<:BetheEnergyLoss},
     e::Float64,
     mat::Material;
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
-) = mapreduce(elm -> dEds(ty, e, elm, density(mat), mip = mip) * mat[elm], +, keys(mat))
-
+)
+    ρ = density(mat)
+    sum(dEds(ty, e, elm, ρ, mip = mip) * mat[elm] for elm in keys(mat))
+end
 """
     range(::Type{BetheEnergyLoss}, mat::Material, e0::Float64, inclDensity = true)
 

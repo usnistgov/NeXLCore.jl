@@ -106,10 +106,6 @@ export asoxide # Compute the standard oxide
 export valence # a table of elemental valences (valence[z(n"O")] = -2)
 export obystoichiometry # computes the mass fraction of O using valence rules.
 
-function __init__()
-    @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
-end
-
 export NeXLPalette
 export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions
 export plotXrayWeights # Plot weights of lines
@@ -234,6 +230,7 @@ export loadlegend # Load a legend for one of the above scales
 
 
 include("mc.jl")
+include("mchelpers.jl")
 export Position
 export Particle, Electron
 export RectangularShape, SphericalShape # aliases for 3D GeometryBasics shapes
@@ -244,5 +241,13 @@ export trajectory # Calculates Point and Region pairs as the Particle traverses 
 export intersection # Compute how far along a ray, the ray intersects a shape.
 export chamber, particle, bulk, thinfilm, coated_particle
 export colorize # Maps Material to Color for all Material in a Region
+
+
+
+function __init__()
+    @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
+    @require MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11" include("meshcat.jl")
+end
+
 
 end

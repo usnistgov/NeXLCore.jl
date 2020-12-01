@@ -752,13 +752,13 @@ function compare(unk::Material, known::Material)::DataFrame
         push!(km, name(known))
         push!(z, elm.symbol)
         push!(kmf, known[elm])
-        push!(rmf, unk[elm])
-        push!(dmf, known[elm] - unk[elm])
-        push!(fmf, (known[elm] - unk[elm]) / known[elm])
-        push!(kaf, get(afk, elm, 0.0))
-        push!(raf, get(afr, elm, 0.0))
-        push!(daf, get(afk, elm, 0.0) - get(afr, elm, 0.0))
-        push!(faf, 100.0 * (get(afk, elm, 0.0) - get(afr, elm, 0.0)) / get(afk, elm, 0.0))
+        push!(rmf, value(unk[elm]))
+        push!(dmf, value(known[elm])- value(unk[elm]))
+        push!(fmf, (value(known[elm]) - value(unk[elm])) / value(known[elm]))
+        push!(kaf, value(get(afk, elm, 0.0)))
+        push!(raf, value(get(afr, elm, 0.0)))
+        push!(daf, value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0)))
+        push!(faf, 100.0 * (value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0))) / value(get(afk, elm, 0.0)))
     end
     return DataFrame(
         Unkown = um,

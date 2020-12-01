@@ -160,7 +160,13 @@ end
 """
     rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
 
-    Pick a randomized mean-free path and scatter angles.
+ Returns a randomly selected elastic scattering event description.  The result is ( λ, θ, ϕ ) where
+ λ is a randomized mean free path for the first scattering event.  θ is a randomized scattering
+ angle on (0.0, π) and ϕ is a randomized azimuthal angle on [0, 2π).
+ 
+ The algorithm considers scattering by any element in the material and picks the shortest randomized
+ path.  This implementation depends on two facts: 1) We are looking for the first scattering event
+ so we consider all the elements and pick the one with the shortest path. 2) The process is memoryless.
 """
 function Base.rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
     elm′, λ′ = elements[119], 1.0e308
@@ -200,5 +206,5 @@ function Base.rand(ty::Type{<:ScreenedRutherfordType}, elm::Element, E::Float64)
 end
 function Base.rand(ty::Type{Browning1994}, elm::Element, E::Float64)::Float64
     α, R = 7.0e-3/(0.001*E), rand()
-    return acos(1.0+2.0*α*R/(1.0+α-R))
+    return acos(1.0-2.0*α*R/(1.0+α-R))
 end

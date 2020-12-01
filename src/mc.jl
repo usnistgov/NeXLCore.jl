@@ -174,7 +174,7 @@ struct Region
         @assert mat[:Density] > 0.0
         name = something(name, isnothing(parent) ? "Root" : "$(parent.name)[$(length(parent.children)+1)]")
         res = new(sh, mat, parent, Region[], name)
-        if !ismissing(parent)
+        if !isnothing(parent)
             @assert all(_->isinside(parent.shape, random_point_inside(sh)), Base.OneTo(ntests)) "The child $sh is not fully contained within the parent $(parent.shape)."
             @assert all(ch->all(_->!isinside(ch.shape, random_point_inside(sh)), Base.OneTo(ntests)), parent.children) "The child $sh overlaps a child of the parent shape."
             push!(parent.children, res)
@@ -214,7 +214,7 @@ function take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float6
     scatter = t > 1.0
     if !scatter
         newP = T(p, (t+ϵ)*𝜆, 𝜃, 𝜑, (t+ϵ)*ΔE)
-        nextReg = childmost_region(ismissing(reg.parent) ? reg : reg.parent, position(newP))
+        nextReg = childmost_region(isnothing(reg.parent) ? reg : reg.parent, position(newP))
     end
     return (newP, nextReg, scatter)
 end

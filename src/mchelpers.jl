@@ -24,7 +24,7 @@ Construct a bulk homogeneous sample at the origin.
 """
 function bulk(mat::Material)
     c = chamber()
-    Region(RectangularShape([-1.0e-2,-1.0e-2,0.0],[2.0e-2,2.0e-2,2.0e-2]), mat, c, "Bulk homogeneous")
+    Region(RectangularShape([-0.1,-0.1,0.0],[0.2,0.2,0.2]), mat, c, "Bulk homogeneous")
     return c
 end
 
@@ -37,7 +37,7 @@ function particle(mat::Material, radius::Float64, substrate::Union{Nothing,Mater
     c = chamber()
     Region(SphericalShape([0.0, 0.0, -radius], radius), mat, c, "Particle")
     if !isnothing(substrate)
-        Region(RectangularShape([-1.0e-3, -1.e-30, 0.0],[2.0e-3,2.0e-3,2.0e-2]), substrate, c, "Substrate")
+        Region(RectangularShape([-0.1, -0.1, 0.0],[0.2,0.2,0.2]), substrate, c, "Substrate")
     end
     return c
 end
@@ -61,7 +61,7 @@ function coated_particle(mat::Material, radius::Float64, coating::Material, thic
     cr = Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius+thickness), coating, c, "Coating")
     Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius), mat, cr, "Particle")
     if !isnothing(substrate)
-        Region(RectangularShape([-1.0e-3, -1.0e-3, 0.0],[2.0e-3,2.0e-3,2.0e-2]), substrate, c, "Substrate")
+        Region(RectangularShape([-0.1, -0.1, 0.0],[0.2,0.2,0.2]), substrate, c, "Substrate")
     end
     return c
 end
@@ -76,11 +76,11 @@ function thin_film(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Mat
     c = chamber()
     t = 0.0
     for (i, (mat, thick)) in enumerate(prs)
-        Region(RectangularShape([-1.0e-3,-1.0e-3,t],[2.0e-3,2.0e-3,thick]), mat, c, "Layer[$i]")
+        Region(RectangularShape([-0.1,-0.1,t],[0.2,0.2,thick]), mat, c, "Layer[$i]")
         t+=thick
     end
     if !isnothing(substrate)
-        Region(RectangularShape([-1.0e-3, -1.0e-3, t],[2.0e-3,2.0e-3,2.0e-2-t]), substrate, c, "Substrate")
+        Region(RectangularShape([-0.1, -0.1, t],[0.2,0.2,0.2-t]), substrate, c, "Substrate")
     end
     return c
 end

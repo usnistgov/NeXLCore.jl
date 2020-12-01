@@ -231,7 +231,7 @@ export loadlegend # Load a legend for one of the above scales
 
 include("mc.jl")
 include("mchelpers.jl")
-export Position
+export Position, position, previous
 export Particle, Electron
 export RectangularShape, SphericalShape # aliases for 3D GeometryBasics shapes
 export Region # A shape and a material
@@ -239,7 +239,7 @@ export scatter # The Particle transport function
 export gun # A source of starter Particle objects
 export trajectory # Calculates Point and Region pairs as the Particle traverses the sample
 export intersection # Compute how far along a ray, the ray intersects a shape.
-export chamber, particle, bulk, thinfilm, coated_particle
+export chamber, particle, bulk, thin_film, coated_particle
 export colorize # Maps Material to Color for all Material in a Region
 
 

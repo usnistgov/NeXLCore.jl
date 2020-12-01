@@ -166,22 +166,25 @@ A `Region` combines a geometric primative and a `Material` (with `:Density` prop
 struct Region
     shape::GeometryPrimitive{3, Float64}
     material::Material
-    parent::Union{Missing,Region}
+    parent::Union{Nothing,Region}
     children::Vector{Region}
+    name::String
 
-    function Region(sh::T, mat::Material, parent::Union{Missing,Region}, ntests=1000) where { T }
+    function Region(sh::T, mat::Material, parent::Union{Nothing,Region}, name::Union{Nothing,String}=nothing, ntests=1000) where { T }
         @assert mat[:Density] > 0.0
-        res = new(sh, mat, parent, Region[])
+        name = something(name, isnothing(parent) ? "Root" : "$(parent.name)[$(length(parent.children)+1)]")
+        res = new(sh, mat, parent, Region[], name)
         if !ismissing(parent)
             @assert all(_->isinside(parent.shape, random_point_inside(sh)), Base.OneTo(ntests)) "The child $sh is not fully contained within the parent $(parent.shape)."
             @assert all(ch->all(_->!isinside(ch.shape, random_point_inside(sh)), Base.OneTo(ntests)), parent.children) "The child $sh overlaps a child of the parent shape."
             push!(parent.children, res)
+        else
         end
         return res
     end
 end
 
-Base.show(io::IO, reg::Region) = print(io, "Region[$(reg.shape), $(reg.material), $(length(reg.children)) children]")
+Base.show(io::IO, reg::Region) = print(io, "Region[$(reg.name), $(reg.shape), $(reg.material), $(length(reg.children)) children]")
 
 """
     childmost_region(reg::Region, pos::Position)::Region

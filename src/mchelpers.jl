@@ -4,7 +4,7 @@
 Construct a high vacuum chamber to act as the outer-most Region.
 """
 chamber(dim=100.0) = #
-    Region(RectangularShape([-dim,-dim,-dim],2.0*[dim,dim,dim]), parse(Material,"H",density=5.0e-11), missing, 0)
+    Region(RectangularShape([-dim,-dim,-dim],2.0*[dim,dim,dim]), parse(Material,"H",density=5.0e-11), nothing, "Chamber", 0)
 
 """
     gun(::Type{T}, energy::Float64, width::Float64=1.0e-7, initial::Position=Position(0.0,0.0,-10.0), direction=Position(0.0,0.0,1.0)::T where {T <: Particle}
@@ -24,7 +24,7 @@ Construct a bulk homogeneous sample at the origin.
 """
 function bulk(mat::Material)
     c = chamber()
-    Region(RectangularShape([-1.0e-2,-1.0e-2,0.0],[2.0e-2,2.0e-2,2.0e-2]), mat, c)
+    Region(RectangularShape([-1.0e-2,-1.0e-2,0.0],[2.0e-2,2.0e-2,2.0e-2]), mat, c, "Bulk homogeneous")
     return c
 end
 
@@ -35,9 +35,9 @@ Construct a spherical particle at the origin with an optional bulk substrate.
 """
 function particle(mat::Material, radius::Float64, substrate::Union{Nothing,Material} = nothing)
     c = chamber()
-    Region(SphericalShape([0.0, 0.0, -radius], radius), mat, c)
+    Region(SphericalShape([0.0, 0.0, -radius], radius), mat, c, "Particle")
     if !isnothing(substrate)
-        Region(RectangularShape([-1.0e-3, -1.e-30, 0.0],[2.0e-3,2.0e-3,2.0e-2]), substrate, c)
+        Region(RectangularShape([-1.0e-3, -1.e-30, 0.0],[2.0e-3,2.0e-3,2.0e-2]), substrate, c, "Substrate")
     end
     return c
 end
@@ -47,32 +47,40 @@ end
     coated_particle(mat::Material, radius::Float64, coating::Material, thickness::Float64, substrate::Union{Nothing,Material} = nothing)
 
 Construct a coated particle on an optional substrate.
+
+This model is a good example of how more complex models are constructed.  Use `dump(..)` to display the structure.  You'll notice that
+the chamber serves as the root `Region`.  The `coating` and `substrate` are in the chamber (children of the chamber `Region`).  The
+`particle` is a child of the `coating` `Region` because the particle is fully enclosed by the coating.  An electron inside of the coating will
+enter the particle and leave the coating as soon as it enters the volume representing the particle.  The electron only appears to be
+within the child-most region at any point in space.  So a typical trajectory might start in the chamber, enter the coating, traverse
+the thickness of the coating and then enter the particle.  It may eventually leave the particle and reenter the coating, exit the coating
+and reenter the chamber and finally come to rest in the substrate.
 """
 function coated_particle(mat::Material, radius::Float64, coating::Material, thickness::Float64, substrate::Union{Nothing,Material} = nothing)
     c = chamber()
-    cr = Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius+thickness), coating, c)
-    Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius), mat, cr)
+    cr = Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius+thickness), coating, c, "Coating")
+    Region(SphericalShape([0.0, 0.0, -(radius+thickness)], radius), mat, cr, "Particle")
     if !isnothing(substrate)
-        Region(RectangularShape([-1.0e-3, -1.0e-3, 0.0],[2.0e-3,2.0e-3,2.0e-2]), substrate, c)
+        Region(RectangularShape([-1.0e-3, -1.0e-3, 0.0],[2.0e-3,2.0e-3,2.0e-2]), substrate, c, "Substrate")
     end
     return c
 end
 
 
 """
-    thinfilm(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Material} = nothing)
+    thin_film(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Material} = nothing)
 
 Construct sample consisting of one or more thin films on an optional bulk substrate.
 """
-function thinfilm(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Material} = nothing)
+function thin_film(prs::Pair{Material, Float64}...; substrate::Union{Nothing,Material} = nothing)
     c = chamber()
     t = 0.0
-    for (mat, thick) in prs
-        Region(RectangularShape([-1.0e-3,-1.0e-3,t],[2.0e-3,2.0e-3,t+thick]), mat, c)
+    for (i, (mat, thick)) in enumerate(prs)
+        Region(RectangularShape([-1.0e-3,-1.0e-3,t],[2.0e-3,2.0e-3,thick]), mat, c, "Layer[$i]")
         t+=thick
     end
     if !isnothing(substrate)
-        Region(RectangularShape([-1.0e-3, -1.0e-3, t],[2.0e-3,2.0e-3,2.0e-2-t]), substrate, c)
+        Region(RectangularShape([-1.0e-3, -1.0e-3, t],[2.0e-3,2.0e-3,2.0e-2-t]), substrate, c, "Substrate")
     end
     return c
 end
@@ -112,3 +120,10 @@ end
 Extracts the sample portion from within the chamber.
 """
 sample(ch::Region)::Vector{Region} = ch.children
+
+function Base.dump(reg::Region, indent=0)
+    print("$(" → "^indent)$reg\n")
+    for ch in reg.children
+        dump(ch, indent+1)
+    end
+end

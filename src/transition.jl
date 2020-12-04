@@ -187,6 +187,8 @@ const transitionsbyshell = Dict(
 const transitionsbysubshell =
     Dict(ss => filter(tr -> tr.innershell == ss, alltransitions) for ss in allsubshells)
 
+Base.hash(tr::Transition, h::UInt)::UInt = hash(hash(tr.innershell), hash(hash(tr.outershell),h))
+
 Base.isequal(tr1::Transition, tr2::Transition) =
     isequal(tr1.innershell, tr2.innershell) && isequal(tr1.outershell, tr2.outershell)
 
@@ -243,6 +245,8 @@ struct CharXRay
         return new(z, transition)
     end
 end
+
+Base.hash(cxr::CharXRay, h::UInt)::UInt = hash(cxr.z, hash(cxr.transition, h))
 
 Base.isequal(cxr1::CharXRay, cxr2::CharXRay) =
     isequal(cxr1.z, cxr2.z) && isequal(cxr1.transition, cxr2.transition)

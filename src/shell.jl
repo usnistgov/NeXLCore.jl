@@ -21,6 +21,7 @@ end
 name(sh::Shell) = "$('J'+sh.n)"
 Base.show(io::IO, sh::Shell) = print(io, name(sh))
 n(sh::Shell) = sh.n
+Base.hash(sh::Shell, h::UInt)::UInt = hash(sh.n, h)
 Base.isequal(sh1::Shell, sh2::Shell) = sh1.n == sh2.n
 Base.isless(sh1::Shell, sh2::Shell) = sh1.n > sh2.n # In binding energy order
 
@@ -49,6 +50,7 @@ end
 
 Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
 
+Base.hash(ss::SubShell, h::UInt)::UInt = hash(ss.index, h)
 Base.isequal(sh1::SubShell, sh2::SubShell) = sh1.index == sh2.index
 Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Outer to inner, approx E order
 

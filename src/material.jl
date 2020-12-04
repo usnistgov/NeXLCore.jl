@@ -58,6 +58,9 @@ Base.isequal(m1::Material, m2::Material) =
     isequal(m1.a, m2.a) &&
     isequal(m1.massfraction, m2.massfraction)
 
+Base.hash(m::Material, h::UInt) =
+    hash(m.name, hash(m.properties, hash(m.a, hash(m.massfraction, h))))
+
 
 Base.:+(mat1::Material, mat2::Material)::Material = sum(mat1, mat2)
 

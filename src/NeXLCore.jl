@@ -231,7 +231,7 @@ export loadlegend # Load a legend for one of the above scales
 
 include("mc.jl")
 include("mchelpers.jl")
-export Position, position, previous
+export Position, previous # Base.position
 export Particle, Electron
 export RectangularShape, SphericalShape # aliases for 3D GeometryBasics shapes
 export Region # A shape and a material

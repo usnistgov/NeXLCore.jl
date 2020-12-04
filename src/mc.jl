@@ -131,7 +131,7 @@ first along a trajectory that is `𝜃` and `𝜑` off the current trajectory.
 end
 
 Base.show(io::IO, el::Electron) = print(io, "Electron[$(position(el)), $(energy(el)) eV]")
-position(el::Particle) = el.current
+Base.position(el::Particle) = el.current
 previous(el::Particle) = el.previous
 energy(el::Particle) = el.energy
 

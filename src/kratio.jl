@@ -54,7 +54,7 @@ struct KRatio
         end
         return new(
             elm,
-            lines,
+            sort(lines, rev=true),
             copy(unkProps),
             copy(stdProps),
             standard,
@@ -68,6 +68,7 @@ find(cxr::CharXRay, krs::AbstractVector{KRatio}) =
 NeXLUncertainties.value(kr::KRatio) = value(kr.kratio)
 NeXLUncertainties.σ(kr::KRatio) = σ(kr.kratio)
 nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
+element(kr::KRatio) = kr.element
 
 """
     strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}

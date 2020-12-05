@@ -7,3 +7,5 @@ Manifest.toml
 /src/Artifacts.toml
 /weave/*.html
 /weave/jl*
+/jupyter/*.html
+/jupyter/*.log

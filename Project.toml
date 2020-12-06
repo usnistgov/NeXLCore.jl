@@ -43,7 +43,7 @@ PhysicalConstants = "^0.2.1"
 QuadGK = "^2.4.0"
 Reexport = "^0.2.0"
 Requires = "^1.0.0, ^1.1.0"
-StaticArrays = "^1.0.0"
+StaticArrays = "^0.12.0, ^1.0.0"
 Unitful = "^1.5.0"
 julia = "^1.5"
 

@@ -2,7 +2,7 @@ name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
 authors = ["Nicholas W.M. Ritchie <nicholas.ritchie@nist.gov>"]
 repo-url = "https://github.com/usnistgov/NeXLCore.jl"
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 BoteSalvatICX = "fe54227b-96c7-489b-9963-dd1ce2905f30"
@@ -30,21 +30,21 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 BoteSalvatICX = "^2.0.0"
-CSV = "^0.7.3"
+CSV = "^0.7.3, ^0.8.0"
 Colors = "^0.12.0"
-DataFrames = "^0.21.0"
+DataFrames = "^0.21.0, ^0.22.0"
 Dierckx = "^0.5.0"
 FFAST = "^2.0.1"
-FileIO = "^1.3.0"
-Gadfly = "^1.3.0"
-NeXLUncertainties = "^0.2.0"
+FileIO = "^1.4.0"
+Gadfly = "^1.3.1"
+NeXLUncertainties = "^0.2.1"
 PeriodicTable = "^1.0.0"
 PhysicalConstants = "^0.2.1"
 QuadGK = "^2.4.0"
 Reexport = "^0.2.0"
-Requires = "^1.0.0"
-StaticArrays = "^0.12.5"
-Unitful = "^1.3.0"
+Requires = "^1.0.0, ^1.1.0"
+StaticArrays = "^1.0.0"
+Unitful = "^1.5.0"
 julia = "^1.5"
 
 [extras]

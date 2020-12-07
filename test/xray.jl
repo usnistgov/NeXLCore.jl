@@ -229,8 +229,7 @@ using NeXLCore
         @test name(m) == "K411"
         @test m[n"Fe"] == 0.1121
         @test density(m) == 4.0
-        @test todtsa2comp(m) ==
-              "K411,(Fe:11.21),(Si:25.379999999999995),(O:42.36),(Mg:8.85),(Ca:11.06),4.0"
+        @test todtsa2comp(m) == "K411,(O:42.36),(Mg:8.85),(Si:25.38),(Ca:11.06),(Fe:11.21),4.0"
         cl = NeXLCore.compositionlibrary()
         @test cl["SRM93a"][n"Na"] == 0.0295
         @test isapprox(cl["NIST K2789"][n"U"], 0.2120, atol = 0.0001)

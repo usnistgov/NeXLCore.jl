@@ -220,7 +220,7 @@ function take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float6
 end
 
 """
-trajectory(p::T, reg::Region, scf::Function=transport, minE::Float64=50.0) where {T <: Particle}
+trajectory(p::T, reg::Region, scf::Function=transport; minE::Float64=50.0) where {T <: Particle}
 
 Run a single particle trajectory from `p` to `minE` or until the particle exits `reg`.
 
@@ -230,7 +230,7 @@ Run a single particle trajectory from `p` to `minE` or until the particle exits 
   * `scf` A function from (<:Particle, Material) -> ( λ, θ, ϕ, ΔE ) that implements the transport dynamics
   * `minE` Stopping criterion
 """
-function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat), minE::Float64=50.0) where { T <: Particle }
+function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat); minE::Float64=50.0) where { T <: Particle }
     (pc, nextr) = (p, childmost_region(reg, position(p))) 
     θ, ϕ = 0.0, 0.0
     while (pc.energy > minE) && isinside(reg.shape, position(pc))

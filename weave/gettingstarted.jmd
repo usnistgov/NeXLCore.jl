@@ -38,7 +38,7 @@ using NeXLCore
 Constructing `Element` objects
 ```julia; term=true
 e1, e2, e3 = n"Ca", elements[20], parse(Element, "Pu")
-es = parse.(Element, ["Ca", "21", "Ti", "Vanadium"  ])
+es = [ n"Ca", n"21", n"Ti", n"Vanadium" ]
 ```
 Note the use of `n"??"`.  We'll see a lot of this.
 
@@ -256,6 +256,32 @@ krs = [
 ```julia; term=true;
 nonnegk.(krs)
 elms(krs)
+```
+
+`KRatio` objects match well with individual spectra or individual point acqusitions in WDS.  For hyper-spectra, them
+`KRatios` object type might be more appropriate.  `KRatios` assumes that all the properties are in common for all
+the entries in the object so it maintains only one copy.
+
+#### Monte Carlo
+NeXLCore also includes a rudimentary Monte Carlo simulator of electron trajectories.  While it is currently limited
+to modeling element trajectories, it can be extended to handle quite complex sample geometries because it is based on 
+the `GeometryBasics` package that defines both simple and meshed shapes.  Currently, basic blocks and spheres have
+been implemented.
+
+```julia
+# Build a alumina coated silica particle on a carbon substrate
+mat = material("SiO2",2.648)
+sample = coated_particle(mat, 1.0e-4, material("Al2O3", 3.99), 0.1e-4, material("C",2.0))
+# Accumulate the path length inside the SiO2.
+len = 0.0
+# Each call to the trajectory function runs a single electron trajecory while calling the `do`
+# clause at each elastic scatter point.  The arguments to the do clasuse are a representation
+# of thelectron and the Region in which the last step occured.
+e0=20.0e3 # eV
+trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
+   global len += region.material == mat ? NeXLCore.pathlength(electron) : 0.0
+end
+"Path length in SiO2 = $(1.0e4*len) μm"
 ```
 
 There is more but this should get you started.  As always, the code is the ultimate resource and you have it in your

@@ -71,6 +71,7 @@ export comptonShift # Computes the fractional compton shift
 export exists # Does a transition occur (according to our list...)
 export @n_str # Parses a string into an Element, SubShell, AtomicSubShell, Transition or CharXRay
 export @enx_str # Energy of a atomic sub-shell or characteristic X-ray in string form
+export Bote2009
 
 include("material.jl")
 export material # Construct a Material struct

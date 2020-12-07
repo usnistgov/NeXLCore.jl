@@ -811,8 +811,10 @@ end
 
 function todtsa2comp(mat::Material)::String
     res = replace(name(mat), ',' => '_')
-    for (elm, qty) in mat.massfraction
-        res *= ",($(element(elm).symbol):$(100.0*qty))"
+    elms = sort(collect(keys(mat)))
+    for elm in elms
+        qty = mat[elm]
+        res *= ",($(symbol(elm)):$(round(100.0*qty,digits=2)))"
     end
     if haskey(mat.properties, :Density)
         res *= ",$(mat.properties[:Density])"

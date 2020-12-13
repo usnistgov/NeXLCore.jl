@@ -281,6 +281,8 @@ a(elm::Element, mat::Material) = get(mat.a, elm.number, a(elm))
 
 Base.getindex(mat::Material, elm::Element) =
     get(mat.massfraction, elm.number, zero(eltype(values(mat.massfraction))))
+Base.getindex(mat::Material, z::Int) =
+    get(mat.massfraction, z, zero(eltype(values(mat.massfraction))))
 
 Base.getindex(mat::Material, sym::Symbol) = property(mat, sym)
 

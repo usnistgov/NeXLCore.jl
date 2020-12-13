@@ -289,10 +289,10 @@ function createmineralartifact()
     return artifact_path(mineral_hash)
 end
 
-function loadmineraldata(parse = false)::DataFrame
+function loadmineraldata(parseit::Bool = false)::DataFrame
     minpath = createmineralartifact()
     res = CSV.File(joinpath(minpath, "RRUFF_Export_20191025_022204.csv")) |> DataFrame
-    if parse
+    if parseit
         function parseelm(str)
             if str == "Ln" # Lanthanide
                 return Set{Element}(elements[z(n"La"):z(n"Lu")])
@@ -334,11 +334,12 @@ function loadmineraldata(parse = false)::DataFrame
                 return Set{Element}()
             end
         end
-        function matormissing(str)
+        function matormissing(row)
+            str = row["IMA Chemistry (plain)"]
             try
                 # The formula with '+' represent valences not sums
                 if isnothing(findfirst(c -> c == '+', str))
-                    return parse(Material, str)
+                    m = parse(Material, str, name = row["Mineral Name"])
                 else
                     return missing
                 end
@@ -347,7 +348,7 @@ function loadmineraldata(parse = false)::DataFrame
             end
         end
         res[:, :Elements] .= parseelms.(res[:, "Chemistry Elements"])
-        res[:, :Material] .= matornothing.(res[:, "IMA Chemistry (plain)"])
+        res[:, :Material] .= matormissing.(eachrow(res))
     end
     return res
 end

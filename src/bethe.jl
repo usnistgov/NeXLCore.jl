@@ -40,7 +40,9 @@ function dEds(
     ρ::Float64;
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 )
-    k, j = 0.731 + 0.0688 * log(10.0, z(elm)), J(mip, z(elm))
+    # Zero allocation
+    k = 0.731 + 0.0688 * log(10.0, z(elm))
+    j = J(mip, z(elm))
     jp = j / (1.0 + k * j / e)
     return ((-785.0e8 * ρ * z(elm)) / (a(elm) * e)) * log(1.166 * e / jp)
 end
@@ -52,7 +54,12 @@ function dEds(
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 )
     ρ = density(mat)
-    sum(dEds(ty, e, elm, ρ, mip = mip) * mat[elm] for elm in keys(mat))
+    s=0.0 # Explicitly unwrapping reduces memory allocations
+    for z in keys(mat.massfraction)
+        elm = elements[z]
+        s += dEds(ty, e, elm, ρ; mip=mip) * mat[z]
+    end
+    return s
 end
 """
     range(::Type{BetheEnergyLoss}, mat::Material, e0::Float64, inclDensity = true)

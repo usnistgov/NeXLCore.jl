@@ -2,6 +2,7 @@ using GeometryBasics
 using LinearAlgebra
 using Colors
 
+
 """
 `Position` : A point in 3-D.
 """
@@ -221,6 +222,7 @@ end
 
 """
 trajectory(p::T, reg::Region, scf::Function=transport; minE::Float64=50.0) where {T <: Particle}
+trajectory(eval::Function, p::T, reg::Region, scf::Function, terminate::Function) where { T <: Particle }
 
 Run a single particle trajectory from `p` to `minE` or until the particle exits `reg`.
 
@@ -229,15 +231,21 @@ Run a single particle trajectory from `p` to `minE` or until the particle exits 
   * `reg` The outer-most region for the trajectory (usually created with `chamber()`)
   * `scf` A function from (<:Particle, Material) -> ( λ, θ, ϕ, ΔE ) that implements the transport dynamics
   * `minE` Stopping criterion
+  * `terminate` a function taking `T` and `Region` that returns false except on the last step (like `terminate = (pc,r)->pc.energy < 50.0`)
 """
-function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat); minE::Float64=50.0) where { T <: Particle }
+function trajectory(eval::Function, p::T, reg::Region, scf::Function, terminate::Function) where { T <: Particle }
     (pc, nextr) = (p, childmost_region(reg, position(p))) 
     θ, ϕ = 0.0, 0.0
-    while (pc.energy > minE) && isinside(reg.shape, position(pc))
+    while (!terminate(pc, reg)) && isinside(reg.shape, position(pc))
         prevr = nextr
         (λ, θₙ, ϕₙ, ΔZ) = scf(pc, nextr.material)
         (pc, nextr, scatter) = take_step(pc, nextr, λ, θ, ϕ, ΔZ)
         ( θ, ϕ ) = scatter ? ( θₙ, ϕₙ ) : ( 0.0, 0.0 )
         eval(pc, prevr)
     end
+end
+
+function trajectory(eval::Function, p::T, reg::Region, scf::Function=(t::T, mat::Material) -> transport(t, mat); minE::Float64=50.0) where { T <: Particle }
+    term(pc::T,_::Region) = pc.energy < minE
+    trajectory(eval, p, reg, scf, term)
 end

@@ -170,12 +170,14 @@ end
 """
 function Base.rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
     elm′, λ′ = elements[119], 1.0e308
-    for elm in keys(mat)
-        l = -λ(ty, mat, elm, E) * log(rand())
+    # Faster to only call rand() once
+    rands = rand(Float64, length(keys(mat))+1)
+    for (i, elm) in enumerate(keys(mat))
+        l = -λ(ty, mat, elm, E) * log(rands[i])
         (elm′, λ′) = l < λ′ ? ( elm, l ) : (elm′, λ′)
     end
     @assert elm′ != elements[119] "Are there any elements in $mat?  Is the density ($(mat[:Density])) too low?"
-    return ( λ′, rand(ty, elm′, E), 2.0*π*rand())
+    return ( λ′, rand(ty, elm′, E), 2.0*π*rands[end])
 end
 
 """

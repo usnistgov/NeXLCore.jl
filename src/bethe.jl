@@ -28,7 +28,7 @@ dEds(
     ::Type{Bethe},
     e::Float64,
     elm::Element,
-    ρ::Float64;
+    ρ::Float64,
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 ) = (-785.0e8 * ρ * z(elm)) / (a(elm) * e) * log(1.166e / J(mip, elm))
 
@@ -37,7 +37,7 @@ function dEds(
     ::Type{JoyLuo},
     e::Float64,
     elm::Element,
-    ρ::Float64;
+    ρ::Float64,
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 )
     # Zero allocation
@@ -50,14 +50,13 @@ end
 function dEds(
     ty::Type{<:BetheEnergyLoss},
     e::Float64,
-    mat::Material;
+    mat::Material,
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 )
     ρ = density(mat)
     s=0.0 # Explicitly unwrapping reduces memory allocations
     for z in keys(mat.massfraction)
-        elm = elements[z]
-        s += dEds(ty, e, elm, ρ; mip=mip) * mat[z]
+        s += dEds(ty, e, elements[z], ρ, mip) * mat[z]
     end
     return s
 end
@@ -74,7 +73,7 @@ Base.range(
     emin = 50.0,
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 ) =
-    quadgk(e -> 1.0 / dEds(ty, e, mat, mip = mip), e0, emin, rtol = 1.0e-6)[1] *
+    quadgk(e -> 1.0 / dEds(ty, e, mat, mip), e0, emin, rtol = 1.0e-6)[1] *
     (inclDensity ? 1.0 : density(mat))
 
 struct Kanaya1972 end

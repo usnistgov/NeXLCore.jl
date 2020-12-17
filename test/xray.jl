@@ -49,18 +49,18 @@ using NeXLCore
         @test length(nsubshells) == 7
         @test length(osubshells) == 9
 
-        @test ksubshells == map(SubShell, ("K",))
-        @test lsubshells == map(SubShell, ("L1", "L2", "L3"))
-        @test msubshells == map(SubShell, ("M1", "M2", "M3", "M4", "M5"))
-        @test nsubshells == map(SubShell, ("N1", "N2", "N3", "N4", "N5", "N6", "N7"))
+        @test ksubshells == map(n->parse(SubShell,n), ("K",))
+        @test lsubshells == map(n->parse(SubShell,n), ("L1", "L2", "L3"))
+        @test msubshells == map(n->parse(SubShell,n), ("M1", "M2", "M3", "M4", "M5"))
+        @test nsubshells == map(n->parse(SubShell,n),("N1", "N2", "N3", "N4", "N5", "N6", "N7"))
         @test osubshells ==
-              map(SubShell, ("O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9"))
+              map(n->parse(SubShell,n), ("O1", "O2", "O3", "O4", "O5", "O6", "O7", "O8", "O9"))
 
-        @test shell(SubShell("K")) == Shell(1)
-        @test shell(SubShell("L2")) == Shell(2)
-        @test shell(SubShell("M4")) == Shell(3)
-        @test shell(SubShell("N7")) == Shell(4)
-        @test shell(SubShell("O1")) == Shell(5)
+        @test shell(parse(SubShell,"K")) == Shell(1)
+        @test shell(parse(SubShell,"L2")) == Shell(2)
+        @test shell(parse(SubShell,"M4")) == Shell(3)
+        @test shell(parse(SubShell,"N7")) == Shell(4)
+        @test shell(parse(SubShell,"O1")) == Shell(5)
 
         @test capacity(n"K1") == 2
         @test capacity(n"L2") == 2

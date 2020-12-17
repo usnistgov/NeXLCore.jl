@@ -73,20 +73,15 @@ end
 
 Returns a SubShell structure from a string of the form "K", "L1", ...., "O11"
 """
-function subshell(name::AbstractString)::SubShell
-    ff = findfirst(sh -> subshellnames[sh.index] == name, allsubshells)
-    @assert !isnothing(ff) "$(name) is not one of the known shells - K, L1, L2...,P11."
-    return allsubshells[ff]
-end
-
-Base.parse(::Type{SubShell}, str::AbstractString)::SubShell = subshell(str)
+subshell(name::AbstractString) = parse(SubShell, name)
 
 """
+    Base.parse(::Type{AtomicSubShell}, str::AbstractString)::AtomicSubShell
     atomicsubshell(str::AbstractString)::AtomicSubShell
 
 Parse an AtomicSubShell from a string of the form \"Fe K\" or \"U M5\".
 """
-function atomicsubshell(str::AbstractString)::AtomicSubShell
+function Base.parse(::Type{AtomicSubShell}, str::AbstractString)::AtomicSubShell
     sp = split(str, " ")
     if length(sp) == 2
         sh = subshell(sp[2])
@@ -96,11 +91,12 @@ function atomicsubshell(str::AbstractString)::AtomicSubShell
     error("Cannot parse ", str, " as an AtomicSubShell like \"Fe L3\"")
 end
 
-Base.parse(::Type{AtomicSubShell}, str::AbstractString)::AtomicSubShell =
-    atomicsubshell(str)
+"""
+    atomicsubshell(str::AbstractString)::AtomicSubShell
 
-Base.parse(::Type{Transition}, str::AbstractString) = transition(str)
-
+Parse an AtomicSubShell from a string of the form \"Fe K\" or \"U M5\".
+"""
+atomicsubshell(str::AbstractString) = Base.parse(AtomicSubShell, str)
 
 """
     characteristic(str::AbstractString)::CharXRay

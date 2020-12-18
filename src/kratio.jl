@@ -99,7 +99,7 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         push!(krv, value(kr.kratio))
         push!(dkrv, σ(kr.kratio))
     end
-    return DataFrame(
+    res = DataFrame(
         Element = elms,
         Z = zs,
         Lines = lines,
@@ -110,9 +110,11 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         Standard = mat,
         Cstd = celm,
         ΔCstd = dcelm,
-        K = krv,
-        ΔK = dkrv,
+        k = krv,
+        Δk = dkrv,
     )
+    rename!(res, "E0std" => "E₀,ₛ", "E0unk" => "E₀,ᵤ", "θunk" => "θᵤ", "θstd" => "θₛ", "Cstd" => "Cₛ", "ΔCstd" => "ΔCₛ" )
+    return res
 end
 
 """

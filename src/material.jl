@@ -2,6 +2,7 @@
 using Unitful
 using Printf
 using DataFrames
+using LaTeXStrings
 
 """
     Material
@@ -695,43 +696,18 @@ function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
 end
 
 """
-    NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
+    NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order = :massfraction | :z)
 
-Tabulate the composition of a list of materials in a DataFrame.  One column
-for each element in any of the materials.
-
-    mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
+Converts a `Material` into a `LaTeXString`.  `parsename` controls whether the material name is assumed to
+be a parsable chemical formula (according to \\ce{...}).
 """
-function NeXLUncertainties.asa(
-    ::Type{DataFrame},
-    mats::AbstractArray{Material},
-    mode = :MassFraction,
-)
-    elms =
-        length(mats) == 1 ? collect(keys(mats[1])) :
-        Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
-    cols = (Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
-    empty = NamedTuple{cols}(map(
-        c -> c == :Material ? Vector{String}() : Vector{AbstractFloat}(),
-        cols,
-    ))
-    res = DataFrame(empty) # Emtpy data frame with necessary columns
-    for mat in mats
-        vals = (
-            mode == :AtomicFraction ? atomicfraction(mat) :
-            (
-                mode == :NormalizedMassFraction ? normalizedmassfraction(mat) :
-                massfraction(mat)
-            )
-        )
-        tmp = [
-            name(mat),
-            (value(get(vals, elm, 0.0)) for elm in elms)...,
-            analyticaltotal(mat),
-        ]
-        push!(res, tmp)
-    end
-    return res
+function NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order=:massfraction)
+    elms = order==massfraction ? #
+        sort(collect(keys(mat)), lt=(e1,e2)->mat[e1]>mat[e2]) :
+        sort(collect(keys(mat)))
+    cstr = join([ "\\ce{$(symbol(elm))}:\\num{$(round(mat[elm], digits=4))}"  for elm in elms ], ", ")
+    nm = parsename ? "\\ce{$(name(mat))}" : "\\mathrm{$(name(mat))}" 
+    return latexstring("$nm~:~\\left( $cstr \\mathrm{~by~mass} \\right)")
 end
 
 """

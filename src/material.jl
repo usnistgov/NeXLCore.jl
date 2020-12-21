@@ -696,6 +696,47 @@ function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
 end
 
 """
+    NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
+
+Tabulate the composition of a list of materials in a DataFrame.  One column
+for each element in any of the materials.
+
+    mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
+"""
+function NeXLUncertainties.asa(
+    ::Type{DataFrame},
+    mats::AbstractArray{Material},
+    mode = :MassFraction,
+)
+    elms =
+        length(mats) == 1 ? collect(keys(mats[1])) :
+        Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
+    cols = (Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
+    empty = NamedTuple{cols}(map(
+        c -> c == :Material ? Vector{String}() : Vector{AbstractFloat}(),
+        cols,
+    ))
+    res = DataFrame(empty) # Emtpy data frame with necessary columns
+    for mat in mats
+        vals = 
+            if mode == :AtomicFraction
+                atomicfraction(mat)
+            elseif mode == :NormalizedMassFraction 
+                normalizedmassfraction(mat)
+            else
+                massfraction(mat)
+            end
+        tmp = [
+            name(mat),
+            (value(get(vals, elm, 0.0)) for elm in elms)...,
+            analyticaltotal(mat),
+        ]
+        push!(res, tmp)
+    end
+    return res
+end
+
+"""
     NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order = :massfraction | :z)
 
 Converts a `Material` into a `LaTeXString`.  `parsename` controls whether the material name is assumed to

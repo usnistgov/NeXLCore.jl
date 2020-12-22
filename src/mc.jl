@@ -144,7 +144,7 @@ The default function defining elastic scattering and energy loss for an Electron
 Returns ( `λ`, `θ`, `ϕ`, `ΔE`) where `λ` is the mean path length, `θ` is the elastic scatter angle, `ϕ` is the azimuthal elastic scatter
 angle and `ΔE` is the energy loss for transport over the distance `λ`.
 """
-function transport(pc::Electron, mat::Material, ecx=Liljequist1989, bethe=JoyLuo)::NTuple{4, Float64}
+function transport(pc::Electron, mat::Material, ecx::Type{<:ElasticScatteringCrossSection}=Liljequist1989, bethe::Type{<:BetheEnergyLoss}=JoyLuo)::NTuple{4, Float64}
     ( 𝜆′, θ′, ϕ′ ) = rand(ecx, mat, pc.energy)
     return ( 𝜆′, θ′, ϕ′, 𝜆′ * dEds(bethe, pc.energy, mat) ) 
 end
@@ -209,11 +209,11 @@ Returns the updated `Particle` reflecting the last trajectory step and the Regio
 function take_step(p::T, reg::Region, 𝜆::Float64, 𝜃::Float64, 𝜑::Float64, ΔE::Float64, ϵ::Float64 = 1.0e-12)::Tuple{T, Region, Bool} where {T <: Particle }
     newP, nextReg = T(p, 𝜆, 𝜃, 𝜑, ΔE), reg
     t = min( 
-        intersection(reg.shape, newP), # Leave this Region
-        (intersection(ch.shape, newP) for ch in reg.children)... # Enter a new child Region
+        intersection(reg.shape, newP), # Leave this Region?
+        (intersection(ch.shape, newP) for ch in reg.children)... # Enter a new child Region?
     )
     scatter = t > 1.0
-    if !scatter
+    if !scatter # Enter new region
         newP = T(p, (t+ϵ)*𝜆, 𝜃, 𝜑, (t+ϵ)*ΔE)
         nextReg = childmost_region(isnothing(reg.parent) ? reg : reg.parent, position(newP))
     end

@@ -71,13 +71,15 @@ const transitionnames =
 Constructs a Transition structure from a string representation of the form \"K-L3\"
 or \"L3-M5\".  Asserts if the transition is not a known transition.
 """
-function transition(str::AbstractString)::Transition
+function Base.parse(::Type{Transition}, str::AbstractString)
     ff = findfirst(name -> name == str, transitionnames)
     if isnothing(ff)
         error("$(str) does not represent a known transition.")
     end
     return alltransitions[ff]
 end
+
+transition(str::AbstractString) = parse(Transition, str)
 
 
 """

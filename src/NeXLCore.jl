@@ -25,6 +25,7 @@ export eachelement # Elements for which there is a complete set of data :-(
 export Shell # K, L, M, N etc
 export KShell, LShell, MShell, NShell # The first few Shell(s)
 export SubShell # K, L1, L2, L3, M1, ...
+export K, L1, L2, L3, M1, M2, M3, M4, M5, N1, N2, N3, N4, N5, N6, N7 # SubShell(s)
 export n, l, j # Quantum numbers
 export allsubshells, ksubshells, lsubshells, msubshells, nsubshells, osubshells, pshell # SubShell type lists
 export subshell # Construct SubShell structs from a string

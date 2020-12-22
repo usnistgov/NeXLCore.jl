@@ -43,9 +43,6 @@ struct SubShell
     SubShell(idx::Int) =
         ((idx >= 1) && (idx <= length(subshellnames))) ? new(idx) :
         error("Unknown sub-shell: Index = $(idx)")
-    SubShell(name::AbstractString) =
-        name in subshellnames ? new(findfirst(shn -> shn == name, subshellnames)) :
-        error("Unknown sub-shell $(name)")
 end
 
 Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
@@ -59,9 +56,31 @@ Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Outer to inn
 
 A tuple containing all K, L, M, N and O sub-shells
 """
-const allsubshells = SubShell.(subshellnames)
+const allsubshells = SubShell.(eachindex(subshellnames))
+
+const K = allsubshells[1]
+const L1 = allsubshells[2]
+const L2 = allsubshells[3]
+const L3 = allsubshells[4]
+const M1 = allsubshells[5]
+const M2 = allsubshells[6]
+const M3 = allsubshells[7]
+const M4 = allsubshells[8]
+const M5 = allsubshells[9]
+const N1 = allsubshells[10]
+const N2 = allsubshells[11]
+const N3 = allsubshells[12]
+const N4 = allsubshells[13]
+const N5 = allsubshells[14]
+const N6 = allsubshells[15]
+const N7 = allsubshells[16]
 
 subshell(idx::Int) = allsubshells[idx]
+
+function Base.parse(::Type{SubShell}, name::AbstractString)
+    i = findfirst(ss->repr(ss)==name, allsubshells)    
+    return !isnothing(i) ? allsubshells[i] : error("Unknown sub-shell $(name)")
+end
 
 
 """

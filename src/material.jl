@@ -2,6 +2,7 @@
 using Unitful
 using Printf
 using DataFrames
+using LaTeXStrings
 
 """
     Material
@@ -717,13 +718,14 @@ function NeXLUncertainties.asa(
     ))
     res = DataFrame(empty) # Emtpy data frame with necessary columns
     for mat in mats
-        vals = (
-            mode == :AtomicFraction ? atomicfraction(mat) :
-            (
-                mode == :NormalizedMassFraction ? normalizedmassfraction(mat) :
+        vals = 
+            if mode == :AtomicFraction
+                atomicfraction(mat)
+            elseif mode == :NormalizedMassFraction 
+                normalizedmassfraction(mat)
+            else
                 massfraction(mat)
-            )
-        )
+            end
         tmp = [
             name(mat),
             (value(get(vals, elm, 0.0)) for elm in elms)...,
@@ -732,6 +734,21 @@ function NeXLUncertainties.asa(
         push!(res, tmp)
     end
     return res
+end
+
+"""
+    NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order = :massfraction | :z)
+
+Converts a `Material` into a `LaTeXString`.  `parsename` controls whether the material name is assumed to
+be a parsable chemical formula (according to \\ce{...}).
+"""
+function NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order=:massfraction)
+    elms = order==massfraction ? #
+        sort(collect(keys(mat)), lt=(e1,e2)->mat[e1]>mat[e2]) :
+        sort(collect(keys(mat)))
+    cstr = join([ "\\ce{$(symbol(elm))}:\\num{$(round(mat[elm], digits=4))}"  for elm in elms ], ", ")
+    nm = parsename ? "\\ce{$(name(mat))}" : "\\mathrm{$(name(mat))}" 
+    return latexstring("$nm~:~\\left( $cstr \\mathrm{~by~mass} \\right)")
 end
 
 """

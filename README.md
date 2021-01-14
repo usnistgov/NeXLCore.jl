@@ -29,10 +29,6 @@ NeXLCore is part of the NeXL collection of Julia language packages.
   - [NeXLDatabase](https://github.com/usnistgov/NeXLDatabase.jl) - A database for handling NeXL library datatypes
   - [NeXLParticle](https://github.com/usnistgov/NeXLParticle.jl) - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
 
-#### Depreciated
-I'll be integrating these examples into the individual libraries
-  - [NeXLNotebooks](https://github.com/NicholasWMRitchie/NeXLNotebooks) - Jupyter notebooks with examples of applying the NeXL packages
-
 ### Standards in NeXL
 
 To reduce ambiguity, the following X-ray microanalysis-standard units are used by all packages even when there are more common or accessible units for a quantity.  Thus stage position is in cm (not mm), coating thicknesses are in cm (not nm), etc.  This means you never need to consult the documentation to know what units a function expects.

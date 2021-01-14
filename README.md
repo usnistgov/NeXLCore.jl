@@ -19,15 +19,15 @@
 
 NeXLCore is part of the NeXL collection of Julia language packages.
 #### Released
-  - [NeXLUncertainties](https://github.com/NicholasWMRitchie/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
-  - [NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
+  - [NeXLUncertainties](https://github.com/usnistgov/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
+  - [NeXLCore](https://github.com/usnistgov/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
 #### Stablizing (Nearing release status - &beta;ish)
-  - [NeXLSpectrum](https://github.com/NicholasWMRitchie/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
-  - [NeXLMatrixCorrection](https://github.com/NicholasWMRitchie/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
+  - [NeXLSpectrum](https://github.com/usnistgov/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
+  - [NeXLMatrixCorrection](https://github.com/usnistgov/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
 
 #### Under rapid development but largely functional (pre-&alpha;)
-  - [NeXLDatabase](https://github.com/NicholasWMRitchie/NeXLDatabase.jl) - A database for handling NeXL library datatypes
-  - [NeXLParticle](https://github.com/NicholasWMRitchie/NeXLParticle.jl) - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
+  - [NeXLDatabase](https://github.com/usnistgov/NeXLDatabase.jl) - A database for handling NeXL library datatypes
+  - [NeXLParticle](https://github.com/usnistgov/NeXLParticle.jl) - Data structures and algorithms for dealing with particle data (particularly ASPEX Zeppelin datasets)
 
 #### Depreciated
 I'll be integrating these examples into the individual libraries

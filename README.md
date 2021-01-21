@@ -21,7 +21,6 @@ NeXLCore is part of the NeXL collection of Julia language packages.
 #### Released
   - [NeXLUncertainties](https://github.com/usnistgov/NeXLUncertainties.jl) - Basic data structures and algorithms for single uncertain values and collects of related uncertain values
   - [NeXLCore](https://github.com/usnistgov/NeXLCore.jl) - Core data and algorithms for X-ray microanalysis (elements, shells, transitions and their properties)
-#### Stablizing (Nearing release status - &beta;ish)
   - [NeXLSpectrum](https://github.com/usnistgov/NeXLSpectrum.jl) - Data structures and algorithms for EDS spectrum and hyperspectral data (reading/writing/fitting/etc.)
   - [NeXLMatrixCorrection](https://github.com/usnistgov/NeXLMatrixCorrection.jl) - Data structures and algorithms for matrix correction of electron excited X-ray k-ratios
 

@@ -154,8 +154,7 @@ bremsstrahlung(::Type{Trincavelli1997}, e::AbstractFloat, e0::AbstractFloat, elm
         0.2835e-3 * e0 +
         30.4 * log(z(elm)) +
         875.0 / (z(elm)^2 * (1.0e-3 * e0)^0.08)
-    ) :
-    0.0
+    ) : 0.0
 
 
 bremsstrahlung(::Type{Castellano2004a}, e::AbstractFloat, e0::AbstractFloat, elm::Element) =
@@ -166,8 +165,7 @@ bremsstrahlung(::Type{Castellano2004a}, e::AbstractFloat, e0::AbstractFloat, elm
         36.502 * log(z(elm)) +
         (148.5 * (1.0e-3 * e0)^0.1239) / z(elm)
     ) * #
-    (1.0 + (-0.006624 + 0.0002906 * (1.0e-3 * e0)) * z(elm) / (1.0e-3 * e)) :
-    0.0
+    (1.0 + (-0.006624 + 0.0002906 * (1.0e-3 * e0)) * z(elm) / (1.0e-3 * e)) : 0.0
 
 function bremsstrahlung(
     ::Type{Castellano2004b},
@@ -182,8 +180,7 @@ function bremsstrahlung(
         sqrt(zz) *
         (1.0 + ((-0.006626 + 0.0002906 * E0) * zz) / E) *
         (-77.28317356370013 + (148.5 * E0^0.1293) / zz + 36.502 * log(zz))
-    ) / E :
-           0.0
+    ) / E : 0.0
 end
 
 bremsstrahlung(e::AbstractFloat, e0::AbstractFloat, elm::Element) =

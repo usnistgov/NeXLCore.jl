@@ -411,5 +411,3 @@ function parsedsmithsoniandata()::Dict{String,Material}
     end
     return res
 end
-
-        

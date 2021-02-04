@@ -53,8 +53,7 @@ Base.isless(el1::MaterialLabel, el2::MaterialLabel) =
     (
         isequal(el1.material, el2.material) ? isless(el1.element, el2.element) :
         isless(el1.material, el2.material)
-    ) :
-    isless(prefix(el1), prefix(el2))
+    ) : isless(prefix(el1), prefix(el2))
 
 Base.show(io::IO, el::MaterialLabel) =
     print(io, "$(prefix(el))[$(el.element.symbol),$(el.material)]")
@@ -237,7 +236,7 @@ struct AnalyticalTotal <: Label
 end
 Base.show(io::IO, maz::AnalyticalTotal) = print(io, "Σ[$(maz.material)]")
 
-const MatStatTypes = ( MeanZ, MeanAz, AnalyticalTotal )
+const MatStatTypes = (MeanZ, MeanAz, AnalyticalTotal)
 
 function NeXLUncertainties.compute(
     ma::MatStats,
@@ -285,10 +284,10 @@ mf2comp(material::String, mfs::UncertainValues)::UncertainValues =
     propagate(AllInputs() | MFtoAF(material) | MFtoNMF(material) | MatStats(material), mfs)
 
 function NeXLCore.mf2comp(mat::Material)::UncertainValues
-    dlu = Dict{Label, UncertainValue}()
+    dlu = Dict{Label,UncertainValue}()
     for elm in keys(mat)
-        dlu[MassFractionLabel(name(mat),elm)]=mat[elm]
-        dlu[AtomicWeightLabel(name(mat),elm)]=a(elm, mat)
+        dlu[MassFractionLabel(name(mat), elm)] = mat[elm]
+        dlu[AtomicWeightLabel(name(mat), elm)] = a(elm, mat)
     end
     return mf2comp(name(mat), uvs(dlu))
 end
@@ -458,8 +457,8 @@ In the first case, the input materials are in UncertainValues representation.
 In the second case, the Material instances are converted to the UncertainValues representation.
 In each case, the first item in the Pair represents a material and the second the mass fraction of that material in the mixture.
 """
-function mixture(mat::String, mix::Pair{Material, UncertainValue}...)
-    mixture(mat, (mf2comp(mat)=>uv for (mat, uv) in mix)...)
+function mixture(mat::String, mix::Pair{Material,UncertainValue}...)
+    mixture(mat, (mf2comp(mat) => uv for (mat, uv) in mix)...)
 end
 
 function mixture(mat::String, mix::Pair{UncertainValues,UncertainValue}...)
@@ -470,7 +469,10 @@ function mixture(mat::String, mix::Pair{UncertainValues,UncertainValue}...)
         return lbl.material
     end
     mixes = uvs(Dict(MaterialFractionLabel(mat, nameofmat(uvs)) => uv for (uvs, uv) in mix))
-    return propagate(AllInputs() | MaterialMixture(mat), cat(mixes, (uvs for (uvs, uv) in mix)...))
+    return propagate(
+        AllInputs() | MaterialMixture(mat),
+        cat(mixes, (uvs for (uvs, uv) in mix)...),
+    )
 end
 
 struct μoρElementLabel <: Label

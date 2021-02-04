@@ -126,8 +126,7 @@ ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009})
         ss,
         energy,
         NeXLCore.edgeenergy(z, ss, FFASTDB),
-    ) :
-    0.0
+    ) : 0.0
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
     ionizationcrosssection(z, ss, energy, Bote2009)
 

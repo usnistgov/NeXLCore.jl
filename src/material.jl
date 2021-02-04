@@ -141,8 +141,9 @@ the `:Density` property.
 
 Total number of atoms per cm³ for all elements in mat. 
 """
-atoms_per_cm³(mat::Material, elm::Element) = mat[:Density]*mat[elm]*6.0221366516752e23 / a(elm, mat)
-atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat,elm) for elm in keys(mat))
+atoms_per_cm³(mat::Material, elm::Element) =
+    mat[:Density] * mat[elm] * 6.0221366516752e23 / a(elm, mat)
+atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat, elm) for elm in keys(mat))
 
 property(mat::Material, sym::Symbol) = get(mat.properties, sym, missing)
 
@@ -219,7 +220,7 @@ material(
 
 Similar to `mat"..."` except requires you to specify a density.
 """
-material(str::String, density::Float64) = parse(Material, str, density=density)
+material(str::String, density::Float64) = parse(Material, str, density = density)
 
 """
     pure(elm::Element)
@@ -237,8 +238,8 @@ function Base.show(io::IO, mat::Material)
     res = "$(name(mat))["
     res *= join(
         (
-            @sprintf("%s=%0.4f", element(z).symbol, value(mf))
-            for (z, mf) in mat.massfraction
+            @sprintf("%s=%0.4f", element(z).symbol, value(mf)) for
+            (z, mf) in mat.massfraction
         ),
         ",",
     )
@@ -304,7 +305,7 @@ function normalizedmassfraction(mat::Material)::Dict{Element,AbstractFloat}
     return Dict((elm, nonneg(mat, elm) / n) for elm in keys(mat))
 end
 
-normalized(mat::Material, elm::Element) = nonneg(mat,elm)/analyticaltotal(mat) 
+normalized(mat::Material, elm::Element) = nonneg(mat, elm) / analyticaltotal(mat)
 """
     asnormalized(mat::Material, n=1.0)::Material
 
@@ -502,7 +503,9 @@ function Base.parse(
                 continue
             elseif (i == start) || (i == start + 1) # Abbreviations are 1 or 2 letters
                 if (i == start) && !isuppercase(expr[idx[i]]) # Abbrevs start with cap
-                    error("Element abbreviations must start with a capital letter. $(expr[idx[i]])")
+                    error(
+                        "Element abbreviations must start with a capital letter. $(expr[idx[i]])",
+                    )
                 end
                 next = i + 1
                 if (next > length(idx)) ||
@@ -673,10 +676,15 @@ material name, element abbreviation, atomic number, atomic weight, mass fraction
 normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
 function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
-    res = DataFrame( Material = Vector{String}(), Element = Vector{String}(),
-                Z = Vector{Int}(), A = Vector{AbstractFloat}(),
-                MassFrac = Vector{AbstractFloat}(), NormMass = Vector{AbstractFloat}(),
-                AtomFrac = Vector{AbstractFloat}() )
+    res = DataFrame(
+        Material = Vector{String}(),
+        Element = Vector{String}(),
+        Z = Vector{Int}(),
+        A = Vector{AbstractFloat}(),
+        MassFrac = Vector{AbstractFloat}(),
+        NormMass = Vector{AbstractFloat}(),
+        AtomFrac = Vector{AbstractFloat}(),
+    )
     af, tot = atomicfraction(mat), analyticaltotal(mat)
     for elm in sort(collect(keys(mat)))
         push!(
@@ -712,20 +720,18 @@ function NeXLUncertainties.asa(
         length(mats) == 1 ? collect(keys(mats[1])) :
         Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
     cols = (Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
-    empty = NamedTuple{cols}(map(
-        c -> c == :Material ? Vector{String}() : Vector{AbstractFloat}(),
-        cols,
-    ))
+    empty = NamedTuple{cols}(
+        map(c -> c == :Material ? Vector{String}() : Vector{AbstractFloat}(), cols),
+    )
     res = DataFrame(empty) # Emtpy data frame with necessary columns
     for mat in mats
-        vals = 
-            if mode == :AtomicFraction
-                atomicfraction(mat)
-            elseif mode == :NormalizedMassFraction 
-                normalizedmassfraction(mat)
-            else
-                massfraction(mat)
-            end
+        vals = if mode == :AtomicFraction
+            atomicfraction(mat)
+        elseif mode == :NormalizedMassFraction
+            normalizedmassfraction(mat)
+        else
+            massfraction(mat)
+        end
         tmp = [
             name(mat),
             (value(get(vals, elm, 0.0)) for elm in elms)...,
@@ -742,12 +748,21 @@ end
 Converts a `Material` into a `LaTeXString`.  `parsename` controls whether the material name is assumed to
 be a parsable chemical formula (according to \\ce{...}).
 """
-function NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order=:massfraction)
-    elms = order==massfraction ? #
-        sort(collect(keys(mat)), lt=(e1,e2)->mat[e1]>mat[e2]) :
+function NeXLUncertainties.asa(
+    ::Type{LaTeXString},
+    mat::Material;
+    parsename = true,
+    order = :massfraction,
+)
+    elms =
+        order == massfraction ? #
+        sort(collect(keys(mat)), lt = (e1, e2) -> mat[e1] > mat[e2]) :
         sort(collect(keys(mat)))
-    cstr = join([ "\\ce{$(symbol(elm))}:\\num{$(round(mat[elm], digits=4))}"  for elm in elms ], ", ")
-    nm = parsename ? "\\ce{$(name(mat))}" : "\\mathrm{$(name(mat))}" 
+    cstr = join(
+        ["\\ce{$(symbol(elm))}:\\num{$(round(mat[elm], digits=4))}" for elm in elms],
+        ", ",
+    )
+    nm = parsename ? "\\ce{$(name(mat))}" : "\\mathrm{$(name(mat))}"
     return latexstring("$nm~:~\\left( $cstr \\mathrm{~by~mass} \\right)")
 end
 
@@ -775,12 +790,16 @@ function compare(unk::Material, known::Material)::DataFrame
         push!(z, elm.symbol)
         push!(kmf, known[elm])
         push!(rmf, value(unk[elm]))
-        push!(dmf, value(known[elm])- value(unk[elm]))
+        push!(dmf, value(known[elm]) - value(unk[elm]))
         push!(fmf, (value(known[elm]) - value(unk[elm])) / value(known[elm]))
         push!(kaf, value(get(afk, elm, 0.0)))
         push!(raf, value(get(afr, elm, 0.0)))
         push!(daf, value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0)))
-        push!(faf, 100.0 * (value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0))) / value(get(afk, elm, 0.0)))
+        push!(
+            faf,
+            100.0 * (value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0))) /
+            value(get(afk, elm, 0.0)),
+        )
     end
     return DataFrame(
         Unkown = um,

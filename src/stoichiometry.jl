@@ -144,8 +144,7 @@ function asoxide(
         join(
             (repr(qty) * asoxide(elm, valences = valences).name for (elm, qty) in elms),
             "+",
-        ) :
-        name
+        ) : name
     mats = (
         massfraction(
             qty * asoxide(elm, valences = valences, atomicweights = atomicweights),

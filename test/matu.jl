@@ -156,4 +156,4 @@ using NeXLCore
         @test isapprox(value(res[lbl]), value(mc_res[lbl]), rtol = 0.01)
         @test isapprox(σ(res[lbl]), σ(mc_res[lbl]), rtol = 0.01)
     end
-end;
+end

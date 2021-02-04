@@ -54,7 +54,7 @@ function dEds(
     mip::Type{<:NeXLMeanIonizationPotential} = Berger1982,
 )
     ρ = density(mat)
-    s=0.0 # Explicitly unwrapping reduces memory allocations
+    s = 0.0 # Explicitly unwrapping reduces memory allocations
     for z in keys(mat.massfraction)
         s += dEds(ty, e, elements[z], ρ, mip) * mat[z]
     end

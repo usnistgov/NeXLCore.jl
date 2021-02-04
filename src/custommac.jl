@@ -31,8 +31,8 @@ function getcustommacs(
 )::Vector{Tuple{Element,CharXRay,Float64}}
     macs = getcustommacs()
     tmp = [
-        (elements[key[2]], key[3], macs[key])
-        for key in filter(k -> k[1] == model, keys(macs))
+        (elements[key[2]], key[3], macs[key]) for
+        key in filter(k -> k[1] == model, keys(macs))
     ]
     if withsimilar
         res = []

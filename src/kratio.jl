@@ -36,7 +36,9 @@ struct KRatio
         end
         elm = element(lines[1])
         if !all(element(l) == elm for l in lines)
-            error("The characteristic X-rays in a k-ratio must all be from the same element.")
+            error(
+                "The characteristic X-rays in a k-ratio must all be from the same element.",
+            )
         end
         if value(standard[elm]) <= 1.0e-6
             error("The standard $standard does not contain the element $(elm).")
@@ -54,7 +56,7 @@ struct KRatio
         end
         return new(
             elm,
-            sort(lines, rev=true),
+            sort(lines, rev = true),
             copy(unkProps),
             copy(stdProps),
             standard,
@@ -69,6 +71,11 @@ NeXLUncertainties.value(kr::KRatio) = value(kr.kratio)
 NeXLUncertainties.σ(kr::KRatio) = σ(kr.kratio)
 nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
 element(kr::KRatio) = kr.element
+
+Statistics.mean(krs::AbstractVector{KRatio})::UncertainValue =
+    mean((kr.kratio for kr in krs)...)
+
+
 
 """
     strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}
@@ -113,7 +120,15 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         k = krv,
         Δk = dkrv,
     )
-    rename!(res, "E0std" => "E₀,ₛ", "E0unk" => "E₀,ᵤ", "θunk" => "θᵤ", "θstd" => "θₛ", "Cstd" => "Cₛ", "ΔCstd" => "ΔCₛ" )
+    rename!(
+        res,
+        "E0std" => "E₀,ₛ",
+        "E0unk" => "E₀,ᵤ",
+        "θunk" => "θᵤ",
+        "θstd" => "θₛ",
+        "Cstd" => "Cₛ",
+        "ΔCstd" => "ΔCₛ",
+    )
     return res
 end
 
@@ -142,7 +157,9 @@ struct KRatios
         end
         elm = element(lines[1])
         if !all(element(l) == elm for l in lines)
-            error("The characteristic X-rays in a k-ratio must all be from the same element.")
+            error(
+                "The characteristic X-rays in a k-ratio must all be from the same element.",
+            )
         end
         if value(standard[elm]) <= 1.0e-6
             error("The standard $standard does not contain the element $(elm).")
@@ -182,8 +199,13 @@ Base.show(io::IO, kr::KRatios) = print(
     "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]",
 )
 
-Base.getindex(krs::KRatios, idx::Int...) =
-    KRatio(krs.lines, krs.unkProps, krs.stdProps, krs.standard, getindex(krs.kratios, idx...))
+Base.getindex(krs::KRatios, idx::Int...) = KRatio(
+    krs.lines,
+    krs.unkProps,
+    krs.stdProps,
+    krs.standard,
+    getindex(krs.kratios, idx...),
+)
 xrays(krs::KRatios) = lines
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)

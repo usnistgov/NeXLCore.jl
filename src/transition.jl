@@ -189,7 +189,8 @@ const transitionsbyshell = Dict(
 const transitionsbysubshell =
     Dict(ss => filter(tr -> tr.innershell == ss, alltransitions) for ss in allsubshells)
 
-Base.hash(tr::Transition, h::UInt)::UInt = hash(hash(tr.innershell), hash(hash(tr.outershell),h))
+Base.hash(tr::Transition, h::UInt)::UInt =
+    hash(hash(tr.innershell), hash(hash(tr.outershell), h))
 
 Base.isequal(tr1::Transition, tr2::Transition) =
     isequal(tr1.innershell, tr2.innershell) && isequal(tr1.outershell, tr2.outershell)
@@ -220,10 +221,12 @@ end
 Does a transition exist in our database for this pair of shells?
 """
 exists(inner::SubShell, outer::SubShell)::Bool =
-    !isnothing(findfirst(
-        tr -> (tr.innershell == inner) && (tr.outershell == outer),
-        alltransitions,
-    ))
+    !isnothing(
+        findfirst(
+            tr -> (tr.innershell == inner) && (tr.outershell == outer),
+            alltransitions,
+        ),
+    )
 
 Base.show(io::IO, tr::Transition) = print(io, tr.innershell, "-", tr.outershell)
 
@@ -399,8 +402,8 @@ function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
     e0, elm = overvoltage * energy(inner(cxr)), element(cxr)
     safeSS(z, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
     return strength(cxr) / sum(
-        safeSS(element(cxr), tr2)
-        for tr2 in transitionsbysubshell[cxr.transition.innershell]
+        safeSS(element(cxr), tr2) for
+        tr2 in transitionsbysubshell[cxr.transition.innershell]
     )
 end
 
@@ -494,8 +497,8 @@ characteristic(
     filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
 )
 
-characteristic(ass::AtomicSubShell) = 
-    characteristic(element(ass), filter(tr->inner(tr)==ass.subshell, alltransitions))
+characteristic(ass::AtomicSubShell) =
+    characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions))
 
 
 """
@@ -550,7 +553,7 @@ function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay}
         Outer = outer.(cc),
         Energy = energy.(cc),
         Strength = strength.(cc),
-		Weight = weight.(cc)
+        Weight = weight.(cc),
     )
 end
 

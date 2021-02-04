@@ -6,11 +6,15 @@ using CSV
 using DataFrames
 using Statistics
 
-const NeXLPalette = convert.(RGB{Colors.N0f8}, distinguishable_colors(
-    66,
-    [RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
-    transform = deuteranopic,
-)[3:end])
+const NeXLPalette =
+    convert.(
+        RGB{Colors.N0f8},
+        distinguishable_colors(
+            66,
+            [RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0), colorant"DodgerBlue4"],
+            transform = deuteranopic,
+        )[3:end],
+    )
 
 const NeXLColorblind = NeXLPalette
 

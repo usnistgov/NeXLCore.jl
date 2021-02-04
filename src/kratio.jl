@@ -1,6 +1,7 @@
 using NeXLUncertainties
 using NeXLCore
 using Colors
+using Statistics
 
 """
     KRatio

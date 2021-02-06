@@ -3,6 +3,8 @@ using Unitful
 using Printf
 using DataFrames
 using LaTeXStrings
+import Base.rand
+import Statistics
 
 """
     Material
@@ -16,12 +18,12 @@ Holds basic data about a material including name, composition in mass fraction a
   - `:Pedigree` Quality indicator for compositional data ("SRM-XXX", "CRM-XXX", "NIST K-Glass", "Stoichiometry", "Wet-chemistry by ???", "WDS by ???", "???")
   - `:Conductivity` => :Insulator, :Semiconductor, :Conductor
 """
-struct Material
+struct Material{U<:AbstractFloat,V<:AbstractFloat}
     name::String
     properties::Dict{Symbol,Any} # :Density, :Description, :Pedigree, :Conductivity, ... + user defined
-    a::Dict{Int,AbstractFloat} # Optional: custom atomic weights for the keys in this Material
-    massfraction::Dict{Int,AbstractFloat}
-
+    massfraction::Dict{Int,U}
+    a::Dict{Int,V} # Optional: custom atomic weights for the keys in this Material
+    
     """
         Material(
             name::AbstractString,
@@ -35,11 +37,11 @@ struct Material
         massfrac::Dict{Int,U},
         atomicweights::Dict{Int,V} = Dict{Int,Float64}(),
         properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
-    ) where {U<:AbstractFloat,V<:AbstractFloat}
+    ) where {U<:AbstractFloat, V<:AbstractFloat}
         if sum(value.(values(massfrac))) > 10.0
             @warn "The sum mass fraction is $(sum(values(massfrac))) which is much larger than unity."
         end
-        new(name, properties, atomicweights, massfrac)
+        new{U,V}(name, properties, massfrac, atomicweights)
     end
 end
 
@@ -713,7 +715,7 @@ for each element in any of the materials.
 """
 function NeXLUncertainties.asa(
     ::Type{DataFrame},
-    mats::AbstractArray{Material},
+    mats::AbstractArray{<:Material},
     mode = :MassFraction,
 )
     elms =
@@ -816,7 +818,7 @@ function compare(unk::Material, known::Material)::DataFrame
     )
 end
 
-compare(unks::AbstractVector{Material}, known::Material) =
+compare(unks::AbstractVector{<:Material}, known::Material) =
     mapreduce(unk -> compare(unk, known), append!, unks)
 
 
@@ -826,7 +828,7 @@ compare(unks::AbstractVector{Material}, known::Material) =
 Compute the material MAC using the standard mass fraction weighted formula.
 """
 mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
-    mapreduce(elm -> mac(elm, xray, alg) * mat[elm], +, keys(mat))
+    mapreduce(elm -> mac(elm, xray, alg) * value(mat[elm]), +, keys(mat))
 
 function parsedtsa2comp(value::AbstractString)::Material
     try
@@ -899,5 +901,66 @@ z(mat::Material) = sum(c * z for (z, c) in mat.massfraction)
 Computes the mean atomic weight for a material. (Naive algorithm.)
 """
 a(mat::Material) =
-    sum(haskey(mat.a, z) ? mat.a[z] : a(elements[z]) * c for (z, c) in mat.massfraction)
+    sum(haskey(mat.a, z) ? mat.a[z] : c * a(elements[z]) for (z, c) in mat.massfraction)
     
+
+"""
+    Statistics.mean(mats::AbstractArray{<:Material})
+
+If the mass fractions for all the elements in all `mats` have non-zero uncertainties
+then the variance weighted mean is calculated and the result will have associated 
+uncertainties.  Otherwise, the straight floating-point mean is calculated and
+the result won't have uncertainties.  This is because even a single value with
+zero uncertainty will poison the variance weighted mean (produce a NaN).
+"""
+function Statistics.mean(mats::AbstractArray{<:Material})
+    zs = mapreduce(m->elms(m), union!, mats)
+    nm = if length(mats)>5
+        "mean[$(name(mats[1])) + $(length(mats)-1) others]"
+    else
+        "mean[$(join(name.(mats), ", "))]"
+    end
+    function mm(z)
+        return if all(σ(mat[z]) > 0.0 for mat in mats)
+            mean(UncertainValue[uv(mat[z]) for mat in mats])
+        else
+            mean(Float64[value(mat[z]) for mat in mats])
+        end
+    end
+    return material(nm, (z=>mm(z) for z in zs)...)
+end
+
+"""
+    Base.rand(::Type{Material}, zs::AbstractUnitRange{Int}=1:20)::Material
+
+Generate a randomize material.
+"""
+function Base.rand(::Type{Material}, zs::AbstractUnitRange{Int}=1:20)::Material{UncertainValue,Float64}
+    sum, mfs = 0.0, Dict{Element,UncertainValue}()
+    while sum<1.0
+        z, r=Base.rand(zs), Base.rand()
+        if !haskey(mfs, elements[z])
+            v = min(r, 1.0-sum)
+            mfs[elements[z]] = uv(v,Base.rand()*0.1*v)
+            sum+=r
+        end
+    end
+    return material("random", mfs)
+end
+
+"""
+    Base.similar(mat::Material{UncertainValue, <:AbstractFloat}, n::Integer)::Vector{Material{UncertainValue,Float64}}
+
+Generate `n` Materials similar to `mat` using the uncertainties in `mat` as 
+your guide of dispersion.  The mass-fractions of `mat` must
+be defined as `UncertainValue`s.
+"""
+function Base.similar(mat::Material{UncertainValue, <:AbstractFloat}, n::Integer)::Vector{Material{UncertainValue,Float64}}
+    return [ material(
+        "Like[$(name(mat)), $i]", 
+        Dict(z=>uv(value(mat[z])+(1.0-2.0*Base.rand())*σ(mat[z]), (0.9+0.2*Base.rand()*σ(mat[z]))) 
+            for z in keys(mat))
+    ) for i in 1:n ]
+end
+
+

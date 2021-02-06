@@ -187,7 +187,7 @@ end
 
 
 """
-    rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
+    Base.rand(ty::Type{<:ScreenedRutherfordType}, mat::Material, E::Float64)::NTuple{3, Float64}
 
  Returns a randomly selected elastic scattering event description.  The result is ( λ, θ, ϕ ) where
  λ is a randomized mean free path for the first scattering event.  θ is a randomized scattering

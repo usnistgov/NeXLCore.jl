@@ -212,25 +212,22 @@ Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 
 """
-    LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f, minsum::Union{Nothing,Real}=nothing)::Vector{Tuple{KRatio, Array}}
+    LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f)::Vector{Tuple{KRatio, Array}}
 
 Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array. `norm` specifies normalization
-constants other than 1.0 and `minsum` assigns the value NaN32 for all pixels where the sum is less than `minsum`. This
+constants other than 1.0 and `minsum` assigns the value 0.0 for all pixels where the sum is less than `minsum`. This
 is useful for holes, shadows and other artifacts which lead to low k-ratio totals.  The palettes below will plot
 NaN32 as yellow.
 """
 function LinearAlgebra.normalize(
     krs::AbstractVector{KRatios};
     norm::Float32 = 1.0f0,
-    minsum::Float32 = 0.0f0,
 )::Vector{Tuple{KRatios,Array}}
     sz = size(krs[1].kratios)
     @assert all((sz == size(kr.kratios) for kr in krs[2:end]))
-    s = [sum(kr.kratios[ci] for kr in krs) for ci in CartesianIndices(krs[1].kratios)]
-    res = [(kr, norm .* (kr.kratios ./ s)) for kr in krs]
-    foreach(
-        ci -> foreach(r -> r[2][ci] = NaN32, res),
-        filter(ci -> s[ci] < minsum, CartesianIndices(s)),
-    )
-    return res
+    s = map(CartesianIndices(krs[1].kratios)) do ci
+        ss = sum( max(0.0, kr.kratios[ci]) for kr in krs)
+        ss<=0.0 ? 1.0 : ss
+    end
+    return [(kr, norm .* (kr.kratios ./ s)) for kr in krs]
 end

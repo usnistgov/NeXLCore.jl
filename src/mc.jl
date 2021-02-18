@@ -1,10 +1,9 @@
-using GeometryBasics
-using LinearAlgebra
-using Colors
-
+using GeometryBasics: Point, Rect3D, Sphere, GeometryPrimitive, origin, widths, radius
+using LinearAlgebra: dot, norm
+using Random: rand
 
 """
-`Position` : A point in 3-D.
+`Position` : A point in 3-D.  Ultimately, derived from StaticArray.
 """
 const Position = Point{3,Float64}
 
@@ -24,7 +23,7 @@ first intersects the `Shape` `r`.  The intersection point will equal `pos0 .+ f*
 If `f` is between 0.0 and 1.0 then the intersection is on the interval between `pos0` and `pos1`.
 If the ray from `pos0` towards `pos2` does not intersect `r` then this function returns Inf64.
 """
-const RectangularShape = Rect{3,Float64}
+const RectangularShape = Rect3D{Float64}
 
 isinside(rr::RectangularShape, pos::AbstractArray{Float64}) =
     all(pos .> minimum(rr)) && all(pos .< maximum(rr))
@@ -59,7 +58,7 @@ function intersection(
     return t
 end
 
-const SphericalShape = HyperSphere{3,Float64}
+const SphericalShape = Sphere{Float64}
 
 isinside(sr::SphericalShape, pos::AbstractArray{Float64}) =
     norm(pos .- origin(sr)) < radius(sr)
@@ -85,9 +84,9 @@ end
 Generate a randomized point that is guaranteed to be in the interior of the shape.
 """
 function random_point_inside(shape)::Position
-    res = origin(shape) .+ rand(Position) .* widths(shape)
+    res = Position(origin(shape) .+ rand(Position) .* widths(shape))
     while !isinside(shape, res)
-        res = origin(shape) .+ rand(Position) .* widths(shape)
+        res = Position(origin(shape) .+ rand(Position) .* widths(shape))
     end
     return res
 end

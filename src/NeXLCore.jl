@@ -244,7 +244,9 @@ export intersection # Compute how far along a ray, the ray intersects a shape.
 export chamber, particle, bulk, thin_film, coated_particle
 export colorize # Maps Material to Color for all Material in a Region
 
-
+include("staging.jl")
+export StageMapping, DefaultStageMapping
+export stage2image, image2stage
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")

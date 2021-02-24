@@ -96,12 +96,14 @@ function Base.sum(
     pedigree::Union{Missing,AbstractString} = missing,
     conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
 )::Material
-    mf = Dict((elm, mat1[elm] + mat2[elm]) for elm in union(keys(mat1), keys(mat2)))
+    plus(v1::AbstractFloat, v2::AbstractFloat) = 
+        (σ(v1)==0.0)&&(σ(v2)==0.0) ? value(v1)+value(v2) : uv(value(v1)+value(v2),sqrt(σ(v1)^2+σ(v2)^2))
+    mf = Dict((elm, plus(mat1[elm], mat2[elm])) for elm in union(keys(mat1), keys(mat2)))
     aw = Dict{Element,Float64}()
     for z in union(keys(mat1.a), keys(mat2.a))
         elm = elements[z]
         aw[elm] =
-            (mat1[elm] + mat2[elm]) / (mat1[elm] / a(elm, mat1) + mat2[elm] / a(elm, mat2))
+            (value(mat1[elm]) + value(mat2[elm])) / (value(mat1[elm]) / a(elm, mat1) + value(mat2[elm]) / a(elm, mat2))
     end
     name = ismissing(name) ? "$(mat1.name)+$(mat2.name)" : name
     return material(
@@ -330,17 +332,16 @@ end
 
 
 """
-    Base.isapprox(mat1::Material, mat2::Material; atol = 0.0, rtol = 1.0e-4)
+    Base.isapprox(mat1::Material, mat2::Material; atol = 1.0e-4)
 
-Are these Material(s) equivalent (approximately).
+Are these Material(s) equivalent to within `atol`?
 """
-function Base.isapprox(mat1::Material, mat2::Material; atol = 0.0, rtol = 1.0e-4)
-    for elm in union(keys(mat1), keys(mat2))
-        if !isapprox(value(mat1[elm]), value(mat2[elm]), atol = atol, rtol = rtol)
-            return false
-        end
-    end
-    return true
+function Base.isapprox(mat1::Material, mat2::Material; atol = 1.0e-4)
+    return all(
+        isapprox(value(mat1[elm]), value(mat2[elm]), atol = atol) && #
+        isapprox(σ(mat1[elm]), σ(mat2[elm]), atol = atol) 
+            for elm in union(keys(mat1), keys(mat2))
+    )
 end
 
 """
@@ -593,6 +594,14 @@ function Base.parse(
         # println("Parsing: $(expr) to $(res)")
         return res
     end
+    function parseC(str::AbstractString)::Union{UncertainValue, Float64}
+        str=strip(str)
+        if startswith(str, "(") && endswith(str, ")")
+            str=str[2:end-1]
+        end
+        uv = parse(UncertainValue, str)
+        return σ(uv)==0.0 ? value(uv) : uv
+    end
 
     # First split sums of Materials
     splt = split(expr, c -> c == '+')
@@ -625,7 +634,7 @@ function Base.parse(
     p = findfirst(c -> (c == '*') || (c == '×') || (c == '⋅'), expr)
     if !isnothing(p)
         nm = ismissing(name) ? expr[nextind(expr, p):lastindex(expr)] : name
-        return parse(Float64, expr[firstindex(expr):prevind(expr, p)]) * parse(
+        return parseC(expr[firstindex(expr):prevind(expr, p)]) * parse(
             Material,
             expr[nextind(expr, p):lastindex(expr)],
             name = nm,

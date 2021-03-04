@@ -1,5 +1,12 @@
 using Pkg.Artifacts
 
+const srm470_k412 = parse(Material, "(0.4535±0.0020)*SiO2+(0.1933±0.0020)*MgO+(0.1525±0.0020)*CaO+(0.0927±0.0020)*Al2O3+(0.0996±0.0020)*FeO", 
+    name="SRM-470 K412", density = 3.45, description="https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nbsspecialpublication260-74.pdf",
+    pedigree="NIST SRM-470", conductivity=:Insulator)
+const srm470_k411 = parse(Material,"(0.5430±0.0020)*SiO2+(0.1467±0.0020)*MgO+(0.1547±0.0020)*CaO+(0.1443±0.0020)*FeO",
+    name="SRM-470 K411", pedigree="SRM-470", conductivity=:Insulator, 
+    description="https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nbsspecialpublication260-74.pdf")
+
 # Materials from the "Mengason Mineral Mount I" SPI # 1025-AB
 const mmm_albite = parse(
     Material,

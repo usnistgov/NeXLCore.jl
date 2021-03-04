@@ -115,9 +115,9 @@ using NeXLCore
         k458=parse(Material, "(0.4179±0.0020)*Ba+(0.0301±0.0006)*Zn+(0.2305±0.0034)*Si+(0.3186±0.0040)*O", 
                 name="SRM-1873 K-458", description="https://www-s.nist.gov/srmors/certificates/1873.pdf")
         @test isapprox(k458,
-                material("Test", Dict(n"Ba"=>uv(0.4179,0.0020), n"Zn"=>uv(0.0301,0.0006), n"Si"=>uv(0.2305,0.0034), n"O"=>uv(0.3186,0.0))))
-        @test value(k458[n"Zn"])==0.2305
-        @test σ(k458[n"Zn"])==0.0034
+                material("Test", Dict(n"Ba"=>uv(0.4179,0.0020), n"Zn"=>uv(0.0301,0.0006), n"Si"=>uv(0.2305,0.0034), n"O"=>uv(0.3186,0.0040))))
+        @test value(k458[n"Zn"])==0.0301
+        @test σ(k458[n"Zn"])==0.0006
 
         para = material(
             "Paracelsian",
@@ -190,7 +190,7 @@ using NeXLCore
             "0.4535*SiO2+0.0996*FeO+0.1933*MgO+0.1525*CaO+0.0927*Al2O3",
             name = "K412",
         )
-        @test isapprox(k412x, k412u, atol = 0.0001)
+        @test all(isapprox(value(k412x[el]), value(k412u[el]), atol = 0.0001) for el in keys(k412x))
         @test isapprox(k412x, k412y, atol = 0.0001)
         @test name(k412y) == "K412"
         q = parse(

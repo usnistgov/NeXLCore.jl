@@ -374,7 +374,7 @@ function Gadfly.plot(
 end
 
 function Gadfly.plot(
-    mats::AbstractVector{Material};
+    mats::AbstractVector{<:Material};
     known::Union{Material,Missing} = missing,
     delta::Bool = false,
     label::AbstractString = "Material",
@@ -446,7 +446,7 @@ function Gadfly.plot(
 end
 
 function plot2(
-    mats::AbstractVector{Material};
+    mats::AbstractVector{<:Material};
     known::Union{Material,Missing} = missing,
     label::AbstractString = "Material",
     palette = NeXLPalette,

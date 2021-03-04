@@ -90,45 +90,41 @@ Base.show(io::IO, kr::KRatio) =
     print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    elms, zs, lines, e0u = String[], Int[], String[], Float64[]
+    lines, e0u = String[], Float64[]
     e0s, toau, toas, mat = Float64[], Float64[], Float64[], String[]
     celm, dcelm, krv, dkrv = Float64[], Float64[], Float64[], Float64[]
     for kr in krs
-        push!(elms, kr.element.symbol)
-        push!(zs, z(kr.element))
         push!(lines, repr(kr.lines))
-        push!(e0u, get(kr.unkProps, :BeamEnergy, -1.0))
-        push!(e0s, get(kr.stdProps, :BeamEnergy, -1.0))
-        push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))
-        push!(toas, get(kr.stdProps, :TakeOffAngle, -1.0))
         push!(mat, name(kr.standard))
+        push!(e0u, get(kr.unkProps, :BeamEnergy, -1.0))
+        push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))
+        push!(e0s, get(kr.stdProps, :BeamEnergy, -1.0))
+        push!(toas, get(kr.stdProps, :TakeOffAngle, -1.0))
         push!(celm, value(kr.standard[kr.element]))
         push!(dcelm, σ(kr.standard[kr.element]))
         push!(krv, value(kr.kratio))
         push!(dkrv, σ(kr.kratio))
     end
     res = DataFrame(
-        Element = elms,
-        Z = zs,
         Lines = lines,
-        E0unk = e0u,
-        E0std = e0s,
-        θunk = toau,
-        θstd = toas,
         Standard = mat,
         Cstd = celm,
         ΔCstd = dcelm,
+        E0unk = e0u,
+        θunk = toau,
+        E0std = e0s,
+        θstd = toas,
         k = krv,
         Δk = dkrv,
     )
     rename!(
         res,
-        "E0std" => "E₀,ₛ",
-        "E0unk" => "E₀,ᵤ",
-        "θunk" => "θᵤ",
-        "θstd" => "θₛ",
-        "Cstd" => "Cₛ",
-        "ΔCstd" => "ΔCₛ",
+        "E0std" => "E₀[std]",
+        "E0unk" => "E₀[unk]",
+        "θunk" => "θ[unk]",
+        "θstd" => "θ[std]",
+        "Cstd" => "C[std]",
+        "ΔCstd" => "ΔC[std]",
     )
     return res
 end

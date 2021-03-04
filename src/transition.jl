@@ -523,22 +523,48 @@ end
 brightest(cxrs::Vector{CharXRay})::CharXRay = cxrs[findmax(weight.(cxrs))[2]]
 
 """
-    name(cxrs::AbstractVector{CharXRay})
+    name(cxrs::AbstractVector{CharXRay}, byfamily=false)
 
 An abbeviated name for a collection of CharXRay.
 """
-function name(cxrs::AbstractVector{CharXRay})::String
-    res = []
-    elms = Set{Element}(element.(cxrs))
-    for elm in elms
-        for sh in Set(shell.(filter(cxr -> element(cxr) == elm, cxrs)))
-            fc = filter(cxr -> (element(cxr) == elm) && (shell(cxr) == sh), cxrs)
-            br, cx = brightest(fc), length(fc)
-            other = cx > 2 ? "others" : "other"
-            push!(res, cx > 1 ? "$(br) + $(cx-1) $(other)" : "$(br)")
+function name(cxrs::AbstractVector{CharXRay}, byfamily::Bool=false)::String
+    if byfamily
+        if all(transition(cxr) in kalpha for cxr in cxrs)
+            "Kα"
+        elseif all(transition(cxr) in kbeta for cxr in cxrs)
+            "Kβ"
+        elseif all(transition(cxr) in ktransitions for cxr in cxrs)
+            "K"
+        elseif all(transition(cxr) in lalpha for cxr in cxrs)
+            "Lα"
+        elseif all(transition(cxr) in lbeta for cxr in cxrs)
+            "Lβ"
+        elseif all(transition(cxr) in ltransitions for cxr in cxrs)
+            "L"
+        elseif all(transition(cxr) in malpha for cxr in cxrs)
+            "Mα"
+        elseif all(transition(cxr) in mbeta for cxr in cxrs)
+            "Mβ"
+        elseif all(transition(cxr) in mtransitions for cxr in cxrs)
+            "M"
+        elseif all(transition(cxr) in ntransitions for cxr in cxrs)
+            "N"
+        else
+            "Unknown"
         end
+    else
+        res = []
+        elms = Set{Element}(element.(cxrs))
+        for elm in elms
+            for sh in Set(shell.(filter(cxr -> element(cxr) == elm, cxrs)))
+                fc = filter(cxr -> (element(cxr) == elm) && (shell(cxr) == sh), cxrs)
+                br, cx = brightest(fc), length(fc)
+                other = cx > 2 ? "others" : "other"
+                push!(res, cx > 1 ? "$(br) + $(cx-1) $(other)" : "$(br)")
+            end
+        end
+        return join(res, ", ")
     end
-    return join(res, ", ")
 end
 
 function Base.show(io::IO, cxrs::AbstractVector{CharXRay})

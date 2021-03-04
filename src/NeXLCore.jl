@@ -225,6 +225,7 @@ export addcustommacs # Adds custom macs to user macs
 include("materials.jl")
 export loadsmithsoniandata, parsedsmithsoniandata
 export loadmineraldata
+export srm470_k411, srm470_k412
 
 include("palettes.jl")
 export Log3BandC, Log3Band, LogScale, LinearScale # Converts [0.0,1.0] to a colored image.

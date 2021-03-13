@@ -45,6 +45,8 @@ struct Material{U<:AbstractFloat,V<:AbstractFloat}
     end
 end
 
+rename(mat::Material, newname::AbstractString) = Material(newname, mat.massfraction, mat.a, mat.properties)
+
 Base.copy(m::Material) =
     Material(m.name, copy(m.massfraction), copy(m.a), copy(m.properties))
 
@@ -118,6 +120,39 @@ function Base.sum(
     )
 end
 
+"""
+    Base.sum(
+      data::Dict{Material, <:AbstractFloat};
+      name::Union{AbstractString,Missing} = missing,
+      properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+      density::Union{Missing,AbstractFloat} = missing,
+      description::Union{Missing,AbstractString} = missing,
+      pedigree::Union{Missing,AbstractString} = missing,
+      conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
+)::Material
+
+Sum together proportions of various `Material` structs.  The dictionary defines the material and the mass fraction of that material.
+"""
+function Base.sum(
+    data::Dict{Material, <:AbstractFloat};
+    name::Union{AbstractString,Missing} = missing,
+    properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+    density::Union{Missing,AbstractFloat} = missing,
+    description::Union{Missing,AbstractString} = missing,
+    pedigree::Union{Missing,AbstractString} = missing,
+    conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
+)::Material
+    assign(val, prop, props) = if !ismissing(val) props[prop]=val end
+    res = mapreduce((a,b)->sum(a,b), data) do (mat, f)
+        f*mat
+    end
+    props = copy(properties)
+    assign(density, :Density, props)
+    assign(description, :Description, props)
+    assign(pedigree, :Pedigree, props)
+    assign(conductivity, :Conductivity, props)
+    return Material(ismissing(name) ? res.name : name, res.massfraction, res.a, props)
+end
 
 """
     name(mat::Material)

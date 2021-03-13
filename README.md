@@ -54,14 +54,15 @@ To access the characteristic energies associated with these items, use the funct
 energy(n"Fe K") # 7112.0
 energy(n"Fe K-L3") # 6403.9
 ```
-
 NeXL uses https://github.com/JuliaPhysics/PeriodicTable.jl for elemental data.
 
-NeXL uses FileIO to implement file reading and writing.  Various different X-ray microanalysis related file types are recognise by a combination of file extension and file content and can be read using code like
+NeXLCore also implements many generally useful X-ray and electron physics algorithms including Bremstrahlun generation, Bethe energy loss, mean-ionization potential, elastic scattering cross-sections and others.
+
+NeXL implements spectrum file support in the `NeXLSpectrum` package including spectrum file input/output.  Various different X-ray microanalysis related file types are recognise by a combination of file extension and file content and can be read using code like
 ```julia
 using FileIO
 using NeXLSpectrum
-spec = load("~/home/data/spectrum.msa") # To read an EMSA spectrum
+spec = loadspectrum("~/home/data/spectrum.msa") # To read an EMSA spectrum
 ```
 
 NeXL uses Gadfly (https://github.com/GiovineItalia/Gadfly.jl) to plot data items.  However, the Gadfly support is not loaded unless/until the user `using Gadfly` elsewhere in their code.  Thus Gadfly support is lightweight and doesn't hinder those who don't want to use it.  However, NeXL implements different specializations of the `Gadfly.plot(...)` method to handle NeXL-related data types.

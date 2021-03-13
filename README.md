@@ -56,7 +56,7 @@ energy(n"Fe K-L3") # 6403.9
 ```
 NeXL uses https://github.com/JuliaPhysics/PeriodicTable.jl for elemental data.
 
-NeXLCore also implements many generally useful X-ray and electron physics algorithms including Bremstrahlun generation, Bethe energy loss, mean-ionization potential, elastic scattering cross-sections and others.
+NeXLCore also implements many generally useful X-ray and electron physics algorithms including Bremstrahlung generation, Bethe energy loss, mean-ionization potential, elastic scattering cross-sections and others.
 
 NeXL implements spectrum file support in the `NeXLSpectrum` package including spectrum file input/output.  Various different X-ray microanalysis related file types are recognise by a combination of file extension and file content and can be read using code like
 ```julia

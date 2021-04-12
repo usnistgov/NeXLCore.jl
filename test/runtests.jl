@@ -15,6 +15,7 @@ using NeXLCore
     include("electron.jl")
     include("scattering.jl")
     include("staging.jl")
+    include("standard.jl")
 end
 
 # To test coverage (from NWMR's Win10 box)

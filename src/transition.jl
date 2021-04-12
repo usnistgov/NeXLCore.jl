@@ -380,6 +380,16 @@ Ionization edge energy for the specified X-ray.
 NeXLCore.edgeenergy(cxr::CharXRay, ty::Type{<:NeXLAlgorithm} = FFASTDB) =
     NeXLCore.edgeenergy(cxr.z, cxr.transition.innershell.index, ty)
 
+const __maxWeights = Dict{AtomicSubShell, Float64}()
+
+function maxweight(ass::AtomicSubShell)
+    if !haskey(__maxWeights, ass)
+        safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
+        __maxWeights[ass] = maximum(safeSS(element(ass), tr2) for tr2 in transitionsbyshell[shell(ass)])
+    end
+    return __maxWeights[ass]
+end
+
 """
     weight(cxr::CharXRay)
 
@@ -387,10 +397,10 @@ The line weight of the specified characteristic X-ray relative to the other line
 same shell.  The most intense line is normalized to unity.
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-    return strength(cxr) /
-           maximum(safeSS(element(cxr), tr2) for tr2 in transitionsbyshell[shell(cxr)])
+    return strength(cxr) / maxweight(inner(cxr))       
 end
+
+const __normWeights = Dict{AtomicSubShell, Float64}()
 
 """
     normweight(cxr::CharXRay)
@@ -399,12 +409,12 @@ The line weight of the specified characteristic X-ray with the sum of the
 weights in a subshell equals to unity.
 """
 function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    e0, elm = overvoltage * energy(inner(cxr)), element(cxr)
-    safeSS(z, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-    return strength(cxr) / sum(
-        safeSS(element(cxr), tr2) for
-        tr2 in transitionsbysubshell[cxr.transition.innershell]
-    )
+    ass = inner(cxr)
+    if !haskey(__normWeights, ass)
+        safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
+        __normWeights[ass] = sum(safeSS(element(ass), tr2) for tr2 in transitionsbysubshell[subshell(ass)])
+    end
+    return strength(cxr) / __normWeights[ass]
 end
 
 """
@@ -480,14 +490,21 @@ Example:
     characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
     characteristic(n"Fe L3")
 """
-characteristic(
+function characteristic(
     elm::Element,
     iter::Tuple{Vararg{Transition}},
     filterfunc::Function,
-)::Vector{CharXRay} = map(
-    tr -> characteristic(elm, tr),
-    filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
-)
+)::Vector{CharXRay}
+    res = CharXRay[]
+    for tr in iter
+        if has(elm, tr)
+            cxr=characteristic(elm, tr)         
+            filterfunc(cxr) && push!(res, cxr)
+        end
+    end
+    res
+end
+
 characteristic(
     elm::Element,
     iter::AbstractVector{Transition},

@@ -203,7 +203,18 @@ Base.getindex(krs::KRatios, idx::Int...) = KRatio(
     krs.standard,
     getindex(krs.kratios, idx...),
 )
-xrays(krs::KRatios) = lines
+
+Base.getindex(krs::KRatios, ci::CartesianIndex) = KRatio(
+    krs.lines,
+    krs.unkProps,
+    krs.stdProps,
+    krs.standard,
+    getindex(krs.kratios, ci),
+)
+
+
+
+xrays(krs::KRatios) = krs.lines
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 
@@ -227,3 +238,10 @@ function LinearAlgebra.normalize(
     end
     return [(kr, norm .* (kr.kratios ./ s)) for kr in krs]
 end
+
+"""
+    brightest(krs::KRatios)
+
+Returns a new KRatios (referencing same basic data as krs) but with a single CharXRay in the `lines` field.
+"""
+brightest(krs::KRatios) = KRatios([brightest(krs.lines)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )

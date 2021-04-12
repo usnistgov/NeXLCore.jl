@@ -45,6 +45,8 @@ struct Material{U<:AbstractFloat,V<:AbstractFloat}
     end
 end
 
+const NULL_MATERIAL = Material("Null Material",Dict{Int,Float64}())
+
 rename(mat::Material, newname::AbstractString) = Material(newname, mat.massfraction, mat.a, mat.properties)
 
 Base.copy(m::Material) =
@@ -352,16 +354,20 @@ Convert the Material to a normalized Material form.  Negative mass fractions
 are set to zero before normalization.
 """
 function asnormalized(mat::Material, n = 1.0)
-    at = analyticaltotal(mat)
-    if isapprox(at, n, rtol = 1.0e-8) && startswith(name(mat), "N[")
-        return mat
+    if !isempty(mat.massfraction)
+        at = analyticaltotal(mat)
+        if isapprox(at, n, rtol = 1.0e-8) && startswith(name(mat), "N[")
+            return mat
+        else
+            return Material(
+                "N[$(name(mat)),$(n)]",
+                Dict((z(elm), n * nonneg(mat, elm) / max(1.0e-8, at)) for elm in keys(mat)),
+                mat.a,
+                copy(mat.properties),
+            )
+        end
     else
-        return Material(
-            "N[$(name(mat)),$(n)]",
-            Dict((z(elm), n * nonneg(mat, elm) / at) for elm in keys(mat)),
-            mat.a,
-            copy(mat.properties),
-        )
+        return mat
     end
 end
 
@@ -871,8 +877,10 @@ compare(unks::AbstractVector{<:Material}, known::Material) =
 
 Compute the material MAC using the standard mass fraction weighted formula.
 """
-mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
-    mapreduce(elm -> mac(elm, xray, alg) * value(mat[elm]), +, keys(mat))
+mac(mat::Material, xray::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
+    sum(zc->mac(elements[zc[1]], xray, alg) * value(zc[2]), mat.massfraction) 
+mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
+    mac(mat, energy(xray), alg)
 
 function parsedtsa2comp(value::AbstractString)::Material
     try

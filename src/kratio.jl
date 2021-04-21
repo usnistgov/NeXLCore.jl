@@ -4,6 +4,36 @@ using Colors
 using Statistics
 
 """
+The members in common between KRatio and KRatios
+"""
+abstract type KRatioBase 
+    # element::Element
+    # lines::Vector{CharXRay} # Which CharXRays were measured?
+    # unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
+    # stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
+    # standard::Material
+end
+
+find(cxr::CharXRay, krs::AbstractVector{<:KRatioBase}) =
+    krs[findfirst(kr -> cxr in kr.lines, krs)]
+element(kr::KRatioBase) = kr.element
+xrays(krs::KRatioBase) = krs.lines
+standard(krs::KRatioBase) = krs.standard
+"""
+    elms(krs::Vector{KRatio})::Set{Element}
+
+Return a set containing the elements present in krs.
+"""
+function elms(krs::Vector{<:KRatioBase})::Set{Element}
+    res = Set{Element}()
+    for kr in krs
+        push!(res, kr.element)
+    end
+    return res
+end
+
+
+"""
     KRatio
 
 The k-ratio is the result of two intensity measurements - one on a standard
@@ -17,7 +47,7 @@ Properties: (These Symbols are intentionally the same used in NeXLSpectrum)
     :TakeOffAngle in radians
     :Coating A NeXLCore.Film object or Film[] detailing a conductive coating
 """
-struct KRatio
+struct KRatio <: KRatioBase
     element::Element
     lines::Vector{CharXRay} # Which CharXRays were measured?
     unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
@@ -66,17 +96,11 @@ struct KRatio
     end
 end
 
-find(cxr::CharXRay, krs::AbstractVector{KRatio}) =
-    krs[findfirst(kr -> cxr in kr.lines, krs)]
 NeXLUncertainties.value(kr::KRatio) = value(kr.kratio)
 NeXLUncertainties.σ(kr::KRatio) = σ(kr.kratio)
 nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.kratio
-element(kr::KRatio) = kr.element
-
 Statistics.mean(krs::AbstractVector{KRatio})::UncertainValue =
     mean((kr.kratio for kr in krs)...)
-
-
 
 """
     strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}
@@ -134,7 +158,7 @@ end
 must be characterized by the same unknown and standard properties, the same X-ray lines and the other
 properties.
 """
-struct KRatios
+struct KRatios <: KRatioBase
     element::Element
     lines::Vector{CharXRay} # Which CharXRays were measured?
     unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
@@ -176,21 +200,6 @@ struct KRatios
     end
 end
 
-NeXLCore.element(kr::Union{KRatio,KRatios}) = kr.element
-
-"""
-    elms(krs::Vector{KRatio})::Set{Element}
-
-Return a set containing the elements present in krs.
-"""
-function elms(krs::Vector{<:Union{KRatio,KRatios}})::Set{Element}
-    res = Set{Element}()
-    for kr in krs
-        push!(res, kr.element)
-    end
-    return res
-end
-
 Base.show(io::IO, kr::KRatios) = print(
     io,
     "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]",
@@ -214,7 +223,6 @@ Base.getindex(krs::KRatios, ci::CartesianIndex) = KRatio(
 
 
 
-xrays(krs::KRatios) = krs.lines
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 

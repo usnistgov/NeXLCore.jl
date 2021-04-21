@@ -249,10 +249,9 @@ include("staging.jl")
 export StageMapping, DefaultStageMapping
 export stage2image, image2stage
 
-include("standard.jl")
-export Standard # Joins a measured k-ratio to the Material from which it was measured for use in standardization.
+include("standardize.jl")
+export suitable_as_standard # Does a k-ratio have the necessary properties to be a standard
 export standardize # Apply similar standards to a KRatio or KRatios
-export matches
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")

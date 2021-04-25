@@ -9,7 +9,7 @@ using Test
             mat"Fe",
             uv(0.6517, 0.02),
         ) 
-        @test suitable_as_standard(fe1)
+        @test isstandard(fe1)
         fe2 = KRatio(
             characteristic(n"Fe", ltransitions),
             Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0), :Composition => mat"Fe2O3"),
@@ -17,7 +17,7 @@ using Test
             mat"Fe",
             uv(0.3217, 0.02),
         )
-        @test suitable_as_standard(fe2)
+        @test isstandard(fe2)
         ca1 = KRatio(
             characteristic(n"Ca", kalpha),
             Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0), :Composition => mat"Ca5(PO4)3F"),
@@ -25,7 +25,7 @@ using Test
             mat"CaF2",
             uv(0.7280, 0.02),
         )
-        @test suitable_as_standard(ca1)
+        @test isstandard(ca1)
         ca2 = KRatio(
             characteristic(n"Ca", kbeta),
             Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0), :Composition => mat"Ca5(PO4)3F"),
@@ -33,7 +33,7 @@ using Test
             mat"CaF2",
             uv(0.7326, 0.02),
         )
-        @test suitable_as_standard(ca2)
+        @test isstandard(ca2)
         si1 = KRatio(
             characteristic(n"Si", ktransitions),
             Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0), :Composition => mat"SiO2"),
@@ -41,7 +41,7 @@ using Test
             mat"Si",
             uv(0.3801, 0.02),
         )
-        @test suitable_as_standard(si1)
+        @test isstandard(si1)
         @test NeXLCore.matches(KRatio(
             characteristic(n"Fe", ltransitions),
             Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0), :Composition => mat"Fe2O3"),

@@ -11,13 +11,11 @@ function isstandard(std::KRatio)::Bool
     b2 || @warn "The :BeamEnergy property needs to be specified for the `unknown` in $std."
     b3 = haskey(std.unkProps, :TakeOffAngle) 
     b3 || @warn "The :TakeOffAngle property needs to be specified for the `unknown` in $std."
-    b4 = haskey(std.stdProps, :Composition) 
-    b4 || @warn "The :Composition property needs to be specified for the `standard` in $std."
-    b5 = haskey(std.stdProps, :BeamEnergy) 
-    b5 || @warn "The :BeamEnergy property needs to be specified for the `standard` in $std."
-    b6 = haskey(std.stdProps, :TakeOffAngle) 
-    b6 || @warn "The :TakeOffAngle property needs to be specified for the `standard` in $std."
-    return b1 && b2 && b3 && b4 && b5 && b6
+    b4 = haskey(std.stdProps, :BeamEnergy) 
+    b4 || @warn "The :BeamEnergy property needs to be specified for the `standard` in $std."
+    b5 = haskey(std.stdProps, :TakeOffAngle) 
+    b5 || @warn "The :TakeOffAngle property needs to be specified for the `standard` in $std."
+    return b1 && b2 && b3 && b4 && b5
 end
 
 

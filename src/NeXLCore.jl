@@ -250,7 +250,7 @@ export StageMapping, DefaultStageMapping
 export stage2image, image2stage
 
 include("standardize.jl")
-export suitable_as_standard # Does a k-ratio have the necessary properties to be a standard
+export isstandard # Does a k-ratio have the necessary properties to be a standard
 export standardize # Apply similar standards to a KRatio or KRatios
 
 function __init__()

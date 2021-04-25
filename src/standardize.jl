@@ -1,21 +1,23 @@
 """
-    suitable_as_standard(kr::KRatio)::Boolean
+    isstandard(kr::KRatio)::Boolean
 
 Does this k-ratio have all the necessary basic properties required for use as a standard 
 (:Composition, :TakeOffAngle, and :BeamEnergy for both `stdProps` and `unkProps`.)
 """
-function suitable_as_standard(std::KRatio)::Bool
-    b1=haskey(std.unkProps, :Composition) 
+function isstandard(std::KRatio)::Bool
+    b1 = haskey(std.unkProps, :Composition) 
     b1 || @warn "The :Composition property needs to be specified for the `unknown` in $std."
     b2 = haskey(std.unkProps, :BeamEnergy) 
     b2 || @warn "The :BeamEnergy property needs to be specified for the `unknown` in $std."
     b3 = haskey(std.unkProps, :TakeOffAngle) 
     b3 || @warn "The :TakeOffAngle property needs to be specified for the `unknown` in $std."
-    b4 = haskey(std.stdProps, :BeamEnergy) 
-    b4 || @warn "The :BeamEnergy property needs to be specified for the `standard` in $std."
-    b5 = haskey(std.stdProps, :TakeOffAngle) 
-    b5 || @warn "The :TakeOffAngle property needs to be specified for the `standard` in $std."
-    return b1 && b2 && b3 && b4 && b5
+    b4 = haskey(std.stdProps, :Composition) 
+    b4 || @warn "The :Composition property needs to be specified for the `standard` in $std."
+    b5 = haskey(std.stdProps, :BeamEnergy) 
+    b5 || @warn "The :BeamEnergy property needs to be specified for the `standard` in $std."
+    b6 = haskey(std.stdProps, :TakeOffAngle) 
+    b6 || @warn "The :TakeOffAngle property needs to be specified for the `standard` in $std."
+    return b1 && b2 && b3 && b4 && b5 && b6
 end
 
 

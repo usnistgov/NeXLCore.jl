@@ -24,9 +24,10 @@ using NeXLCore
         @test isapprox(σ(afs[AtomicFractionLabel(mat, n"Au")]), 0.0075, atol = 0.0001)
         @test isapprox(
             NeXLUncertainties.correlation(
+                afs,
                 AtomicFractionLabel(mat, n"Ag"),
                 AtomicFractionLabel(mat, n"Au"),
-                afs,
+                
             ),
             -1.0,
             atol = 0.0001,
@@ -44,9 +45,9 @@ using NeXLCore
         @test isapprox(σ(afs[NormMassFractionLabel(mat, n"Au")]), 0.0073, atol = 0.0001)
         @test isapprox(
             NeXLUncertainties.correlation(
+                afs,
                 NormMassFractionLabel(mat, n"Ag"),
                 NormMassFractionLabel(mat, n"Au"),
-                afs,
             ),
             -1.0,
             atol = 0.0001,
@@ -63,7 +64,7 @@ using NeXLCore
         @test isapprox(σ(afs[MeanZ(mat)]), 1.0381, atol = 0.0001)
         @test isapprox(σ(afs[MeanAz(mat)]), 2.5552, atol = 0.0001)
         @test isapprox(
-            NeXLUncertainties.correlation(MeanZ(mat), MeanAz(mat), afs),
+            NeXLUncertainties.correlation(afs, MeanZ(mat), MeanAz(mat)),
             1.0,
             atol = 0.001,
         )
@@ -79,9 +80,9 @@ using NeXLCore
         @test isapprox(σ(afs[AtomicFractionLabel(mat, n"Au")]), 0.0075, atol = 0.0001)
         @test isapprox(
             NeXLUncertainties.correlation(
-                AtomicFractionLabel(mat, n"Ag"),
-                AtomicFractionLabel(mat, n"Au"),
                 afs,
+                AtomicFractionLabel(mat, n"Ag"),
+                AtomicFractionLabel(mat, n"Au")
             ),
             -1.0,
             atol = 0.0001,
@@ -94,9 +95,9 @@ using NeXLCore
         @test isapprox(σ(afs[NormMassFractionLabel(mat, n"Au")]), 0.0073, atol = 0.0001)
         @test isapprox(
             NeXLUncertainties.correlation(
-                NormMassFractionLabel(mat, n"Ag"),
-                NormMassFractionLabel(mat, n"Au"),
                 afs,
+                NormMassFractionLabel(mat, n"Ag"),
+                NormMassFractionLabel(mat, n"Au")
             ),
             -1.0,
             atol = 0.0001,
@@ -108,7 +109,7 @@ using NeXLCore
         @test isapprox(σ(afs[MeanZ(mat)]), 1.0381, atol = 0.0001)
         @test isapprox(σ(afs[MeanAz(mat)]), 2.5552, atol = 0.0001)
         @test isapprox(
-            NeXLUncertainties.correlation(MeanZ(mat), MeanAz(mat), afs),
+            NeXLUncertainties.correlation(afs, MeanZ(mat), MeanAz(mat)),
             1.0,
             atol = 0.001,
         )

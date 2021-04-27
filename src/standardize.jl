@@ -2,7 +2,8 @@
     isstandard(kr::KRatio)::Boolean
 
 Does this k-ratio have all the necessary basic properties required for use as a standard 
-(:Composition, :TakeOffAngle, and :BeamEnergy for both `stdProps` and `unkProps`.)
+(:TakeOffAngle, and :BeamEnergy for both `stdProps` and `unkProps` and :Composition for 
+`unkProps`.)
 """
 function isstandard(std::KRatio)::Bool
     b1 = haskey(std.unkProps, :Composition) 
@@ -41,28 +42,35 @@ end
     standardize(kr::KRatios, std::KRatio)::KRatios
     standardize(kratios::Union{AbstractVector{KRatio},AbstractVector{KRatios}}, stds::AbstractVector{KRatio})
 
-If the `Standard` is a suitable match then the KRatio(s) `kr` is restandardized using `std`.  Otherwise, the original
-KRatio(s) is returned.
+If the `std::KRatio` is a suitable match for `kr` then `kr` is restandardized using `std`.  Otherwise, the original
+`KRatio` or `KRatios` is returned.
 """
 function standardize(kr::KRatio, std::KRatio)::KRatio
-    function div(n, d)
-        f = value(n)/value(d)
-        s = sqrt((σ(n)/value(d))^2+((value(n)*σ(d))/(value(d)*value(d)))^2)
-        return s > 0 ? UncertainValue(f, s) : f
+    div(n::AbstractFloat, d::AbstractFloat) = value(n)/value(d)
+    div(n::UncertainValue, d::UncertainValue) = divide(n,d,0.0)
+    @assert isstandard(std) "$std does not contain all the necessary properties (see details in the above warnings)."
+    return if matches(kr, std) 
+        newkr = div(kr.kratio, std.kratio)
+        KRatio(kr.lines, kr.unkProps, std.unkProps, std.unkProps[:Composition], newkr)
+    else 
+        kr
     end
-    return matches(kr, std) ? KRatio(kr.lines, kr.unkProps, std.unkProps, std.unkProps[:Composition], div(kr.kratio, std.kratio)) : kr
 end
 function standardize(krs::KRatios, std::KRatio)::KRatios
-    function div(n, d)
-        f = value(n)/value(d)
-        s = sqrt((σ(n)/value(d))^2+((value(n)*σ(d))/(value(d)*value(d)))^2)
-        return s > 0 ? UncertainValue(f, s) : f
-    end
-    return matches(krs, std) ? KRatios(krs.lines, krs.unkProps, std.unkProps, std.unkProps[:Composition], map(kr->div(kr, std.kratio), krs.kratios)) : krs 
+    @assert isstandard(std) "$std does not contain all the necessary properties (see details in the above warnings)."
+    div(n::AbstractFloat, d::AbstractFloat) = value(n)/value(d)
+    div(n::UncertainValue, d::UncertainValue) = divide(n, d, 0.0)
+    return if matches(krs, std)
+        newkrs = map(krs.kratios) do kr
+            div(kr, std.kratio)
+        end
+        KRatios(krs.lines, krs.unkProps, std.unkProps, std.unkProps[:Composition], newkrs)
+    else
+        krs
+    end 
 end
-
 function standardize(kratios::Union{AbstractVector{KRatio},AbstractVector{KRatios}}, stds::AbstractVector{KRatio})
-    map(kratios) do kr
+    return map(kratios) do kr
         i = findfirst(std->matches(kr,std), stds)
         isnothing(i) ? kr : standardize(kr, stds[i])
     end

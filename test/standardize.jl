@@ -1,4 +1,5 @@
 using Test
+using NeXLCore
 
 @testset "Standardize" begin
     @testset "Standardize KRatio" begin
@@ -151,7 +152,7 @@ using Test
                 Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
                 Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
                 mat"Fe",
-                [ uv(0.45, 0.02), uv(0.45, 0.02)]),
+                [ uv(0.45, 0.02), uv(0.49, 0.03)]),
             KRatios(
                 characteristic(n"Ca", kalpha),
                 Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
@@ -166,10 +167,43 @@ using Test
                 [ uv(0.333, 0.02), uv(0.333, 0.02) ]) ],
             [ fe1, fe2, ca1, ca2, si1 ])
         @test value(stdized[1].kratios[1]) == 0.45/0.6517
+        @test isapprox(σ(stdized[1].kratios[1]),0.037,atol=0.001)
+        @test value(stdized[1].kratios[2]) == 0.49/0.6517
+        @test isapprox(σ(stdized[1].kratios[2]),0.051,atol=0.001)
         @test isequal(stdized[1].standard, mat"Fe2O3")
         @test value(stdized[2].kratios[1])==0.32/0.7280
         @test isequal(stdized[2].standard, mat"Ca5(PO4)3F")
         @test isequal(stdized[3].standard, mat"LiF")
         @test value(stdized[3].kratios[1])==0.333
+    end
+    @testset "Standardize KRatios - mixed" begin
+        fe1 = KRatio(
+            characteristic(n"Fe", kalpha),
+            Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0), :Composition => mat"Fe2O3"),
+            Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
+            mat"Fe",
+            uv(0.6517, 0.02),
+        ) 
+        stdized = standardize([ 
+            KRatios(
+                characteristic(n"Fe", kalpha),
+                Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
+                Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
+                mat"Fe",
+                [ 0.45, 0.49 ]),  # Float64
+            KRatios(
+                characteristic(n"Fe", kalpha),
+                Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
+                Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),
+                mat"Fe",
+                [ uv(0.45, 0.02), uv(0.49, 0.03) ]) ],  # UncertainValue
+            [ fe1 ])
+        # Check mixed UncertainValue and Float64
+        @test stdized[1].kratios[1] == 0.45/0.6517
+        @test σ(stdized[1].kratios[1]) == 0.0
+        @test stdized[1].kratios[2] == 0.49/0.6517
+        @test value(stdized[2].kratios[1]) == 0.45/0.6517
+        @test isapprox(σ(stdized[2].kratios[1]),0.037,atol=0.001)
+        @test isequal(stdized[1].standard, mat"Fe2O3")
     end
 end

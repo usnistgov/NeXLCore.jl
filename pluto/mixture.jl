@@ -90,36 +90,36 @@ begin
 		## Summary
 		#### Mass Fractions
 
-		$(asa(DataFrame, extract(MassFractionLabel, mix), false))
+		$(asa(DataFrame, extract(mix, MassFractionLabel), false))
 		#### Atom Fractions
 
-		$(asa(DataFrame, extract(AtomicFractionLabel, mix), false))
+		$(asa(DataFrame, extract(mix, AtomicFractionLabel), false))
 		#### Normalized Mass Fractions
 
-		$(asa(DataFrame, extract(NormMassFractionLabel, mix), false))
+		$(asa(DataFrame, extract(mix, NormMassFractionLabel), false))
 		#### Material Statistics
 
-		$(asa(DataFrame, extract( collect(MatStatTypes), mix), false))
+		$(asa(DataFrame, extract(mix, collect(MatStatTypes)), false))
 		#### Material Fraction
 
-		$(asa(DataFrame, extract( MaterialFractionLabel, mix), false))
+		$(asa(DataFrame, extract(mix, MaterialFractionLabel), false))
 		
 		## Full Covariance
 		#### Mass Fractions
 
-		$(asa(DataFrame, extract(MassFractionLabel, mix), true))
+		$(asa(DataFrame, extract(mix, MassFractionLabel), true))
 		#### Atom Fractions
 
-		$(asa(DataFrame, extract(AtomicFractionLabel, mix), true))
+		$(asa(DataFrame, extract(mix, AtomicFractionLabel), true))
 		#### Normalized Mass Fractions
 
-		$(asa(DataFrame, extract(NormMassFractionLabel, mix), true))
+		$(asa(DataFrame, extract(mix, NormMassFractionLabel), true))
 		#### Material Statistics
 
-		$(asa(DataFrame, extract( collect(MatStatTypes), mix), true))
+		$(asa(DataFrame, extract(mix, collect(MatStatTypes)), true))
 		#### Material Fraction
 
-		$(asa(DataFrame, extract( MaterialFractionLabel, mix), true))
+		$(asa(DataFrame, extract(mix, MaterialFractionLabel), true))
 		
 		"""
 	else

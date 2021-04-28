@@ -93,14 +93,14 @@ function NeXLUncertainties.compute(
             for j in eachindex(mfls)
                 if i == j
                     @assert outputs[i].element == mfls[j].element
-                    jac[i, indexin(mfls[i], inputs)] =
+                    jac[i, indexin(inputs, mfls[i])] =
                         results[i] * (1.0 - results[i]) / inputs[mfls[i]]
-                    jac[i, indexin(awls[i], inputs)] =
+                    jac[i, indexin(inputs, awls[i])] =
                         results[i] * (results[i] - 1.0) / inputs[awls[i]]
                 else
-                    jac[i, indexin(mfls[j], inputs)] =
+                    jac[i, indexin(inputs, mfls[j])] =
                         -results[i] * results[j] / inputs[mfls[j]]
-                    jac[i, indexin(awls[j], inputs)] =
+                    jac[i, indexin(inputs, awls[j])] =
                         results[i] * results[j] / inputs[awls[j]]
                 end
             end
@@ -141,10 +141,10 @@ function NeXLUncertainties.compute(
             for j in eachindex(elms)
                 if i == j
                     @assert outputs[i].element == elms[j]
-                    jac[i, indexin(mfls[i], inputs)] =
+                    jac[i, indexin(inputs, mfls[i])] =
                         results[i] * (1.0 - results[i]) / inputs[mfls[i]]
                 else
-                    jac[i, indexin(mfls[j], inputs)] =
+                    jac[i, indexin(inputs, mfls[j])] =
                         -results[i] * results[j] / inputs[mfls[j]]
                 end
             end
@@ -192,17 +192,17 @@ function NeXLUncertainties.compute(
             for j in eachindex(elms)
                 if i == j
                     @assert outputs[i].element == elms[j]
-                    ii = indexin(afls[i], inputs)
+                    ii = indexin(inputs, afls[i])
                     jac[i+off, ii] =
                         (jac[i, ii] = results[i] * (1.0 - results[i]) / inputs[afls[i]])
-                    ii = indexin(awls[i], inputs)
+                    ii = indexin(inputs, awls[i])
                     jac[i+off, ii] =
                         (jac[i, ii] = results[i] * (1.0 - results[i]) / inputs[awls[i]])
                 else
-                    ij = indexin(afls[j], inputs)
+                    ij = indexin(inputs, afls[j])
                     jac[i+off, ij] =
                         (jac[i, ij] = -results[i] * results[j] / inputs[afls[j]])
-                    ij = indexin(awls[j], inputs)
+                    ij = indexin(inputs, awls[j])
                     jac[i+off, ij] =
                         (jac[i, ij] = -results[i] * results[j] / inputs[awls[j]])
                 end
@@ -262,10 +262,10 @@ function NeXLUncertainties.compute(
     jac = withJac ? zeros(Float64, length(outputs), length(inputs)) : missing
     if withJac
         for j in eachindex(elms)
-            jac[1, indexin(mfls[j], inputs)] = elms[j].number
-            jac[2, indexin(mfls[j], inputs)] = inputs[awls[j]]
-            jac[2, indexin(awls[j], inputs)] = inputs[mfls[j]]
-            jac[3, indexin(mfls[j], inputs)] = 1.0
+            jac[1, indexin(inputs, mfls[j])] = elms[j].number
+            jac[2, indexin(inputs, mfls[j])] = inputs[awls[j]]
+            jac[2, indexin(inputs, awls[j])] = inputs[mfls[j]]
+            jac[3, indexin(inputs, mfls[j])] = 1.0
         end
     end
     return (LabeledValues(outputs, results), jac)
@@ -334,7 +334,7 @@ function NeXLUncertainties.compute(
     jac = withJac ? zeros(Float64, 1, length(inputs)) : missing
     if withJac
         if s < 1.0
-            foreach(mfl -> jac[1, indexin(mfl, inputs)] = -1.0, mfls)
+            foreach(mfl -> jac[1, indexin(inputs, mfl)] = -1.0, mfls)
         end
     end
     return (LabeledValues(outputs, results), jac)
@@ -381,11 +381,11 @@ function NeXLUncertainties.compute(
     ]
     jac = withJac ? zeros(Float64, 1, length(inputs)) : missing
     if withJac
-        jac[1, indexin(awe, inputs)] = results[1] / aN
+        jac[1, indexin(inputs, awe)] = results[1] / aN
         for j in eachindex(elms)
             aj, vj = inputs[awls[j]], v(elms[j])
-            jac[1, indexin(mfls[i], inputs)] = -(aN * vj) / (aj * vN)
-            jac[1, indexin(awls[i], inputs)] = (aN * vj) / (vN * Aj^2) * inputs[mfls[j]]
+            jac[1, indexin(inputs, mfls[i])] = -(aN * vj) / (aj * vN)
+            jac[1, indexin(inputs, awls[i])] = (aN * vj) / (vN * Aj^2) * inputs[mfls[j]]
         end
     end
     return (LabeledValues(outputs, results), jac)
@@ -435,12 +435,12 @@ function NeXLUncertainties.compute(
                 if haskey(inputs, mf) # Does this constituent have this element?
                     awl = AtomicWeightLabel(mf.material, elm)
                     cjz, ajz, cMz = inputs[mf], inputs[awl], resmf[elm]
-                    jac[mfi, indexin(mf, inputs)] = Mjz # Ok
-                    jac[mfi, indexin(constitlbl, inputs)] = cjz # Ok
-                    jac[awi, indexin(constitlbl, inputs)] =
+                    jac[mfi, indexin(inputs, mf)] = Mjz # Ok
+                    jac[mfi, indexin(inputs, constitlbl)] = cjz # Ok
+                    jac[awi, indexin(inputs, constitlbl)] =
                         (cjz / cMz) * (aMz - aMz^2 / ajz) # 23.1
-                    jac[awi, indexin(mf, inputs)] = (Mjz / cMz) * (aMz - aMz^2 / ajz)
-                    jac[awi, indexin(awl, inputs)] = (cMz * (aMz^2)) / ajz
+                    jac[awi, indexin(inputs, mf)] = (Mjz / cMz) * (aMz - aMz^2 / ajz)
+                    jac[awi, indexin(inputs, awl)] = (cMz * (aMz^2)) / ajz
                 end
             end
         end
@@ -507,8 +507,8 @@ function NeXLUncertainties.compute(
     jac = withJac ? zeros(Float64, length(vals), length(inputs)) : missing
     if withJac
         for i in eachindex(mfls)
-            jac[1, indexin(mfls[i], inputs)] = emacs[i]
-            jac[1, indexin(emacls[i], inputs)] = mfs[i]
+            jac[1, indexin(inputs, mfls[i])] = emacs[i]
+            jac[1, indexin(inputs, emacls[i])] = mfs[i]
         end
     end
     return (vals, jac)

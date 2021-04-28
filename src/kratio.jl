@@ -14,7 +14,12 @@ abstract type KRatioBase
     # standard::Material
 end
 
-find(cxr::CharXRay, krs::AbstractVector{<:KRatioBase}) =
+"""
+    Base.findfirst(krs::AbstractVector{<:KRatioBase}, cxr::CharXRay)
+	
+Find the first KRatio or KRatios in which the .xrays field contains the cxr::CharXRay.
+"""
+Base.findfirst(krs::AbstractVector{<:KRatioBase}, cxr::CharXRay) =
     krs[findfirst(kr -> cxr in kr.xrays, krs)]
 element(kr::KRatioBase) = kr.element
 xrays(krs::KRatioBase) = krs.xrays

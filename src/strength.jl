@@ -103,7 +103,7 @@ The line weight for the transition `(inner,outer)` which results from an ionizat
 """
 function nexlTotalWeight(z::Int, ionized::Int, inner::Int, outer::Int)
     trs = get(xrayweights, (z, ionized), nothing)
-    return isnothing(trs) ? 0.0 : something( get(trs, (inner,outer), nothing), 0.0)
+    return isnothing(trs) ? 0.0 : get(trs, (inner,outer), 0.0)
 end
 
 """

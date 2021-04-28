@@ -9,8 +9,8 @@ using NeXLCore
         mat"Fe2O3",
         uv(0.77, 0.01),
     )
-    @test n"Fe K-L2" in kr.lines
-    @test !(n"Ca K-L2" in kr.lines)
+    @test n"Fe K-L2" in kr.xrays
+    @test !(n"Ca K-L2" in kr.xrays)
     @test kr.unkProps[:BeamEnergy] == 20.0e3
     @test kr.unkProps[:TakeOffAngle] == deg2rad(40.0)
     @test kr.stdProps[:BeamEnergy] == 15.0e3

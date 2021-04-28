@@ -8,16 +8,16 @@ The members in common between KRatio and KRatios
 """
 abstract type KRatioBase 
     # element::Element
-    # lines::Vector{CharXRay} # Which CharXRays were measured?
+    # xrays::Vector{CharXRay} # Which CharXRays were measured?
     # unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     # stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     # standard::Material
 end
 
 find(cxr::CharXRay, krs::AbstractVector{<:KRatioBase}) =
-    krs[findfirst(kr -> cxr in kr.lines, krs)]
+    krs[findfirst(kr -> cxr in kr.xrays, krs)]
 element(kr::KRatioBase) = kr.element
-xrays(krs::KRatioBase) = krs.lines
+xrays(krs::KRatioBase) = krs.xrays
 standard(krs::KRatioBase) = krs.standard
 """
     elms(krs::Vector{KRatio})::Set{Element}
@@ -49,24 +49,24 @@ Properties: (These Symbols are intentionally the same used in NeXLSpectrum)
 """
 struct KRatio <: KRatioBase
     element::Element
-    lines::Vector{CharXRay} # Which CharXRays were measured?
+    xrays::Vector{CharXRay} # Which CharXRays were measured?
     unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     standard::Material
     kratio::UncertainValue
 
     function KRatio(
-        lines::AbstractVector{CharXRay},
+        xrays::AbstractVector{CharXRay},
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,
         kratio::AbstractFloat,
     )
-        if length(lines) < 1
+        if length(xrays) < 1
             error("A k-ratio must specify at least one characteristic X-ray.")
         end
-        elm = element(lines[1])
-        if !all(element(l) == elm for l in lines)
+        elm = element(xrays[1])
+        if !all(element(l) == elm for l in xrays)
             error(
                 "The characteristic X-rays in a k-ratio must all be from the same element.",
             )
@@ -83,11 +83,11 @@ struct KRatio <: KRatioBase
                    atol = deg2rad(0.1),
                )
            )
-            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
+            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $xrays."
         end
         return new(
             elm,
-            sort(lines, rev = true),
+            sort(xrays, rev = true),
             copy(unkProps),
             copy(stdProps),
             standard,
@@ -111,14 +111,14 @@ Base.strip(krs::AbstractVector{KRatio}, els::Element...) =
     collect(filter(k -> !(element(k) in els), krs))
 
 Base.show(io::IO, kr::KRatio) =
-    print(io, "k[$(name(kr.lines)), $(name(kr.standard))] = $(round(kr.kratio))")
+    print(io, "k[$(name(kr.xrays)), $(name(kr.standard))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    lines, e0u = String[], Float64[]
+    xrays, e0u = String[], Float64[]
     e0s, toau, toas, mat = Float64[], Float64[], Float64[], String[]
     celm, dcelm, krv, dkrv = Float64[], Float64[], Float64[], Float64[]
     for kr in krs
-        push!(lines, repr(kr.lines))
+        push!(xrays, repr(kr.xrays))
         push!(mat, name(kr.standard))
         push!(e0u, get(kr.unkProps, :BeamEnergy, -1.0))
         push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))
@@ -130,7 +130,7 @@ function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::
         push!(dkrv, σ(kr.kratio))
     end
     res = DataFrame(
-        Lines = lines,
+        Xrays = xrays,
         Standard = mat,
         Cstd = celm,
         ΔCstd = dcelm,
@@ -160,24 +160,24 @@ properties.
 """
 struct KRatios <: KRatioBase
     element::Element
-    lines::Vector{CharXRay} # Which CharXRays were measured?
+    xrays::Vector{CharXRay} # Which CharXRays were measured?
     unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     standard::Material
     kratios::Array{<:AbstractFloat}
 
     function KRatios(
-        lines::Vector{CharXRay},
+        xrays::Vector{CharXRay},
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,
         kratios::Array{<:AbstractFloat},
     )
-        if length(lines) < 1
+        if length(xrays) < 1
             error("A k-ratio must specify at least one characteristic X-ray.")
         end
-        elm = element(lines[1])
-        if !all(element(l) == elm for l in lines)
+        elm = element(xrays[1])
+        if !all(element(l) == elm for l in xrays)
             error(
                 "The characteristic X-rays in a k-ratio must all be from the same element.",
             )
@@ -194,19 +194,19 @@ struct KRatios <: KRatioBase
                    atol = deg2rad(0.1),
                )
            )
-            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $lines."
+            @warn "The unknown and standard take-off angles do not match for $elm in $standard and $xrays."
         end
-        return new(elm, lines, copy(unkProps), copy(stdProps), standard, kratios)
+        return new(elm, xrays, copy(unkProps), copy(stdProps), standard, kratios)
     end
 end
 
 Base.show(io::IO, kr::KRatios) = print(
     io,
-    "k[$(name(kr.standard)), $(name(kr.lines))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]",
+    "k[$(name(kr.standard)), $(name(kr.xrays))] = $(eltype(kr.kratios))[ $(size(kr.kratios)) ]",
 )
 
 Base.getindex(krs::KRatios, idx::Int...) = KRatio(
-    krs.lines,
+    krs.xrays,
     krs.unkProps,
     krs.stdProps,
     krs.standard,
@@ -214,7 +214,7 @@ Base.getindex(krs::KRatios, idx::Int...) = KRatio(
 )
 
 Base.getindex(krs::KRatios, ci::CartesianIndex) = KRatio(
-    krs.lines,
+    krs.xrays,
     krs.unkProps,
     krs.stdProps,
     krs.standard,
@@ -252,4 +252,4 @@ end
 
 Returns a new KRatios (referencing same basic data as krs) but with a single CharXRay in the `lines` field.
 """
-brightest(krs::KRatios) = KRatios([brightest(krs.lines)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )
+brightest(krs::KRatios) = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )

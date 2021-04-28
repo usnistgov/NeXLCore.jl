@@ -32,7 +32,7 @@ function matches(unk::Union{KRatio, KRatios}, std::KRatio)::Bool
     up, sp = unk.stdProps, std.stdProps
     return element(unk)==element(std) && #  Same element 
         isapprox(unk.standard, std.standard, atol=1.0e-5) && # Relative to same material
-        issetequal(unk.lines, std.lines) && # Same lines 
+        issetequal(unk.xrays, std.xrays) && # Same lines 
         isapprox(sp[:BeamEnergy], up[:BeamEnergy], rtol=0.001) && # Same E0
         isapprox(sp[:TakeOffAngle], up[:TakeOffAngle], atol=deg2rad(0.1)) # Same take-off angle
 end
@@ -51,7 +51,7 @@ function standardize(kr::KRatio, std::KRatio)::KRatio
     @assert isstandard(std) "$std does not contain all the necessary properties (see details in the above warnings)."
     return if matches(kr, std) 
         newkr = div(kr.kratio, std.kratio)
-        KRatio(kr.lines, kr.unkProps, std.unkProps, std.unkProps[:Composition], newkr)
+        KRatio(kr.xrays, kr.unkProps, std.unkProps, std.unkProps[:Composition], newkr)
     else 
         kr
     end
@@ -64,7 +64,7 @@ function standardize(krs::KRatios, std::KRatio)::KRatios
         newkrs = map(krs.kratios) do kr
             div(kr, std.kratio)
         end
-        KRatios(krs.lines, krs.unkProps, std.unkProps, std.unkProps[:Composition], newkrs)
+        KRatios(krs.xrays, krs.unkProps, std.unkProps, std.unkProps[:Composition], newkrs)
     else
         krs
     end 

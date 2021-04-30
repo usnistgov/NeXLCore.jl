@@ -1,4 +1,4 @@
-const valences = (
+const defaultValences = (
     1,
     0,
     1,
@@ -97,14 +97,14 @@ const valences = (
 
 
 """
-    asoxide(elm::Element, valences = valences)
+    asoxide(elm::Element, valences = NeXLCore.defaultValences)
 
 Compute the oxidized form of the specified element using the valences provided in `val`.  By default,
-`val = NeXLCore.valences`, a typical set of valences.
+`val = NeXLCore.defaultValences`, a typical set of valences.
 """
 function asoxide(
     elm::Element;
-    valences = valences,
+    valences = NeXLCore.defaultValences,
     name = nothing,
     atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}(),
 )
@@ -128,8 +128,8 @@ function asoxide(
 end
 
 """
-    asoxide(elms::Pair{Element, <:AbstractFloat}...; valences = valences, atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}())
-    asoxide(elms::Dict{Element, <:AbstractFloat}...; valences = valences, atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}())
+    asoxide(elms::Pair{Element, <:AbstractFloat}...; valences = NeXLCore.defaultValences, atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}())
+    asoxide(elms::Dict{Element, <:AbstractFloat}...; valences = NeXLCore.defaultValences, atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}())
 
 Providing the mass-fraction of the consituent elements in `elms`, compute the corresponding amounts of the oxide forms
 of the elements.  This can be used to answer the question: If I measure this amount of these elements, what mass fraction of
@@ -156,7 +156,7 @@ Example:
 """
 function asoxide( 
     elms::Pair{Element,<:AbstractFloat}...; 
-    valences = valences,
+    valences = NeXLCore.defaultValences,
     atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}()
 ) :: Dict{Material, AbstractFloat}
     return  Dict{Material, AbstractFloat}(
@@ -169,7 +169,7 @@ function asoxide(
 end
 function asoxide( 
     elms::Dict{Element, <:AbstractFloat};
-    valences = valences,
+    valences = NeXLCore.defaultValences,
     name = nothing, 
     atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}()
 )
@@ -183,8 +183,8 @@ function asoxide(
 end
 
 """
-    obystoichiometry(elms::Pair{Element, <:AbstractFloat}..., valences = valences)
-    obystoichiometry(elms::Dict{Element, <:AbstractFloat}; valences = valences)
+    obystoichiometry(elms::Pair{Element, <:AbstractFloat}..., valences = NeXLCore.defaultValences)
+    obystoichiometry(elms::Dict{Element, <:AbstractFloat}; valences = NeXLCore.defaultValences)
 
 Compute O-by-stoichiometry from the provided mass fractions of elements.
 
@@ -193,9 +193,11 @@ Example:
     obystoichiometry(n"Mg"=>0.1099, n"Al"=>0.0443, n"Si"=>0.1941, n"Ca"=>0.1034, n"Fe"=>0.0756)
     0.39582340257233467
 """
-obystoichiometry(elms::Pair{Element,<:AbstractFloat}...; valences = valences) = sum(
-    f * (-valences[z(elm)] * a(n"O")) / (a(elm) * valences[z(n"O")]) for (elm, f) in elms
-)
-obystoichiometry(elms::Dict{Element,<:AbstractFloat}; valences = valences) = sum(
-    f * (-valences[z(elm)] * a(n"O")) / (a(elm) * valences[z(n"O")]) for (elm, f) in elms
-)
+function obystoichiometry(elms::Dict{Element,<:AbstractFloat}; valences = NeXLCore.defaultValences)
+    sum(elms) do (elm, f)
+        elm ≠ n"O" ?  f * (-valences[z(elm)] * a(n"O")) / (a(elm) * valences[z(n"O")]) : 0.0
+    end
+end
+function obystoichiometry(elms::Pair{Element,<:AbstractFloat}...; valences = NeXLCore.defaultValences)
+    obystoichiometry(Dict(elms...); valences = valences)
+end

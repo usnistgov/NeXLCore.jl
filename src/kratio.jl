@@ -230,6 +230,7 @@ Base.getindex(krs::KRatios, ci::CartesianIndex) = KRatio(
 
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
+Base.CartesianIndices(krs::KRatios) = CartesianIndices(krs.kratios)
 
 """
     LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f)::Vector{Tuple{KRatio, Array}}

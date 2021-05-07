@@ -233,29 +233,43 @@ Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 Base.CartesianIndices(krs::KRatios) = CartesianIndices(krs.kratios)
 
 """
-    LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f)::Vector{Tuple{KRatio, Array}}
+    LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f)::Vector{KRatios}
+    LinearAlgebra.normalize(krs::AbstractVector{KRatio}; norm::Float32=1.0f)::Vector{KRatio}
 
 Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array. `norm` specifies normalization
-constants other than 1.0 and `minsum` assigns the value 0.0 for all pixels where the sum is less than `minsum`. This
-is useful for holes, shadows and other artifacts which lead to low k-ratio totals.  The palettes below will plot
-NaN32 as yellow.
+constants other than 1.0.
 """
 function LinearAlgebra.normalize(
     krs::AbstractVector{KRatios};
-    norm::Float32 = 1.0f0,
-)::Vector{Tuple{KRatios,Array}}
+    norm::Float64 = 1.0,
+    minsum::Float64 = 0.0
+)
     sz = size(krs[1].kratios)
     @assert all((sz == size(kr.kratios) for kr in krs[2:end]))
     s = map(CartesianIndices(krs[1].kratios)) do ci
         ss = sum( max(0.0, kr.kratios[ci]) for kr in krs)
-        ss<=0.0 ? 1.0 : ss
+        ss<=minsum ? 1.0e100 : ss
     end
-    return [(kr, norm .* (kr.kratios ./ s)) for kr in krs]
+    return map(krs) do kr
+        KRatios(kr.xrays, copy(kr.unkProps), copy(kr.stdProps), kr.standard, norm .* (kr.kratios ./ s))
+    end
+end
+function LinearAlgebra.normalize(
+    krs::AbstractVector{KRatio};
+    norm::Float64 = 1.0,
+    minsum::Float64 = 0.0
+)
+    s = sum(kr->max(0.0, kr.kratio), krs)
+    s = s<=minsum ? 1.0e100 : s
+    map(krs) do kr
+        KRatio(kr.xrays, copy(kr.unkProps), copy(kr.stdProps), kr.standard, (norm/s) * kr.kratio)
+    end
 end
 
 """
-    brightest(krs::KRatios)
+    brightest(krs::Union{KRatios, KRatio})
 
 Returns a new KRatios (referencing same basic data as krs) but with a single CharXRay in the `lines` field.
 """
 brightest(krs::KRatios) = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )
+brightest(krs::KRatio) = KRatio([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratio )

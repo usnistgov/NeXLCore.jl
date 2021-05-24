@@ -53,6 +53,7 @@ Base.copy(m::Material) =
     Material(m.name, copy(m.massfraction), copy(m.a), copy(m.properties))
 
 elms(mat::Material) = Set(element(z) for z in keys(mat.massfraction))
+ispure(mat::Material) = length(mat.massfraction)==1
 
 function Base.:*(k::AbstractFloat, mat::Material)::Material
     mf = Dict((z, q * k) for (z, q) in mat.massfraction)
@@ -102,7 +103,7 @@ function Base.sum(
 )::Material
     plus(v1::AbstractFloat, v2::AbstractFloat) = 
         (σ(v1)==0.0)&&(σ(v2)==0.0) ? value(v1)+value(v2) : uv(value(v1)+value(v2),sqrt(σ(v1)^2+σ(v2)^2))
-    mf = Dict((elm, plus(mat1[elm], mat2[elm])) for elm in union(keys(mat1), keys(mat2)))
+    mf = Dict{Element,AbstractFloat}((elm, plus(mat1[elm], mat2[elm])) for elm in union(keys(mat1), keys(mat2)))
     aw = Dict{Element,Float64}()
     for z in union(keys(mat1.a), keys(mat2.a))
         elm = elements[z]
@@ -228,8 +229,6 @@ function material(
     (!ismissing(description)) && ((props[:Description] = description) == description)
     (!ismissing(pedigree)) && ((props[:Pedigree] = pedigree) == pedigree)
     (!ismissing(conductivity)) && ((props[:Conductivity] = conductivity) == conductivity)
-    reallyhas(kwa, sym) =
-        haskey(kwa, sym) && (!ismissing(kwa[sym])) && (!isnothing(kwa[sym]))
     mf = Dict{Int,U}((z(elm), v) for (elm, v) in massfrac)
     aw = Dict{Int,V}((z(elm), v) for (elm, v) in atomicweights)
     return Material(name, mf, aw, props)

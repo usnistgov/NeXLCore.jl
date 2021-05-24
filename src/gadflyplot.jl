@@ -447,7 +447,6 @@ end
 
 function plot2(
     mats::AbstractVector{<:Material};
-    known::Union{Material,Missing} = missing,
     label::AbstractString = "Material",
     palette = NeXLPalette,
 )

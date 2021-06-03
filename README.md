@@ -12,10 +12,15 @@
 [travis-url]: https://travis-ci.com/usnistgov/NeXLCore.jl
 
 #### Installation
-`NeXLCore` and its dependencies are all available on the Julia registry.
-```julia
-] add NeXLCore
-```
+Install NeXLCore using the Julia package manager
+
+    > ]add NeXLCore
+
+or
+
+    > using Pkg
+    > Pkg.add("NeXLCore")
+
 
 NeXLCore is part of the NeXL collection of Julia language packages.
 #### Released

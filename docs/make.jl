@@ -44,6 +44,6 @@ makedocs(
 addNISTHeaders(joinpath(@__DIR__, "build","index.html"))
 addNISTHeaders.(map(name->joinpath(@__DIR__, "build", splitext(name)[1], "index.html"), map(p->p.second, pages)))
 
-rm.(joinpath("src",page[2]) for page in pages[2:end])
+rm.(joinpath(@__DIR__,"src",page[2]) for page in pages[2:end])
 
 # deploydocs(repo = "github.com/JuliaLang/NeXLCore.jl.git")

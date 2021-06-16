@@ -204,6 +204,7 @@ export KRatio # Represents a measured intensity ratio
 export KRatios # The array equivalent of KRatio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
+export colorize # Colorize a X-ray 
 #export strip # Removes one or more elements from a Vector{KRatio}
 
 include("properties.jl")

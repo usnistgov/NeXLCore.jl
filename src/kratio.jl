@@ -1,6 +1,7 @@
 using NeXLUncertainties
 using NeXLCore
 using Colors
+using ImageCore: colorview
 using Statistics
 
 """
@@ -273,3 +274,48 @@ Returns a new KRatios (referencing same basic data as krs) but with a single Cha
 """
 brightest(krs::KRatios) = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )
 brightest(krs::KRatio) = KRatio([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratio )
+
+"""
+    colorize(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element, normalize=:All[|:Each])
+    colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, normalize=:All)
+
+Create RGB colorized images from up to three `Element`s.  The elements
+are normalized relative to all `KRatios` in `krs`. The resulting images are scaled by the factor
+`scale` to allow visualization of trace elements.
+"""
+function colorize(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element, normalize=:All)
+    colorize(krs, [red, green, blue], normalize)
+end
+function colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, normalize=:All)
+    idx  = collect( findfirst(kr->isequal(kr.element, elm), krs) for elm in elms )
+    if normalize==:All
+        # Normalize relative to sum of KRatios at each point
+        s = map(CartesianIndices(krs[1])) do ci
+            ss = sum( max(0.0, kr.kratios[ci]) for kr in krs)
+            ss<=0.0 ? 1.0 : ss
+        end
+        clip(skr) = min(skr, 1.0)
+        norm(kr) = clip.(kr.kratios ./ s)
+        colorview(RGB, 
+            norm(krs[idx[1]]), 
+            length(idx)>1 ? norm(krs[idx[2]]) : zeroarray, 
+            length(idx)>2 ? norm(krs[idx[3]]) : zeroarray)
+    else
+        # Normalize relative to max of each KRatios independently
+        each(kr) = kr.kratios / maximum(kr.kratios)
+        colorview(RGB, 
+            each(krs[idx[1]]), 
+            length(idx)>1 ? each(krs[idx[2]]) : zeroarray, 
+            length(idx)>2 ? each(krs[idx[3]]) : zeroarray)
+    end
+end
+
+function Base.getindex(krs::AbstractVector{KRatios}, elm::Element)
+    colorize(krs, [ elm, elm, elm ])
+end
+function Base.getindex(krs::AbstractVector{KRatios}, red::Element, green::Element)
+    colorize(krs, [ red, green ])
+end
+function Base.getindex(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element)
+    colorize(krs, [ red, green, blue ])
+end

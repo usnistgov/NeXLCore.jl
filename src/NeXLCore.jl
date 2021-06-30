@@ -6,9 +6,7 @@ using LinearAlgebra
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
-@reexport using PhysicalConstants
-
-# using Base.isless, Base.isequal, Base.show, Base.convert
+@reexport using PhysicalConstants.CODATA2018
 
 # Abstract model types
 abstract type NeXLAlgorithm end

@@ -1,10 +1,12 @@
 # Defines how various different algorithms are implemented
 import FFAST # for mass absorption coefficienct
 import BoteSalvatICX # For ionization crosssections
+import Unitful: @u_str, ustrip
+import PhysicalConstants.CODATA2018: PlanckConstant, SpeedOfLightInVacuum
 
-const plancksConstant = 4.135667696e-15 # eV s
-const hc = 1.23984193e-4 # eV cm (plancks⋅speed-of-light)
-const speedOfLight = 2.99792458e10 # cm/s
+const plancksConstant = ustrip(PlanckConstant |> u"eV*s")
+const hc = ustrip((PlanckConstant * SpeedOfLightInVacuum) |> u"eV*cm") # (plancks⋅speed-of-light)
+const speedOfLight = ustrip(SpeedOfLightInVacuum |> u"cm/s")
 
 const subshellnames = (
     "K",

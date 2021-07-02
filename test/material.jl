@@ -53,6 +53,14 @@ using NeXLCore
         @test a(n"Fe", k411) == a(n"Fe")
         @test a(n"Si", k411_2) == a(n"Si")
         @test a(n"Fe", k411_2) == a(n"Fe")
+
+        d411 = delete(k411, n"O")
+        @test d411[n"O"]==0.0
+        @test all(el->k411[el]==d411[el], keys(d411))
+        d411 = delete(k411, [ n"O", n"Fe" ])
+        @test d411[n"O"]==0.0
+        @test d411[n"Fe"]==0.0
+        @test all(el->k411[el]==d411[el], keys(d411))
     end
     @testset "Parse" begin
         albite = parse(Material, "AlNaSi3O8")

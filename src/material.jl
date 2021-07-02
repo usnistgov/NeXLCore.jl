@@ -21,8 +21,8 @@ Holds basic data about a material including name, composition in mass fraction a
 struct Material{U<:AbstractFloat,V<:AbstractFloat}
     name::String
     properties::Dict{Symbol,Any} # :Density, :Description, :Pedigree, :Conductivity, ... + user defined
-    massfraction::Dict{Int,U}
-    a::Dict{Int,V} # Optional: custom atomic weights for the keys in this Material
+    massfraction::Dict{Element,U}
+    a::Dict{Element,V} # Optional: custom atomic weights for the keys in this Material
     
     """
         Material(
@@ -34,8 +34,8 @@ struct Material{U<:AbstractFloat,V<:AbstractFloat}
     """
     function Material(
         name::AbstractString,
-        massfrac::Dict{Int,U},
-        atomicweights::Dict{Int,V} = Dict{Int,Float64}(),
+        massfrac::Dict{Element,U},
+        atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
         properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
     ) where {U<:AbstractFloat, V<:AbstractFloat}
         if sum(value.(values(massfrac))) > 10.0
@@ -45,19 +45,34 @@ struct Material{U<:AbstractFloat,V<:AbstractFloat}
     end
 end
 
-const NULL_MATERIAL = Material("Null Material",Dict{Int,Float64}())
+const NULL_MATERIAL = Material("Null Material",Dict{Element,Float64}())
+"""
+    rename(mat::Material, newname::AbstractString)
 
+Creates a replica of `mat` but with a new name.
+"""
 rename(mat::Material, newname::AbstractString) = Material(newname, mat.massfraction, mat.a, mat.properties)
 
 Base.copy(m::Material) =
     Material(m.name, copy(m.massfraction), copy(m.a), copy(m.properties))
 
-elms(mat::Material) = Set(element(z) for z in keys(mat.massfraction))
+"""
+    elms(mat::Material)
+
+The elements with mass fraction ≠ 0.0 in `mat`.
+"""
+elms(mat::Material) = keys(mat.massfraction)
+
+"""
+    ispure(mat::Material)
+
+Does `mat` represent a single element.
+"""
 ispure(mat::Material) = length(mat.massfraction)==1
 
 function Base.:*(k::AbstractFloat, mat::Material)::Material
-    mf = Dict((z, q * k) for (z, q) in mat.massfraction)
-    return Material("$(k)×$(mat.name)", mf, copy(mat.a), copy(mat.properties))
+    mf = Dict( el => q * k for (el, q) in mat.massfraction )
+    return Material("$(k)⋅$(mat.name)", mf, copy(mat.a), copy(mat.properties))
 end
 
 Base.isequal(m1::Material, m2::Material) =
@@ -88,8 +103,8 @@ Base.:+(mat1::Material, mat2::Material)::Material = sum(mat1, mat2)
 
 Construct a Material that represents the mass-fraction sum of mat1 and mat2. This function 
 is often used along with Base.:*(k::AbstractFloat, mat::Material)::Material to construct
-mixtures of compounds.  Ultimately, expressions like `mat"0.5*Al2O3+0.5*MgO"` are computed
-using `sum(...)`.
+mixtures of compounds.  Ultimately, expressions like `mat"0.5*Al2O3+0.5*MgO"` or equivalently
+`0.5*mat"Al2O3"+0.5*mat"MgO"` are computed using `sum(...)`.
 """
 function Base.sum(
     mat1::Material,
@@ -103,11 +118,10 @@ function Base.sum(
 )::Material
     plus(v1::AbstractFloat, v2::AbstractFloat) = 
         (σ(v1)==0.0)&&(σ(v2)==0.0) ? value(v1)+value(v2) : uv(value(v1)+value(v2),sqrt(σ(v1)^2+σ(v2)^2))
-    mf = Dict{Element,AbstractFloat}((elm, plus(mat1[elm], mat2[elm])) for elm in union(keys(mat1), keys(mat2)))
+    mf = Dict{Element,AbstractFloat}( elm => plus(mat1[elm], mat2[elm]) for elm in union(elms(mat1), elms(mat2)))
     aw = Dict{Element,Float64}()
-    for z in union(keys(mat1.a), keys(mat2.a))
-        elm = elements[z]
-        aw[elm] =
+    for elm in union(keys(mat1.a), keys(mat2.a))
+        aw[elm] = 
             (value(mat1[elm]) + value(mat2[elm])) / (value(mat1[elm]) / a(elm, mat1) + value(mat2[elm]) / a(elm, mat2))
     end
     name = ismissing(name) ? "$(mat1.name)+$(mat2.name)" : name
@@ -169,9 +183,21 @@ name(mat::Material) = mat.name
 
 Return the density in g/cm³ (Might be 'missing')
 """
-density(mat::Material) = property(mat, :Density)
-description(mat::Material) = property(mat, :Description)
-pedigree(mat::Material) = property(mat, :Pedigree)
+density(mat::Material) = mat[:Density]
+
+"""
+    description(mat::Materail)
+
+The :Description property.
+"""
+description(mat::Material) = mat[:Description]
+
+"""
+    pedigree(mat::Material)
+
+The :Pedigree property.
+"""
+pedigree(mat::Material) = mat[Pedigree]
 
 """
     atoms_per_cm³(mat::Material, elm::Element) =
@@ -186,9 +212,6 @@ Total number of atoms per cm³ for all elements in mat.
 atoms_per_cm³(mat::Material, elm::Element) =
     mat[:Density] * mat[elm] * 6.0221366516752e23 / a(elm, mat)
 atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat, elm) for elm in keys(mat))
-
-property(mat::Material, sym::Symbol) = get(mat.properties, sym, missing)
-
 
 """
     material(
@@ -229,9 +252,7 @@ function material(
     (!ismissing(description)) && ((props[:Description] = description) == description)
     (!ismissing(pedigree)) && ((props[:Pedigree] = pedigree) == pedigree)
     (!ismissing(conductivity)) && ((props[:Conductivity] = conductivity) == conductivity)
-    mf = Dict{Int,U}((z(elm), v) for (elm, v) in massfrac)
-    aw = Dict{Int,V}((z(elm), v) for (elm, v) in atomicweights)
-    return Material(name, mf, aw, props)
+    return Material(name, massfrac, atomicweights, props)
 end
 
 material(
@@ -278,8 +299,7 @@ function Base.show(io::IO, mat::Material)
     res = "$(name(mat))["
     res *= join(
         (
-            @sprintf("%s=%0.4f", element(z).symbol, value(mf)) for
-            (z, mf) in mat.massfraction
+            @sprintf("%s=%0.4f", elm.symbol, value(mf)) for (elm, mf) in mat.massfraction
         ),
         ",",
     )
@@ -319,17 +339,15 @@ end
 
 Get the atomic weight for the specified Element in the specified Material.
 """
-a(elm::Element, mat::Material) = get(mat.a, elm.number, a(elm))
+a(elm::Element, mat::Material) = get(mat.a, elm, a(elm))
 
-Base.getindex(mat::Material, elm::Element) =
-    get(mat.massfraction, elm.number, zero(eltype(values(mat.massfraction))))
-Base.getindex(mat::Material, z::Int) =
-    get(mat.massfraction, z, zero(eltype(values(mat.massfraction))))
+Base.getindex(mat::Material{U,V}, elm::Element) where {U<:AbstractFloat,V<:AbstractFloat} =
+    get(mat.massfraction, elm, zero(U))
+Base.getindex(mat::Material{U,V}, z::Int) where {U<:AbstractFloat,V<:AbstractFloat} =
+    get(mat.massfraction, elements[z], zero(U))
 
-Base.getindex(mat::Material, sym::Symbol) = property(mat, sym)
-
+Base.getindex(mat::Material, sym::Symbol) = getindex(mat.properties, sym)
 Base.get(mat::Material, sym::Symbol, def) = get(mat.properties, sym, def)
-
 Base.setindex!(mat::Material, val, sym::Symbol) = mat.properties[sym] = val
 
 nonneg(mat::Material, elm::Element) = max(0.0, value(mat[elm]))
@@ -342,10 +360,11 @@ are set to zero.
 """
 function normalizedmassfraction(mat::Material)::Dict{Element,AbstractFloat}
     n = analyticaltotal(mat)
-    return Dict((elm, nonneg(mat, elm) / n) for elm in keys(mat))
+    return Dict( elm => nonneg(mat, elm) / n for elm in keys(mat))
 end
 
 normalized(mat::Material, elm::Element) = nonneg(mat, elm) / analyticaltotal(mat)
+
 """
     asnormalized(mat::Material, n=1.0)::Material
 
@@ -360,7 +379,7 @@ function asnormalized(mat::Material, n = 1.0)
         else
             return Material(
                 "N[$(name(mat)),$(n)]",
-                Dict((z(elm), n * nonneg(mat, elm) / max(1.0e-8, at)) for elm in keys(mat)),
+                Dict( elm => n * nonneg(mat, elm) / max(1.0e-8, at) for elm in keys(mat)),
                 mat.a,
                 copy(mat.properties),
             )
@@ -389,22 +408,21 @@ end
 
 The mass fraction as a Dict{Element, AbstractFloat}
 """
-massfraction(mat::Material)::Dict{Element,AbstractFloat} =
-    Dict((element(z), mf) for (z, mf) in mat.massfraction)
+massfraction(mat::Material)::Dict{Element,AbstractFloat} = copy(mat.massfraction)
 
 """
-    keys(mat::Material)
+    Base.keys(mat::Material)
 
 Return an interator over the elements in the Material.
 """
-Base.keys(mat::Material) = (element(z) for z in keys(mat.massfraction))
+Base.keys(mat::Material) = keys(mat.massfraction)
 
 """
     labeled(mat::Material)
 
 Transform the mass fraction representation of a material into a Dict{MassFractionLabel,AbstractFloat}"""
 labeled(mat::Material) =
-    Dict((MassFractionLabel(name(mat), element(z)), mf) for (z, mf) in mat.massfraction)
+    Dict(MassFractionLabel(name(mat), elm) => mf for (elm, mf) in mat.massfraction)
 
 """
     atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
@@ -412,10 +430,8 @@ labeled(mat::Material) =
 Return the composition in atomic fraction representation.
 """
 function atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
-    norm = sum(mf / a(element(z), mat) for (z, mf) in mat.massfraction)
-    return Dict(
-        (element(z), (mf / a(element(z), mat)) / norm) for (z, mf) in mat.massfraction
-    )
+    norm = sum(mf / a(elm, mat) for (elm, mf) in mat.massfraction)
+    return Dict( elm => (mf / a(elm, mat)) / norm for (elm, mf) in mat.massfraction )
 end
 
 """
@@ -423,14 +439,16 @@ end
 
 Return the sum of the positive mass fractions.
 """
-analyticaltotal(mat::Material) = sum(nonneg(mat, elm) for elm in keys(mat))
+analyticaltotal(mat::Material) = sum(elm->nonneg(mat, elm), keys(mat))
 
 """
     haskey(mat::Material, elm::Element)
+    haskey(mat::Material, z::Int)
 
 Does this material contain this element?
 """
-Base.haskey(mat::Material, elm::Element) = haskey(mat.massfraction, z(elm))
+Base.haskey(mat::Material, elm::Element) = haskey(mat.massfraction, elm)
+Base.haskey(mat::Material, z::Int) = haskey(mat.massfraction, elements[z])
 
 """
     haskey(mat::Material, sym::Symbol)
@@ -438,7 +456,6 @@ Base.haskey(mat::Material, elm::Element) = haskey(mat.massfraction, z(elm))
 Does this material have this property defined?
 """
 Base.haskey(mat::Material, sym::Symbol) = haskey(mat.properties, sym)
-
 
 """
     atomicfraction(
@@ -486,7 +503,7 @@ function atomicfraction(
 ) where {U<:Real,V<:AbstractFloat}
     aw(elm) = get(atomicweights, elm, a(elm))
     norm = sum(af * aw(elm) for (elm, af) in atomfracs)
-    massfracs = Dict((elm, (aw(elm) / norm) * af) for (elm, af) in atomfracs)
+    massfracs = Dict(elm => (aw(elm) / norm) * af for (elm, af) in atomfracs)
     return material(
         name,
         massfracs;
@@ -537,9 +554,7 @@ function Base.parse(
 ) where {V<:AbstractFloat}
     # Parses expressions like SiO2, Al2O3 or other simple (element qty) phrases
     function parseCompH1(expr::AbstractString)::Dict{PeriodicTable.Element,Int}
-        parseSymbol(expr::AbstractString) =
-            findfirst(z -> isequal(elements[z].symbol, expr), eachindex(elements))
-        res = Dict{PeriodicTable.Element,Int}()
+        res = Dict{Element,Int}()
         start, idx = 1, collect(eachindex(expr))
         for i in eachindex(idx)
             if i < start
@@ -554,11 +569,11 @@ function Base.parse(
                 if (next > length(idx)) ||
                    isuppercase(expr[idx[next]]) ||
                    isdigitex(expr[idx[next]])
-                    z = parseSymbol(expr[idx[start]:idx[i]])
-                    if isnothing(z)
+                    elm = get(elements, Symbol(expr[idx[start]:idx[i]]), nothing)
+                    if isnothing(elm)
                         error("Unrecognized element parsing compound: $(expr[start:i])")
                     end
-                    elm, cx = elements[z], 1
+                    cx = 1
                     if (next <= length(idx)) && isdigitex(expr[idx[next]])
                         for stop = next:length(idx)
                             if (stop == length(idx)) || (!isdigitex(expr[idx[stop+1]]))
@@ -791,10 +806,11 @@ function NeXLUncertainties.asa(
     parsename = true,
     order = :massfraction,
 )
-    elms =
-        order == massfraction ? #
-        sort(collect(keys(mat)), lt = (e1, e2) -> mat[e1] > mat[e2]) :
+    elms = if order == :massfraction
+        sort(collect(keys(mat)), lt = (e1, e2) -> mat[e1] > mat[e2])
+    else
         sort(collect(keys(mat)))
+    end
     cstr = join(
         ["\\ce{$(symbol(elm))}:\\num{$(round(mat[elm], digits=4))}" for elm in elms],
         ", ",
@@ -842,7 +858,7 @@ compare(unks::AbstractVector{<:Material}, known::Material) =
 Compute the material MAC using the standard mass fraction weighted formula.
 """
 mac(mat::Material, xray::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
-    sum(zc->mac(elements[zc[1]], xray, alg) * value(zc[2]), mat.massfraction) 
+    sum(zc->mac(zc[1], xray, alg) * value(zc[2]), mat.massfraction) 
 mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
     mac(mat, energy(xray), alg)
 
@@ -907,17 +923,15 @@ end
 
 Computes the mean atomic number for a material. (Naive algorithm.)
 """
-z(mat::Material) = sum(c * z for (z, c) in mat.massfraction)
+z(mat::Material) = sum(c * z(elm) for (elm, c) in mat.massfraction)
 
 
 """
-    z(mat::Material)
-
+    a(mat::Material)
 
 Computes the mean atomic weight for a material. (Naive algorithm.)
 """
-a(mat::Material) =
-    sum(haskey(mat.a, z) ? mat.a[z] : c * a(elements[z]) for (z, c) in mat.massfraction)
+a(mat::Material) = sum(c * a(elm, mat) for (elm, c) in mat.massfraction)
     
 
 """
@@ -930,20 +944,20 @@ the result won't have uncertainties.  This is because even a single value with
 zero uncertainty will poison the variance weighted mean (produce a NaN).
 """
 function Statistics.mean(mats::AbstractArray{<:Material})
-    zs = mapreduce(m->elms(m), union!, mats)
+    els = mapreduce(m->keys(m), union!, mats, init=Set{Element}())
     nm = if length(mats)>5
         "mean[$(name(mats[1])) + $(length(mats)-1) others]"
     else
         "mean[$(join(name.(mats), ", "))]"
     end
-    function mm(z)
-        return if all(σ(mat[z]) > 0.0 for mat in mats)
-            mean(UncertainValue[uv(mat[z]) for mat in mats])
+    function mm(el)
+        return if all(σ(mat[el]) > 0.0 for mat in mats)
+            mean(UncertainValue[uv(mat[el]) for mat in mats])
         else
-            mean(Float64[value(mat[z]) for mat in mats])
+            mean(Float64[value(mat[el]) for mat in mats])
         end
     end
-    return material(nm, (z=>mm(z) for z in zs)...)
+    return material(nm, Dict(el=>mm(el) for el in els))
 end
 
 """
@@ -974,9 +988,28 @@ be defined as `UncertainValue`s.
 function Base.similar(mat::Material{UncertainValue, <:AbstractFloat}, n::Integer)::Vector{Material{UncertainValue,Float64}}
     return [ material(
         "Like[$(name(mat)), $i]", 
-        Dict(z=>uv(value(mat[z])+(1.0-2.0*Base.rand())*σ(mat[z]), (0.9+0.2*Base.rand()*σ(mat[z]))) 
-            for z in keys(mat))
+        Dict(el=>uv(value(mat[el])+(1.0-2.0*Base.rand())*σ(mat[el]), (0.9+0.2*Base.rand()*σ(mat[el]))) 
+            for el in keys(mat))
     ) for i in 1:n ]
 end
 
+"""
+    delete(mat::Material, elm::Element)::Material
+    delete(mat::Material, elm::AbstractVector{Element})::Material
 
+Constructs a new Material from `mat` with `elm` removed.
+"""
+function delete(mat::Material, elm::Element)
+    res = copy(mat)
+    delete!(res.massfraction, elm)
+    delete!(res.a, elm)
+    return res
+end
+function delete(mat::Material, els::AbstractVector{Element})
+    res = copy(mat)
+    for elm in els
+        delete!(res.massfraction, elm)
+        delete!(res.a, elm)
+    end
+    return res
+end

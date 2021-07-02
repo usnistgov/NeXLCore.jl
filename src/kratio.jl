@@ -120,43 +120,18 @@ Base.show(io::IO, kr::KRatio) =
     print(io, "k[$(name(kr.xrays)), $(name(kr.standard))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    xrays, e0u = String[], Float64[]
-    e0s, toau, toas, mat = Float64[], Float64[], Float64[], String[]
-    celm, dcelm, krv, dkrv = Float64[], Float64[], Float64[], Float64[]
-    for kr in krs
-        push!(xrays, repr(kr.xrays))
-        push!(mat, name(kr.standard))
-        push!(e0u, get(kr.unkProps, :BeamEnergy, -1.0))
-        push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))
-        push!(e0s, get(kr.stdProps, :BeamEnergy, -1.0))
-        push!(toas, get(kr.stdProps, :TakeOffAngle, -1.0))
-        push!(celm, value(kr.standard[kr.element]))
-        push!(dcelm, σ(kr.standard[kr.element]))
-        push!(krv, value(kr.kratio))
-        push!(dkrv, σ(kr.kratio))
-    end
-    res = DataFrame(
-        Xrays = xrays,
-        Standard = mat,
-        Cstd = celm,
-        ΔCstd = dcelm,
-        E0unk = e0u,
-        θunk = toau,
-        E0std = e0s,
-        θstd = toas,
-        k = krv,
-        Δk = dkrv,
+    return DataFrame(
+        Symbol("X-rays") => [ repr(kr.xrays) for kr in krs ],
+        Symbol("Standard") => [ name(kr.standard) for kr in krs ],
+        Symbol("C[std]") => [ value(kr.standard[kr.element]) for kr in krs ],
+        Symbol("ΔC[std]") => [ σ(kr.standard[kr.element]) for kr in krs ],
+        Symbol("E₀[unk]") => [ get(kr.unkProps, :BeamEnergy, missing) for kr in krs ],
+        Symbol("θ[unk]") => [ get(kr.unkProps, :TakeOffAngle, missing) for kr in krs ],
+        Symbol("E₀[std]") => [ get(kr.stdProps, :BeamEnergy, missing) for kr in krs ],
+        Symbol("θ[std]") => [ get(kr.stdProps, :TakeOffAngle, missing) for kr in krs ],
+        Symbol("k") => [ value(kr.kratio) for kr in krs ],
+        Symbol("Δk") => [ σ(kr.kratio) for kr in krs ],
     )
-    rename!(
-        res,
-        "E0std" => "E₀[std]",
-        "E0unk" => "E₀[unk]",
-        "θunk" => "θ[unk]",
-        "θstd" => "θ[std]",
-        "Cstd" => "C[std]",
-        "ΔCstd" => "ΔC[std]",
-    )
-    return res
 end
 
 """

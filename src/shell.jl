@@ -229,7 +229,7 @@ j(ss::SubShell) = (
 )[ss.index]
 
 function NeXLUncertainties.asa(::Type{DataFrame}, vss::AbstractVector{SubShell})
-    css = sort(vss)
+    css = sort(vss, rev=true)
     return DataFrame(
         SubShell = css,
         Shell = shell.(css),
@@ -424,8 +424,6 @@ end
 
 atomicsubshells(
     ss::SubShell,
-    maxE = 1.0e6,
-    eety::Type{<:NeXLAlgorithm} = FFASTDB,
 )::Vector{AtomicSubShell} =
     [atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
 

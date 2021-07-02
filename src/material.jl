@@ -727,31 +727,17 @@ material name, element abbreviation, atomic number, atomic weight, mass fraction
 normalized mass fraction, and atomic fraction. Rows for each element in mat.
 """
 function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
-    res = DataFrame(
-        Material = Vector{String}(),
-        Element = Vector{String}(),
-        Z = Vector{Int}(),
-        A = Vector{AbstractFloat}(),
-        MassFrac = Vector{AbstractFloat}(),
-        NormMass = Vector{AbstractFloat}(),
-        AtomFrac = Vector{AbstractFloat}(),
+    af, nmf = atomicfraction(mat), normalizedmassfraction(mat)
+    els = sort(collect(keys(mat)))
+    return DataFrame(
+        "Material" => [ name(mat) for _ in els ],
+        "Element" => [ el.symbol for el in els ],
+        "Z" => [ z(el) for el in els ],
+        "A" => [ a(el, mat) for el in els ],
+        "C(z)" => [ mat[el] for el in els ],
+        "Norm[C(z)]" => [ nmf[el] for el in els ],
+        "A(z)" => [ af[el] for el in els ]
     )
-    af, tot = atomicfraction(mat), analyticaltotal(mat)
-    for elm in sort(collect(keys(mat)))
-        push!(
-            res,
-            (
-                name(mat),
-                symbol(elm),
-                z(elm),
-                a(elm, mat),
-                mat[elm],
-                mat[elm] / tot,
-                af[elm],
-            ),
-        )
-    end
-    return res
 end
 
 """
@@ -823,47 +809,26 @@ end
 Compare two compositions in a DataFrame.
 """
 function compare(unk::Material, known::Material)::DataFrame
-    um, km, z, kmf, rmf, dmf = Vector{String}(),
-    Vector{String}(),
-    Vector{String}(),
-    Vector{Float64}(),
-    Vector{Float64}(),
-    Vector{Float64}()
-    fmf, kaf, raf, daf, faf = Vector{Float64}(),
-    Vector{Float64}(),
-    Vector{Float64}(),
-    Vector{Float64}(),
-    Vector{Float64}()
     afk, afr = atomicfraction(known), atomicfraction(unk)
-    for elm in union(keys(known), keys(unk))
-        push!(um, name(unk))
-        push!(km, name(known))
-        push!(z, elm.symbol)
-        push!(kmf, known[elm])
-        push!(rmf, value(unk[elm]))
-        push!(dmf, value(known[elm]) - value(unk[elm]))
-        push!(fmf, (value(known[elm]) - value(unk[elm])) / value(known[elm]))
-        push!(kaf, value(get(afk, elm, 0.0)))
-        push!(raf, value(get(afr, elm, 0.0)))
-        push!(daf, value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0)))
-        push!(
-            faf,
-            100.0 * (value(get(afk, elm, 0.0)) - value(get(afr, elm, 0.0))) /
-            value(get(afk, elm, 0.0)),
-        )
-    end
+    els = union(keys(known), keys(unk) )
     return DataFrame(
-        Unkown = um,
-        Known = km,
-        Elm = z,
-        Cknown = kmf,
-        Cresult = rmf,
-        ΔC = dmf,
-        ΔCoC = fmf,
-        Aknown = kaf,
-        Aresult = raf,
-        ΔA = daf,
-        ΔAoA = faf,
+        Symbol("Material 1") => [ name(unk) for _ in els ],
+        Symbol("Material 2") => [ name(known) for _ in els ],
+        Symbol("Elm") => [ symbol(el) for el in els ],
+        Symbol("C₁(z)") => [ known[el] for el in els ],
+        Symbol("C₂(z)") => [ value(unk[el]) for el in els ],
+        Symbol("ΔC") => [ value(known[el]) - value(unk[el]) for el in els ],
+        Symbol("ΔC/C") => map(els) do el
+             (value(known[el]) - value(unk[el])) / #
+              max(value(known[el]),value(unk[el]))
+        end,
+        Symbol("A₁(z)") => [ value(get(afk, el, 0.0)) for el in els ],
+        Symbol("A₂(z)") => [ value(get(afr, el, 0.0)) for el in els ],
+        Symbol("ΔA") => [ value(get(afk, el, 0.0)) - value(get(afr, el, 0.0)) for el in els ],
+        Symbol("ΔA/A") => map(els)  do el
+            (value(get(afk, el, 0.0)) - value(get(afr, el, 0.0))) / #
+             max(value(get(afk, el, 0.0)),value(get(afr, el, 0.0))) 
+        end
     )
 end
 

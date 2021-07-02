@@ -3,7 +3,7 @@ using Dierckx
 """
     a₀ : Bohr radius (in cm)
 """
-const a₀ = 5.29e-9 # cm = 0.529 Å
+const a₀ = ustrip(BohrRadius |> u"cm") # 0.529 Å
 
 
 """
@@ -54,7 +54,7 @@ struct Browning1991 <: ScreenedRutherfordType end
   * E in eV
 """
 function ξ(::Type{<:ScreenedRutherfordType}, elm::Element, E::Float64)::Float64
-    Rₑ, mc² = 13.605693, 0.510998950e6 # eV 
+    Rₑ, mc² = ustrip((PlanckConstant * SpeedOfLightInVacuum * RydbergConstant) |> u"eV"), ustrip(ElectronMass * SpeedOfLightInVacuum^2 |> u"eV")
     return 0.5 * π * a₀^2 * (4.0 * z(elm) * ((E + mc²) / (E + 2.0 * mc²)) * (Rₑ / E))^2 # As corrected in Liljequist1989
 
 end

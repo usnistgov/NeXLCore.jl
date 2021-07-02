@@ -24,6 +24,6 @@ using NeXLCore
     @test isapprox(σₜ(Liljequist1989, n"Au", 100000.0), 0.630 * NeXLCore.a₀^2, atol = 0.001) # 0.692
 
     @test isapprox(Rₐ(n"Po"), 0.1208 * 1.0e-8, atol = 0.0001 * 1.0e-8)
-    @test isapprox(Rₐ(n"H"), 0.529 * 1.0e-8, atol = 0.0001 * 1.0e-8)
+    @test isapprox(Rₐ(n"H"), 0.5292 * 1.0e-8, atol = 0.0001 * 1.0e-8)
     @test isapprox(Rₐ(n"Fe"), 0.1786 * 1.0e-8, atol = 0.0001 * 1.0e-8)
 end

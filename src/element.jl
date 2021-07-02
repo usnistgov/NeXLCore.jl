@@ -19,9 +19,9 @@ element(z::Integer) = PeriodicTable.elements[z]
 """
     a(elm::Element)
 
-Return the mean atomic weight of the Element.
+Return the mean atomic weight of the Element in amu
 """
-a(elm::Element) = elm.atomic_mass / 1.0u"u"
+a(elm::Element) = ustrip(elm.atomic_mass |> u"u")
 
 """
     z(elm::Element)
@@ -47,6 +47,6 @@ name(elm::Element) = elm.name
 """
     density(elm::Element)
 
-Return the nominal density for the element.
+Return the nominal density for the element in g/cm³.
 """
-density(elm::Element) = elm.density / 1.0u"g/cm^3"
+density(elm::Element) = ustrip(elm.density |> u"g/cm^3")

@@ -36,10 +36,10 @@ using NeXLCore
     @test isapprox(mix[n"Fe"], 0.0774196, atol = 0.0001)
 
 
-    ox = sum(asoxide(filter(elm->elm[1]!=n"O", massfraction(srm470_k412))), name="K412")
+    ox = sum(asoxide(massfraction(delete(srm470_k412, n"O"))), name="K412")
     @test all(isapprox(ox[elm], srm470_k412[elm], atol=1.0e-8) for elm in keys(srm470_k412))
 
-    ox = sum(asoxide(filter(elm->elm[1]!=n"O", massfraction(srm470_k411))), name="K411")
+    ox = sum(asoxide(massfraction(delete(srm470_k411, [ n"O" ]))), name="K411")
     @test all(isapprox(ox[elm], srm470_k411[elm], atol=1.0e-8) for elm in keys(srm470_k411))
 
     m=sum(asoxide(n"Al"=>0.1029, n"Na"=>0.0877, n"Si"=>0.3213), name="Albite", density=5.0, description="a common mineral", pedigree="Natural")

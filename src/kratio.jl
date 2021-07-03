@@ -1,6 +1,7 @@
 using NeXLUncertainties
 using NeXLCore
 using Colors
+using ImageCore: colorview
 using Statistics
 
 """
@@ -119,43 +120,18 @@ Base.show(io::IO, kr::KRatio) =
     print(io, "k[$(name(kr.xrays)), $(name(kr.standard))] = $(round(kr.kratio))")
 
 function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    xrays, e0u = String[], Float64[]
-    e0s, toau, toas, mat = Float64[], Float64[], Float64[], String[]
-    celm, dcelm, krv, dkrv = Float64[], Float64[], Float64[], Float64[]
-    for kr in krs
-        push!(xrays, repr(kr.xrays))
-        push!(mat, name(kr.standard))
-        push!(e0u, get(kr.unkProps, :BeamEnergy, -1.0))
-        push!(toau, get(kr.unkProps, :TakeOffAngle, -1.0))
-        push!(e0s, get(kr.stdProps, :BeamEnergy, -1.0))
-        push!(toas, get(kr.stdProps, :TakeOffAngle, -1.0))
-        push!(celm, value(kr.standard[kr.element]))
-        push!(dcelm, σ(kr.standard[kr.element]))
-        push!(krv, value(kr.kratio))
-        push!(dkrv, σ(kr.kratio))
-    end
-    res = DataFrame(
-        Xrays = xrays,
-        Standard = mat,
-        Cstd = celm,
-        ΔCstd = dcelm,
-        E0unk = e0u,
-        θunk = toau,
-        E0std = e0s,
-        θstd = toas,
-        k = krv,
-        Δk = dkrv,
+    return DataFrame(
+        Symbol("X-rays") => [ repr(kr.xrays) for kr in krs ],
+        Symbol("Standard") => [ name(kr.standard) for kr in krs ],
+        Symbol("C[std]") => [ value(kr.standard[kr.element]) for kr in krs ],
+        Symbol("ΔC[std]") => [ σ(kr.standard[kr.element]) for kr in krs ],
+        Symbol("E₀[unk]") => [ get(kr.unkProps, :BeamEnergy, missing) for kr in krs ],
+        Symbol("θ[unk]") => [ get(kr.unkProps, :TakeOffAngle, missing) for kr in krs ],
+        Symbol("E₀[std]") => [ get(kr.stdProps, :BeamEnergy, missing) for kr in krs ],
+        Symbol("θ[std]") => [ get(kr.stdProps, :TakeOffAngle, missing) for kr in krs ],
+        Symbol("k") => [ value(kr.kratio) for kr in krs ],
+        Symbol("Δk") => [ σ(kr.kratio) for kr in krs ],
     )
-    rename!(
-        res,
-        "E0std" => "E₀[std]",
-        "E0unk" => "E₀[unk]",
-        "θunk" => "θ[unk]",
-        "θstd" => "θ[std]",
-        "Cstd" => "C[std]",
-        "ΔCstd" => "ΔC[std]",
-    )
-    return res
 end
 
 """
@@ -273,3 +249,48 @@ Returns a new KRatios (referencing same basic data as krs) but with a single Cha
 """
 brightest(krs::KRatios) = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )
 brightest(krs::KRatio) = KRatio([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratio )
+
+"""
+    colorize(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element, normalize=:All[|:Each])
+    colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, normalize=:All)
+
+Create RGB colorized images from up to three `Element`s.  The elements
+are normalized relative to all `KRatios` in `krs`. The resulting images are scaled by the factor
+`scale` to allow visualization of trace elements.
+"""
+function colorize(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element, normalize=:All)
+    colorize(krs, [red, green, blue], normalize)
+end
+function colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, normalize=:All)
+    idx  = collect( findfirst(kr->isequal(kr.element, elm), krs) for elm in elms )
+    if normalize==:All
+        # Normalize relative to sum of KRatios at each point
+        s = map(CartesianIndices(krs[1])) do ci
+            ss = sum( max(0.0, kr.kratios[ci]) for kr in krs)
+            ss<=0.0 ? 1.0 : ss
+        end
+        clip(skr) = min(skr, 1.0)
+        norm(kr) = clip.(kr.kratios ./ s)
+        colorview(RGB, 
+            norm(krs[idx[1]]), 
+            length(idx)>1 ? norm(krs[idx[2]]) : zeroarray, 
+            length(idx)>2 ? norm(krs[idx[3]]) : zeroarray)
+    else
+        # Normalize relative to max of each KRatios independently
+        each(kr) = kr.kratios / maximum(kr.kratios)
+        colorview(RGB, 
+            each(krs[idx[1]]), 
+            length(idx)>1 ? each(krs[idx[2]]) : zeroarray, 
+            length(idx)>2 ? each(krs[idx[3]]) : zeroarray)
+    end
+end
+
+function Base.getindex(krs::AbstractVector{KRatios}, elm::Element)
+    colorize(krs, [ elm, elm, elm ])
+end
+function Base.getindex(krs::AbstractVector{KRatios}, red::Element, green::Element)
+    colorize(krs, [ red, green ])
+end
+function Base.getindex(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element)
+    colorize(krs, [ red, green, blue ])
+end

@@ -1,51 +1,21 @@
 # Defines how various different algorithms are implemented
 import FFAST # for mass absorption coefficienct
 import BoteSalvatICX # For ionization crosssections
+import Unitful: @u_str, ustrip
+import PhysicalConstants.CODATA2018: PlanckConstant, SpeedOfLightInVacuum
 
-const plancksConstant = 4.135667696e-15 # eV s
-const hc = 1.23984193e-4 # eV cm (plancks⋅speed-of-light)
-const speedOfLight = 2.99792458e10 # cm/s
+const plancksConstant = ustrip(PlanckConstant |> u"eV*s")
+const hc = ustrip((PlanckConstant * SpeedOfLightInVacuum) |> u"eV*cm") # (plancks⋅speed-of-light)
+const speedOfLight = ustrip(SpeedOfLightInVacuum |> u"cm/s")
 
 const subshellnames = (
     "K",
-    "L1",
-    "L2",
-    "L3",
-    "M1",
-    "M2",
-    "M3",
-    "M4",
-    "M5",
-    "N1",
-    "N2",
-    "N3",
-    "N4",
-    "N5",
-    "N6",
-    "N7",
-    "O1",
-    "O2",
-    "O3",
-    "O4",
-    "O5",
-    "O6",
-    "O7",
-    "O8",
-    "O9",
-    "P1",
-    "P2",
-    "P3",
-    "P4",
-    "P5",
-    "P6",
-    "P7",
-    "P8",
-    "P9",
-    "P10",
-    "P11",
-    "Q1",
-    "Q2",
-    "Q3",
+    ( "L$i" for i in 1:3 )...,
+    ( "M$i" for i in 1:5 )...,
+    ( "N$i" for i in 1:7 )...,
+    ( "O$i" for i in 1:9 )...,
+    ( "P$i" for i in 1:11 )...,
+    ( "Q$i" for i in 1:3 )...
 )
 """
     subshellindex(ss::AbstractString)

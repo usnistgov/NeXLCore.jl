@@ -6,9 +6,7 @@ using LinearAlgebra
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
-@reexport using PhysicalConstants
-
-# using Base.isless, Base.isequal, Base.show, Base.convert
+@reexport using PhysicalConstants.CODATA2018
 
 # Abstract model types
 abstract type NeXLAlgorithm end
@@ -92,6 +90,7 @@ export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
 export atoms_per_cm³ # Returns the number of atoms in one cm² of the Material
 export @mat_str
+export delete # Create a new Material with certain elements removed
 
 include("film.jl")
 export Film # A thin film of Material
@@ -204,6 +203,7 @@ export KRatio # Represents a measured intensity ratio
 export KRatios # The array equivalent of KRatio
 export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
+export colorize # Colorize a X-ray 
 #export strip # Removes one or more elements from a Vector{KRatio}
 
 include("properties.jl")

@@ -220,7 +220,7 @@ using NeXLCore
         @test analyticaltotal(m) == 1.0
         lm = labeled(m)
         @test all(
-            e -> lm[MassFractionLabel("N[0.8×Fe+0.15×Ni+0.04×Cr,1.0]", e)] == m[e],
+            el -> lm[MassFractionLabel("N[0.8⋅Fe+0.15⋅Ni+0.04⋅Cr,1.0]", el)] == m[el],
             keys(m),
         )
         @test haskey(m, n"Fe")

@@ -87,7 +87,6 @@ Base.hash(m::Material, h::UInt) =
 
 Base.:+(mat1::Material, mat2::Material)::Material = sum(mat1, mat2)
 
-
 """
     Base.sum(
         mat1::Material,
@@ -768,9 +767,7 @@ function NeXLUncertainties.asa(
     mats::AbstractArray{<:Material},
     mode = :MassFraction,
 )
-    elms =
-        length(mats) == 1 ? collect(keys(mats[1])) :
-        Base.convert(Vector{Element}, sort(reduce(union, keys.(mats)))) # array of sorted Element
+    elms = sort(collect(union(keys.(mats)...))) # array of sorted Element
     cols = (Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
     empty = NamedTuple{cols}(
         map(c -> c == :Material ? Vector{String}() : Vector{AbstractFloat}(), cols),
@@ -826,7 +823,7 @@ Compare two compositions in a DataFrame.
 """
 function compare(unk::Material, known::Material)::DataFrame
     afk, afr = atomicfraction(known), atomicfraction(unk)
-    els = union(keys(known), keys(unk) )
+    els = collect(union(keys(known), keys(unk) ))
     return DataFrame(
         Symbol("Material 1") => [ name(unk) for _ in els ],
         Symbol("Material 2") => [ name(known) for _ in els ],

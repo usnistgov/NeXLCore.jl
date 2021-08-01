@@ -203,9 +203,9 @@ function Base.rand(
     E::Float64,
 )::NTuple{3,Float64}
     elm′, λ′ = elements[119], 1.0e308
-    for (i, z) in enumerate(keys(mat.massfraction))
-        l = -λ(ty, mat, elements[z], E) * log(rand())
-        (elm′, λ′) = l < λ′ ? (elements[z], l) : (elm′, λ′)
+    for (i, z) in enumerate(keys(mat))
+        l = -λ(ty, mat, z, E) * log(rand())
+        (elm′, λ′) = l < λ′ ? (z, l) : (elm′, λ′)
     end
     @assert elm′ != elements[119] "Are there any elements in $mat?  Is the density ($(mat[:Density])) too low?"
     return (λ′, rand(ty, elm′, E), 2.0 * π * rand())

@@ -29,10 +29,15 @@ You can add a similar argument to `obystoichiometry(...)` also.
 
 There is a second usage of `asoxide(...)` when a dictionary is provided.  This calculates a mixture of oxides from the
 mass fraction of each constituent oxide.  The results is a dictionary that maps the oxide to the mass-fractions of that oxide.
-This may be passed to the `sum(...)` function to produce a `Material` datum.
+This is intended to be used when you have measured the mass fraction of all elements except O and want to know how
+much oxygen is in the sample. 
 ```julia
-k412=sum(asoxide(n"Mg"=>0.1933,n"Al"=>0.0927,n"Si"=>0.4535,n"Ca"=>0.1525,n"Fe"=>0.0996), name="K412")
-k411=sum(asoxide(n"Mg"=>0.1467,n"Si"=>0.5430,n"Ca"=>0.1547,n"Fe"=>0.1442), name="K411")
+asoxide(n"Al"=>0.0491,n"Ca"=>0.1090,n"Fe"=>0.0774,n"Mg"=>0.1166,n"Si"=>0.2120)
+```
+The result may be passed to the `sum(...)` function to produce a `Material` datum.
+```julia
+k412=sum(asoxide(n"Al"=>0.0491,n"Ca"=>0.1090,n"Fe"=>0.0774,n"Mg"=>0.1166,n"Si"=>0.2120), name="K412")
+k411=sum(asoxide(n"Mg"=>0.0885,n"Si"=>0.2538,n"Ca"=>0.1106,n"Fe"=>0.1122), name="K411")
 ENV["Columns"]=160
 using DataFrames
 vcat(asa(DataFrame, k411),asa(DataFrame, k412))

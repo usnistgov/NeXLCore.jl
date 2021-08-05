@@ -3,6 +3,7 @@
 *.jl.mem
 /docs/build/
 /docs/src/figures/*
+/figures/*
 Manifest.toml
 /src/Artifacts.toml
 /weave/*.html

@@ -44,6 +44,7 @@ export characteristic # Constructs CharXRay
 export inner, outer  # Returns AtomiShell for inner and outer CharXRay
 export a  # Atomic weight
 export z # Atomic number
+export atomic_weight # Atomic weights with uncertainties / intervals according to https://ciaaw.org/atomic-weights.htm
 export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name
 export energy # Returns CharXRay and AtomicSubShell eneries

@@ -3,6 +3,7 @@ using Random
 using NeXLCore
 
 @testset "NeXLCore Tests" begin
+    include("element.jl")
     include("xray.jl")
     include("material.jl")
     include("stoichiometry.jl")

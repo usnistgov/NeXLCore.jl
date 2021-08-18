@@ -108,6 +108,11 @@ nonnegk(kr::KRatio) = value(kr.kratio) < 0.0 ? uv(0.0, σ(kr.kratio)) : kr.krati
 Statistics.mean(krs::AbstractVector{KRatio})::UncertainValue =
     mean((kr.kratio for kr in krs)...)
 
+function Base.getindex(krs::AbstractVector{KRatio}, cxr::CharXRay)
+    i = findfirst(kr->cxr in kr.xrays, krs)
+    return isnothing(i) ? zero(UncertainValue) : krs[i].kratio
+end
+
 """
     strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}
 

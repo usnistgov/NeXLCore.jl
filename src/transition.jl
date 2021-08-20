@@ -637,15 +637,6 @@ macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Uncer
     macU(elm, energy, alg)
 
 
-"""
-    comptonShift(θ::AbstractFloat, energy::AbstractFloat)
-
-Calculates the fractional shift of an x-ray of the specified energy scattered at the specified angle.
-"""
-comptonShift(θ::AbstractFloat, energy::AbstractFloat) =
-    1.0 / (1.0 + ((energy / 0.511e6) * (1.0 - cos(θ))))
-
-
 struct DTSA <: NeXLAlgorithm end
 
 """

@@ -67,11 +67,16 @@ export brightest # Returns the brightest characteristic X-ray from a set of tran
 export splitbyshell # Creates a Dict{AtomicSubShell,CharXRay} from a collection of CharXRay and the associated inner AtomicSubShell.
 export relativeionizationcrosssection # Computes a number proportional to the ionization crosssection
 export ionizationcrosssection # Computes the absolute ionization crosssection
-export comptonShift # Computes the fractional compton shift
 export exists # Does a transition occur (according to our list...)
 export @n_str # Parses a string into an Element, SubShell, AtomicSubShell, Transition or CharXRay
 export @enx_str # Energy of a atomic sub-shell or characteristic X-ray in string form
 export Bote2009
+
+include("compton.jl")
+export comptonAngular # Computes the angular distribution of Compton 
+export comptonShift # Computes the fractional Compton shift
+export comptonEnergy # Computes the resulting Compton-shifted X-ray energy
+export comptonDifferential # Computes the differential Compton cross-section
 
 include("material.jl")
 export material # Construct a Material struct

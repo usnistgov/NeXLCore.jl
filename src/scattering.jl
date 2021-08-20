@@ -246,3 +246,5 @@ function Base.rand(ty::Type{Browning1994}, elm::Element, E::Float64)::Float64
     α, R = 7.0e-3 / (0.001 * E), rand()
     return acos(1.0 - 2.0 * α * R / (1.0 + α - R))
 end
+
+

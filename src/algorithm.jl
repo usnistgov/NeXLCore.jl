@@ -1,6 +1,4 @@
 # Defines how various different algorithms are implemented
-import FFAST # for mass absorption coefficienct
-import BoteSalvatICX # For ionization crosssections
 import Unitful: @u_str, ustrip
 import PhysicalConstants.CODATA2018: PlanckConstant, SpeedOfLightInVacuum
 
@@ -8,132 +6,193 @@ const plancksConstant = ustrip(PlanckConstant |> u"eV*s")
 const hc = ustrip((PlanckConstant * SpeedOfLightInVacuum) |> u"eV*cm") # (plancks⋅speed-of-light)
 const speedOfLight = ustrip(SpeedOfLightInVacuum |> u"cm/s")
 
-const subshellnames = (
-    "K",
-    ( "L$i" for i in 1:3 )...,
-    ( "M$i" for i in 1:5 )...,
-    ( "N$i" for i in 1:7 )...,
-    ( "O$i" for i in 1:9 )...,
-    ( "P$i" for i in 1:11 )...,
-    ( "Q$i" for i in 1:3 )...
-)
-"""
-    subshellindex(ss::AbstractString)
-
-Map sub-shell names ("K","L1", ...,"P11") to an integer index ("K"==1,"L1"==2, etc).
-"""
-subshellindex(ssname::AbstractString) = findfirst(name -> ssname == name, subshellnames)
-
-struct FFASTDB <: NeXLAlgorithm end
+# Define the default algorithms for various pieces of X-ray physics data.
 
 """
-    mac(elm::Element, energy::Float64, ::Type{FFASTDB})::Float64
+    edgeenergy(z::Int, ss::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64
+    edgeenergy(cxr::CharXRay, ::Type{<:NeXLAlgorithm}=FFASTDB)
 
-Compute the mass absorption coefficient for the specified energy X-ray (in eV) in the specified element (z=> atomic number).
+Return the minimum energy (in eV) necessary to ionize the specified sub-shell in the specified atom
+or the ionized shell for the specified characteristic X-ray.
 """
-mac(elm::Element, energy::Float64, ::Type{FFASTDB})::Float64 =
-    FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
+edgeenergy(z::Int, ss::Int)::Float64 = 
+    edgeenergy(z, ss, FFASTDB)
+edgeenergy(cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
+    edgeenergy(cxr.z, cxr.transition.innershell.index, alg)
 
 
 """
-    macU(elm::Element, energy::Float64, ::Type{FFASTDB})::UncertainValue
+     energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
+     energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
 
-Compute the mass absorption coefficient (with estimate of uncertainty) for the specified energy X-ray (in eV) in the specified
-element (z=> atomic number).
+ The edge energy in eV for the specified AtomicSubShell
+
+Example:
+
+    julia> energy(n"Fe L3")
+    708.0999999999999
+    julia> energy(n"Fe", n"L3")
+    708.0999999999999
+
+    energy(elm::Element, tr::Transition)::Float64
+    energy(cxr::CharXRay)
+
+The characteristic X-ray energy for the specified element / transition or characteristic X-ray.
 """
-function macU(elm::Element, energy::Float64, ::Type{FFASTDB})::UncertainValue
-    macv = FFAST.mac(FFAST.PhotoElectricMAC, z(elm), energy)
-    return uv(
-        macv,
-        min(FFAST.fractionaluncertainty(FFAST.SolidLiquid, z(elm), energy)[1], 0.9) * macv,
+energy(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    edgeenergy(ass.z, ass.subshell.index, alg)
+energy(elm::Element, ss::SubShell, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    edgeenergy(z(elm), ss.index, alg)
+energy(elm::Element, tr::Transition, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
+    energy(z(elm), tr.innershell.index, tr.outershell.index, alg)
+energy(cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) = energy(
+        cxr.z, 
+        cxr.transition.innershell.index,
+        cxr.transition.outershell.index,
+        alg
     )
-end
+    
 
 """
-    edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64
-
-Return the minimum energy (in eV) necessary to ionize the specified sub-shell in the specified atom.
-"""
-edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 = FFAST.edgeenergy(z, ss)
-edgeenergy(z::Int, ss::Int) = edgeenergy(z, ss, FFASTDB)
-
-"""
-    eachelement() = 1:92
+    eachelement(alg::Type{<:NeXLAlgorithm} = FFASTDB)
 
 Return the range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data
 """
-eachelement(::Type{FFASTDB}) = FFAST.eachelement()
 eachelement() = eachelement(FFASTDB)
+
 """
-    subshellsindexes(z::Int)
+    strength(cxr::CharXRay)::Float64
+
+The fraction of ionizations of `inner(cxr)` that relax via a characteristic X-ray resulting
+from an electronic transition from `outer(cxr)` to `inner(cxr)`.
+
+See also `weight(cxr)`.
+"""
+strength(cxr::CharXRay)::Float64 = strength(element(cxr), cxr.transition, CullenEADL)
+
+
+"""
+    subshellsindexes(z::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)
 
 Return the shells occupied in a neutral, ground state atom of the specified atomic number.
 """
-subshellsindexes(z::Int, ::Type{FFASTDB}) = FFAST.eachedge(z)
-subshellsindexes(z::Int) = subshellsindexes(z::Int, FFASTDB)
+subshellsindexes(z::Int) = subshellsindexes(z, FFASTDB)
 
-
-"""
-    characteristicXRayEnergy(z::Int, inner::Int, outer::Int)::Float64
-
-Return energy (in eV) of the transition by specified inner and outer sub-shell index.
-"""
-characteristicXRayEnergy(z::Int, inner::Int, outer::Int, ::Type{FFASTDB})::Float64 =
-    FFAST.edgeenergy(z, inner) - FFAST.edgeenergy(z, outer)
-
-struct Bote2009 <: NeXLAlgorithm end
-
-"""
-    ionizationcrosssection(z::Int, shell::Int, energy::AbstractFloat, ::Type{Bote2009})
-
-Compute the absolute ionization crosssection (in cm²) for the specified element, shell and
-electon energy (in eV).
-"""
-ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009}) =
-    BoteSalvatICX.hasedge(z, ss) ?
-    BoteSalvatICX.ionizationcrosssection(
-        z,
-        ss,
-        energy,
-        NeXLCore.edgeenergy(z, ss, FFASTDB),
-    ) : 0.0
-ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
-    ionizationcrosssection(z, ss, energy, Bote2009)
 
 """
     jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) =
 
 Compute the jump ratio.
 """
-jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) = FFAST.jumpratio(z, ss)
-
-include("strength.jl")
-
-struct NeXL <: NeXLAlgorithm end
+jumpratio(z::Int, ss::Int) = jumpratio(z, ss, FFAST)
 
 """
-    fluorescenceyield(z::Int, inner::Int, outer::Int)::Float64
+    mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64
+    mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64
+
+The mass absorption coefficient for an X-ray of the specified energy (eV) or
+characteristic X-ray line in the specified element.  In cm²/g.
+"""
+mac(elm::Element, energy::Float64)::Float64 =
+    mac(elm, energy, FFASTDB)
+mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 =
+    mac(elm, energy(cxr), alg)
+
+
+"""
+    macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)
+    macU(elm::Element, cxr::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue
+    macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue
+
+The mass absorption coefficient (with uncertainty estimate) for an X-ray of the specified energy (eV) 
+or characteristix X-ray line in the specified element.
+"""
+macU(elm::Element, energy::Float64)::UncertainValue =
+    macU(elm, energy, FFASTDB)
+macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::UncertainValue =
+    macU(elm, energy(cxr), alg)
+
+"""
+    fluorescenceyield(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
 
 The fraction of `inner` sub-shell ionizations that relax via a characteristic X-ray resulting from an
 electronic transition from `outer` to `inner`.
 """
-fluorescenceyield(z::Int, inner::Int, outer::Int, ::Type{NeXL})::Float64 =
-    nexlTotalWeight(z, inner, inner, outer)
+fluorescenceyield(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
+    totalWeight(z, inner, inner, outer, alg)
 
 """
-    characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int)::Float64
+    characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
 
 The fraction of `ionized` sub-shell ionizations that relax via a characteristic X-ray resulting from an
 electronic transition from `outer` to `inner`.  This includes both direct transitions (where `outer`==`ionized`)
 and cascade (where `outer` != `ionized` due to Coster-Kronig and previous decays.)
 """
-characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{NeXL})::Float64 =
-    nexlTotalWeight(z, ionized, inner, outer)
+characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
+    totalWeight(z, ionized, inner, outer, alg)
 
 """
-    characteristicXRayAvailable(z::Int, inner::Int, outer::Int)::Float64
+    characteristicXRayAvailable(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
 
 Is the weight associated with this transition greater than zero?
 """
-charactericXRayAvailable(z::Int, inner::Int, outer::Int, ::Type{NeXL})::Bool =
-    nexlIsAvailable(z, inner, outer)
+charactericXRayAvailable(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Bool =
+    isAvailable(z, inner, outer, alg)
+
+"""
+    ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2009)
+    ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat)
+
+Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
+electon energy (in eV) using the default algorithm.
+
+Example:
+
+    julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
+    0.5672910174711278
+"""
+ionizationcrosssection(
+    ass::AtomicSubShell,
+    energy::AbstractFloat,
+    ty::Type{<:NeXLAlgorithm} = Bote2009,
+) = ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
+ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
+    ionizationcrosssection(z, ss, energy, Bote2009)
+
+    """
+    strength(elm::Element, tr::Transition)::Float64
+
+Return the nominal line strenth for the specified transition in the specified element.
+The strength differs from the weight by the fluorescence yield.  Assumes an overvoltage of 4.0
+"""
+strength(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
+    ionizationfraction(z(elm), tr.innershell.index, 4.0) *
+    fluorescenceyield(z(elm), tr.innershell.index, tr.outershell.index, ty)
+
+
+"""
+    fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
+
+The fraction of relaxations from the specified shell that decay via radiative transition
+rather than electronic (Auger) transition.  Does not include Coster-Kronig
+"""
+fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64 = sum(map(
+    s -> fluorescenceyield(ass.z, ass.subshell.index, s, alg),
+    ass.subshell.index+1:length(allsubshells),
+))
+
+"""
+    fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
+
+The fraction of relaxations from the specified shell that decay via radiative transition
+rather than electronic (Auger) transition.  Includes Coster-Kronig
+"""
+function fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
+    f(ss) = sum(map(
+        s -> fluorescenceyield(ass.z, ass.subshell.index, s, alg),
+        ss.index+1:length(allsubshells),
+    ))
+    return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
+end
+
+fluorescenceyieldcc(ass::AtomicSubShell) = fluorescenceyieldcc(ass, CullenEADL)

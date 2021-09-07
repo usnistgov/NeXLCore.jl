@@ -9,57 +9,18 @@ using CSV
 # When the atom finally returns to the ground state, it could have emitted zero or more x-rays and
 # zero or more Augers.  A K shell vacancy could relax via L3 which could relax via M5 and so on.
 
+struct CullenEADL <: NeXLAlgorithm end
+
 function loadAltWeights()
     nn = (
         1, # Shell index
-        2,
-        2,
-        2,
-        3,
-        3,
-        3,
-        3,
-        3,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        4,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        5,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        6,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-        7,
-    )
+        (2 for _ in 1:3)...,
+        (3 for _ in 1:5)...,
+        (4 for _ in 1:7)...,
+        (5 for _ in 1:9)...,
+        (6 for _ in 1:11)...,
+        (7 for _ in 1:13)...
+    ) # = collect(Iterators.flatten(collect(i for _ in 1:(2i-1)) for i in 1:7 ))
     trans = Dict{Tuple{Int,Int},Int}()
     xrw = Dict{Tuple{Int,Int},Dict{Tuple{Int,Int},Float64}}()
     for row in CSV.File(joinpath(dirname(pathof(@__MODULE__)), "..", "data", "relax.csv"))
@@ -97,23 +58,23 @@ end
 const transitions, xrayweights = loadAltWeights()
 
 """
-    nexlTotalWeight(z::Int, ionized::Int, inner::Int, outer::Int)
+    totalWeight(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{CullenEADL})
 
 The line weight for the transition `(inner,outer)` which results from an ionization of `ionized`.
 """
-function nexlTotalWeight(z::Int, ionized::Int, inner::Int, outer::Int)
+function totalWeight(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{CullenEADL})
     trs = get(xrayweights, (z, ionized), nothing)
     return isnothing(trs) ? 0.0 : get(trs, (inner,outer), 0.0)
 end
 
 """
-    nexlAllTotalWeights(z::Int, ionized::Int)
+    allTotalWeights(z::Int, ionized::Int)
 
 Returns a Vector containing tuples `(inner, outer, weight)` for each transition which could
 result when the specified shell is ionized.
 """
-nexlAllTotalWeights(z::Int, ionized::Int)::Dict{Tuple{Int,Int},Float64} =
+allTotalWeights(z::Int, ionized::Int, ::Type{CullenEADL})::Dict{Tuple{Int,Int},Float64} =
     get(xrayweights, (z, ionized), Dict{Tuple{Int,Int},Float64}())
 
-nexlIsAvailable(z::Int, inner::Int, outer::Int) =
-    nexlTotalWeight(z, inner, inner, outer) > 0.0
+isAvailable(z::Int, inner::Int, outer::Int, ::Type{CullenEADL}) =
+    totalWeight(z, inner, inner, outer, CullenEADL) > 0.0

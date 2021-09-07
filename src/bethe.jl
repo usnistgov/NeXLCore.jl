@@ -58,6 +58,7 @@ function dEds(
         dEds(ty, e, el, ρ, mip) * mat[el]
     end
 end
+
 """
     range(::Type{BetheEnergyLoss}, mat::Material, e0::Float64, inclDensity = true)
 

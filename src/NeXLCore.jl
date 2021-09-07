@@ -12,11 +12,15 @@ using LinearAlgebra
 abstract type NeXLAlgorithm end
 export NeXLAlgorithm
 
-include("algorithm.jl")
+include("ffast.jl")
+include("botesalvat.jl")
+include("cullen_eadl.jl")
 include("element.jl")
 include("shell.jl")
 include("transition.jl")
+include("characteristic.jl")
 include("parse.jl")
+include("algorithm.jl")
 
 export element # Construct Element structs
 export eachelement # Elements for which there is a complete set of data :-(
@@ -167,7 +171,7 @@ export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
 export Burhop1965 # A fluorescence yield model
-export NeXL
+export CullenEADL
 export fluorescenceyield # fluorescence yield models
 export characteristicyield
 

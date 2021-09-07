@@ -51,6 +51,16 @@ Base.hash(ss::SubShell, h::UInt)::UInt = hash(ss.index, h)
 Base.isequal(sh1::SubShell, sh2::SubShell) = sh1.index == sh2.index
 Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Outer to inner, approx E order
 
+const subshellnames = (
+    "K",
+    ( "L$i" for i in 1:3 )...,
+    ( "M$i" for i in 1:5 )...,
+    ( "N$i" for i in 1:7 )...,
+    ( "O$i" for i in 1:9 )...,
+    ( "P$i" for i in 1:11 )...,
+    ( "Q$i" for i in 1:3 )...
+)
+
 """
     allsubshells
 
@@ -363,31 +373,7 @@ atom of the specified element?
 """
 has(elm::Element, ss::SubShell) = ss.index in subshellsindexes(z(elm))
 
-"""
-     energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
 
- The edge energy in eV for the specified AtomicSubShell
-
-Example:
-
-    julia> energy(n"Fe L3")
-    708.0999999999999
- """
-energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
-    NeXLCore.edgeenergy(ass.z, ass.subshell.index, ty)
-
-"""
-    energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
-
-The edge energy in eV for the specified atomic sub-shell
-
-Example:
-
-   julia> energy(n"Fe", n"L3")
-   708.0999999999999
-"""
-energy(elm::Element, ss::SubShell, ty::Type{<:NeXLAlgorithm} = FFASTDB)::Float64 =
-    NeXLCore.edgeenergy(z(elm), ss.index, ty)
 
 """
      atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
@@ -429,24 +415,6 @@ atomicsubshells(
 
 z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)
-
-"""
-    ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2009)
-
-Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
-electon energy (in eV) using the default algorithm.
-
-Example:
-
-    julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
-    0.5672910174711278
-"""
-ionizationcrosssection(
-    ass::AtomicSubShell,
-    energy::AbstractFloat,
-    ty::Type{<:NeXLAlgorithm} = Bote2009,
-) = ionizationcrosssection(ass.z, ass.subshell.index, energy, ty)
-
 
 function NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSubShell})
     cva = sort(vass)
@@ -601,31 +569,27 @@ end
 meanfluorescenceyield(elm::Element, sh::Shell) =
     meanfluorescenceyield(elm, sh, Bambynek1972)
 
-"""
-    fluorescenceyield(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64
-
-The fraction of relaxations from the specified shell that decay via radiative transition
-rather than electronic (Auger) transition.  Does not include Coster-Kronig
-"""
-fluorescenceyield(ass::AtomicSubShell, ::Type{NeXL})::Float64 = sum(map(
-    s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL),
-    ass.subshell.index+1:length(allsubshells),
-))
-
-fluorescenceyield(ass::AtomicSubShell) = fluorescenceyield(ass, NeXL)
-
-"""
-    fluorescenceyieldcc(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=NeXL)::Float64
-
-The fraction of relaxations from the specified shell that decay via radiative transition
-rather than electronic (Auger) transition.  Includes Coster-Kronig
-"""
-function fluorescenceyieldcc(ass::AtomicSubShell, ::Type{NeXL})::Float64
-    f(ss) = sum(map(
-        s -> fluorescenceyield(ass.z, ass.subshell.index, s, NeXL),
-        ss.index+1:length(allsubshells),
-    ))
-    return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
+function ionizationfraction(z::Int, sh::Int, over = 4.0)
+    @assert (sh >= 1) && (sh <= 16) "Shell index out of 1:16 in ionizationfraction."
+    function relativeTo(z, sh)
+        nn = (1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4)
+        # Find the largest available shell in shell
+        return findlast(ss -> (nn[ss] == nn[sh]) && FFAST.hasedge(z, ss), eachindex(nn))
+    end
+    rel = relativeTo(z, sh)
+    @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
+    ee = over * NeXLCore.edgeenergy(z, rel)
+    return rel == sh ? 1.0 :
+           ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
 end
 
-fluorescenceyieldcc(ass::AtomicSubShell) = fluorescenceyieldcc(ass, NeXL)
+const __maxWeights = Dict{AtomicSubShell, Float64}()
+
+function maxweight(ass::AtomicSubShell)
+    if !haskey(__maxWeights, ass)
+        safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
+        __maxWeights[ass] = maximum(safeSS(element(ass), tr2) for tr2 in transitionsbyshell[shell(ass)])
+    end
+    return __maxWeights[ass]
+end
+

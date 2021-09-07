@@ -102,7 +102,7 @@ using NeXLCore
  
         # Check that these funtions are defined for all available AtomicSubShell
         @test all(energy.(atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(fluorescenceyield.(atomicsubshells(el), NeXL) ≠ 0.0 for el in elements[eachelement()])
+        @test all(fluorescenceyield.(atomicsubshells(el), CullenEADL) ≠ 0.0 for el in elements[eachelement()])
         @test all(map(sh->ionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
         @test all(map(sh->relativeionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
         @test all(all(map(ass->parse(AtomicSubShell,repr(ass)) == ass, atomicsubshells(el))) for el in elements[eachelement()])
@@ -190,9 +190,9 @@ using NeXLCore
         @test firstsubshell(Shell(2)) == n"L1"
         @test lastsubshell(Shell(2)) == n"L3"
         @test eachelement() == 1:92
-        @test NeXLCore.characteristicyield(20, 1, 4, 9, NeXL) == 0.0
+        @test NeXLCore.characteristicyield(20, 1, 4, 9, CullenEADL) == 0.0
         @test isapprox(
-            NeXLCore.characteristicyield(25, 1, 4, 9, NeXL),
+            NeXLCore.characteristicyield(25, 1, 4, 9, CullenEADL),
             0.0007828,
             atol = 0.0000001,
         )

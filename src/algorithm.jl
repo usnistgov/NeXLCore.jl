@@ -95,9 +95,16 @@ characteristic X-ray line in the specified element.  In cm²/g.
 """
 mac(elm::Element, energy::Float64)::Float64 =
     mac(elm, energy, FFASTDB)
-mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 =
-    mac(elm, energy(cxr), alg)
 
+const userMacs = Dict{Tuple{Element, CharXRay}, Float64}()
+mac(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64 =
+    get(userMacs, (elm, cxr), mac(elm, energy(cxr), alg))
+set_user_mac!(elm::Element, cxr::CharXRay, mac::Float64) = 
+    userMacs[(elm, cxr)]=mac
+delete_user_mac!(elm::Element, cxr::CharXRay) = 
+    delete!(userMacs, (elm, cxr))
+clear_user_macs!() = 
+    empty!(userMacs)
 
 """
     macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)
@@ -194,5 +201,3 @@ function fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=Cul
     ))
     return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
 end
-
-fluorescenceyieldcc(ass::AtomicSubShell) = fluorescenceyieldcc(ass, CullenEADL)

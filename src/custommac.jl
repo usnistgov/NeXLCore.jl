@@ -1,6 +1,11 @@
 
 """
-Implements a user-customizable set of mass-absorption cofficients.
+Implements tabulated MACs from various literature sources including
+`Henke1974`, `Henke1982`, `Bastin1988`, `Bastin1989`, `Henke1993`,
+`Bastin1997`, `Ruste1979`, `Kohlhaas1970`, `Weisweiler1975`, 
+`Bastin1990`, `Poml2020`, `Ruste1975`, `Farthing1990` and `Sabbatucci2016`.
+
+The custom MACs are stored in the file `data/specialmacs.csv`.
 """
 struct CustomMAC <: NeXLAlgorithm end
 
@@ -22,8 +27,8 @@ let custommacs = nothing
     end
 end
 
-getcustommac(elm::Element, cxr::CharXRay, model::Symbol) =
-    get(getcustommacs(), (model, z(elm), cxr), missing)
+mac(elm::Element, cxr::CharXRay, model::Symbol, def = missing) =
+    get(getcustommacs(), (model, z(elm), cxr), def)
 
 function getcustommacs(
     model::Symbol,
@@ -47,39 +52,11 @@ function getcustommacs(
 end
 
 
-mac(
-    elm::Element,
-    cxr::CharXRay,
-    ::Type{CustomMAC};
-    alg = :Bastin1989,
-)::Union{Missing,Float64} = getcustommac(elm, cxr, alg)
-
-struct UserMAC <: NeXLAlgorithm end
-
-let usermacs = Dict{Tuple{Int,CharXRay},Float64}()
-    global addusermac(elm::Element, cxr::CharXRay, mac::Float64) =
-        usermacs[(z(elm), cxr)] = mac
-
-    global function mac(elm::Element, cxr::CharXRay, ::Type{UserMAC})
-        um = get(usermacs, (z(elm), cxr), missing)
-        return ismissing(um) ? mac(elm, cxr) : um
+function NeXLUncertainties.asa(::Type{DataFrame}, ::Type{CustomMAC}, model::Symbol)
+    macs = getcustommacs()
+    df = DataFrame(Element=String[], CharXRay=CharXRay[], MAC=Float64[])
+    for key in filter(k -> k[1] == model, keys(macs))
+        push!(df, (symbol(elements[key[2]]), key[3], macs[key]))
     end
-
-    global function clearusermacs()
-        empty!(usermacs)
-    end
-
-    global function NeXLUncertainties.asa(df::Type{DataFrame}, ::Type{UserMAC})::DataFrame
-        elms = [elements[key[1]] for (key, mac) in usermacs]
-        cxrs = [key[2] for (key, mac) in usermacs]
-        macs = [mac for (key, mac) in usermacs]
-        return DataFrame(Elements = elms, Characteristic = cxrs, MAC = macs)
-    end
-
-    global getusermacs() = usermacs
+    return df
 end
-
-addcustommacs(model::Symbol, withsimilar = true) =
-    foreach(mac -> addusermac(mac...), getcustommacs(model, withsimilar))
-
-mac(elm::Element, energy::Float64, ::Type{UserMAC}) = mac(elm, energy)

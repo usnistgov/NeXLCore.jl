@@ -12,15 +12,15 @@ using LinearAlgebra
 abstract type NeXLAlgorithm end
 export NeXLAlgorithm
 
-include("ffast.jl")
-include("botesalvat.jl")
-include("cullen_eadl.jl")
-include("element.jl")
-include("shell.jl")
-include("transition.jl")
-include("characteristic.jl")
-include("parse.jl")
-include("algorithm.jl")
+include("ffast.jl") # Algorithms implemented in FFAST.jl
+include("botesalvat.jl") # Algorithms implemented in BoteSalvat.jl
+include("cullen_eadl.jl") # Data from Cullen's Evaluated Atomic Data Library
+include("element.jl") # Element data from PeriodicTable.jl
+include("shell.jl") # Atomic shell methods
+include("transition.jl") # Atomic transition methods
+include("characteristic.jl") # Characteristic X-ray methods
+include("parse.jl") # Parse elements, shells, transitions from strings
+include("algorithm.jl") # Default implementation of algorithms
 
 export element # Construct Element structs
 export eachelement # Elements for which there is a complete set of data :-(
@@ -63,6 +63,9 @@ export FFASTDB # Chantler's FFAST database
 export DTSA   # Heinrich's IXCOM 11 MACs
 export mac # Calculates the MAC using the default or a specified algorithm
 export macU # Calculates the MAC using the default or a specified algorithm
+export set_user_mac! # Specify a custom user mac
+export delete_user_mac! # Delete a specific user mac
+export clear_user_macs! # Clear all user macs
 export shell # The shell (Shell(K),Shell(L),Shell(M),...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition Shell to lists of Transition(s)
 export transitionsbysubshell # Dictionary mapping transition SubShell to lists of Transition(s)
@@ -224,12 +227,7 @@ export requiredbutmissing # Lists missing properties
 
 include("custommac.jl")
 export CustomMAC  # Tied to "data\specialmacs.csv"
-export UserMAC # Allows the user to specify which MACs to use for specific elements while defaulting to the default algorithm otherwise.
-export addusermac # Specify a mac for an element and characteristic x-ray
-export clearusermacs # Reset user macs
-export getcustommac # Retrieve a specific custom MAC value
 export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke1982, :Bastin19XX, etc. (see specialmacs.csv))
-export addcustommacs # Adds custom macs to user macs
 
 include("materials.jl")
 export loadsmithsoniandata, parsedsmithsoniandata
@@ -239,7 +237,6 @@ export srm470_k411, srm470_k412
 include("palettes.jl")
 export Log3BandC, Log3Band, LogScale, LinearScale # Converts [0.0,1.0] to a colored image.
 export loadlegend # Load a legend for one of the above scales
-
 
 include("mc.jl")
 include("mchelpers.jl")

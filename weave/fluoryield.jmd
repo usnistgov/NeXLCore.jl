@@ -11,7 +11,7 @@ function plotyields(sss::SubShell...)
   for ss in sss
     for ass in atomicsubshells(ss)
       push!(x, z(element(ass)))
-      push!(y,fluorescenceyield(ass, NeXLCore.NeXL))
+      push!(y,fluorescenceyield(ass, CullenEADL))
       push!(c,repr(ss))
     end
   end

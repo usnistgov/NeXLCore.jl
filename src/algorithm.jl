@@ -1,4 +1,6 @@
-# Defines how various different algorithms are implemented
+# Define the default algorithms for various pieces of X-ray physics data.
+# If you want to change the default data that NeXL uses, make the change in here.
+
 import Unitful: @u_str, ustrip
 import PhysicalConstants.CODATA2018: PlanckConstant, SpeedOfLightInVacuum
 
@@ -6,7 +8,6 @@ const plancksConstant = ustrip(PlanckConstant |> u"eV*s")
 const hc = ustrip((PlanckConstant * SpeedOfLightInVacuum) |> u"eV*cm") # (plancks⋅speed-of-light)
 const speedOfLight = ustrip(SpeedOfLightInVacuum |> u"cm/s")
 
-# Define the default algorithms for various pieces of X-ray physics data.
 
 """
     edgeenergy(z::Int, ss::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64

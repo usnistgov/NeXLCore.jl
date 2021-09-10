@@ -44,7 +44,7 @@ julia> e1, e2, e3 = n"Ca", elements[20], parse(Element, "Pu")
 (Element(Calcium), Element(Calcium), Element(Plutonium))
 
 julia> es = [ n"Ca", n"21", n"Ti", n"Vanadium" ]
-4-element Array{Element,1}:
+4-element Vector{Element}:
  Element(Calcium)
  Element(Scandium)
  Element(Titanium)
@@ -89,7 +89,7 @@ As you can see, each element comes with many different properties which can be a
 `PeriodicTable` uses [`Unitful`](https://github.com/PainterQubits/Unitful.jl) to provide physical units for quantities.
 ```julia
 julia> fieldnames(Element)
-(:name, :appearance, :atomic_mass, :boil, :category, :color, :density, :discovered_by, :el_config, :melt, :molar_heat, :named_by, :number, :period, :phase, :source, :spectral_img, :summary, :symbol, :xpos, :ypos, :shells)
+(:name, :appearance, :atomic_mass, :boil, :category, :color, :cpk_hex, :density, :discovered_by, :el_config, :melt, :molar_heat, :named_by, :number, :period, :phase, :source, :spectral_img, :summary, :symbol, :xpos, :ypos, :shells)
 
 julia> e1.name, name(e1)
 ("Calcium", "Calcium")
@@ -122,19 +122,23 @@ To get the mass fraction's out index the object with an element.  All the `Eleme
 via `keys(...)`.
 ```julia
 julia> albite = mat"AlNaSi3O8"
-AlNaSi3O8[Al=0.1029,Si=0.3213,Na=0.0877,O=0.4881]
+AlNaSi3O8[Al=0.1029,Na=0.0877,Si=0.3213,O=0.4881]
 
 julia> albite[n"Al"], albite[n"Na"], albite[n"Tc"]
 (0.10289723395373596, 0.08767415772881798, 0.0)
 
 julia> keys(albite) # keys(...) for consistency with other Julia objects
-Base.Generator{Base.KeySet{Int64,Dict{Int64,AbstractFloat}},typeof(element)}(NeXLCore.element, [13, 14, 11, 8])
+KeySet for a Dict{Element, Float64} with 4 entries. Keys:
+  Element(Aluminium)
+  Element(Sodium)
+  Element(Silicon)
+  Element(Oxygen)
 
 julia> collect(keys(albite)) # Now maybe this is a little more clear
-4-element Array{Element,1}:
+4-element Vector{Element}:
  Element(Aluminium)
- Element(Silicon)
  Element(Sodium)
+ Element(Silicon)
  Element(Oxygen)
 
 julia> a(n"Na", albite)
@@ -148,7 +152,7 @@ mat = mat"0.8*Fe+0.15*Ni+0.05*Cr"
 ```
 
 ```
-0.8×Fe+0.15×Ni+0.05×Cr[Fe=0.8000,Ni=0.1500,Cr=0.0500]
+0.8⋅Fe+0.15⋅Ni+0.05⋅Cr[Fe=0.8000,Cr=0.0500,Ni=0.1500]
 ```
 
 
@@ -159,7 +163,7 @@ There are more sophisticated ways to create materials with additional properties
 created a richer definition of albite.
 ```julia
 julia> albite = parse(Material, "AlNaSi3O8", name="Albite", density=2.60, atomicweights=Dict(n"Na"=>23.0))
-Albite[Al=0.1029,Si=0.3213,Na=0.0877,O=0.4881,2.60 g/cm³]
+Albite[Al=0.1029,Na=0.0877,Si=0.3213,O=0.4881,2.60 g/cm³]
 
 julia> all(e->a(e)==a(e,albite), keys(albite)) # Not all are default
 false
@@ -168,7 +172,7 @@ julia> a(n"Na", albite),  a(n"O", albite)
 (23.0, 15.999)
 
 julia> ss = parse(Material, "0.8*Fe+0.15*Ni+0.05*Cr", name="Stainless", density=7.5)
-Stainless[Fe=0.8000,Ni=0.1500,Cr=0.0500,7.50 g/cm³]
+Stainless[Fe=0.8000,Cr=0.0500,Ni=0.1500,7.50 g/cm³]
 
 julia> ss[n"Fe"], density(ss), name(ss)
 (0.8, 7.5, "Stainless")
@@ -183,7 +187,7 @@ Alternatively, I could have built albite in terms of atom fractions.  Note that 
 because the assumed atomic weight of sodium is different.
 ```julia
 julia> albite2 = atomicfraction("Albite", n"Al"=>1, n"Na"=>1, n"Si"=>3, n"O"=>8, properties=Dict{Symbol,Any}(:Density=>2.6), atomicweights=Dict(n"Na"=>22.0))
-Albite[Al=0.1033,Si=0.3225,Na=0.0842,O=0.4900,2.60 g/cm³]
+Albite[Al=0.1033,Na=0.0842,Si=0.3225,O=0.4900,2.60 g/cm³]
 ```
 
 ```julia
@@ -193,14 +197,13 @@ asa(DataFrame, albite2)
 
 ```
 4×7 DataFrame
- Row │ Material  Element  Z      A          MassFrac   NormMass   AtomFrac
-     │ String    String   Int64  Abstract…  Abstract…  Abstract…  Abstract…
+ Row │ Material  Element  Z      A        C(z)       Norm[C(z)]  A(z)
+     │ String    String   Int64  Float64  Float64    Float64     Float64
 ─────┼─────────────────────────────────────────────────────────────────────
-─
-   1 │ Albite    O            8    15.999   0.489962   0.489962   0.615385
-   2 │ Albite    Na          11    22.0     0.0842174  0.0842174  0.0769231
-   3 │ Albite    Al          13    26.9815  0.103287   0.103287   0.0769231
-   4 │ Albite    Si          14    28.085   0.322534   0.322534   0.230769
+   1 │ Albite    O            8  15.999   0.489962    0.489962   0.615385
+   2 │ Albite    Na          11  22.0     0.0842174   0.0842174  0.0769231
+   3 │ Albite    Al          13  26.9815  0.103287    0.103287   0.0769231
+   4 │ Albite    Si          14  28.085   0.322534    0.322534   0.230769
 ```
 
 
@@ -210,25 +213,25 @@ asa(DataFrame, albite2)
 There are many methods for transforming representation of the composition.
 ```julia
 julia> ss = parse(Material,"0.78*Fe+0.15*Ni+0.04*Cr",name="Stainless")
-Stainless[Fe=0.7800,Ni=0.1500,Cr=0.0400]
+Stainless[Fe=0.7800,Cr=0.0400,Ni=0.1500]
 
 julia> analyticaltotal(ss)
 0.9700000000000001
 
 julia> atomicfraction(ss)
-Dict{Element,AbstractFloat} with 3 entries:
+Dict{Element, AbstractFloat} with 3 entries:
   Element(Iron)     => 0.807719
-  Element(Nickel)   => 0.147793
   Element(Chromium) => 0.0444878
+  Element(Nickel)   => 0.147793
 
 julia> normalizedmassfraction(ss)
-Dict{Element,AbstractFloat} with 3 entries:
+Dict{Element, AbstractFloat} with 3 entries:
   Element(Iron)     => 0.804124
-  Element(Nickel)   => 0.154639
   Element(Chromium) => 0.0412371
+  Element(Nickel)   => 0.154639
 
 julia> asnormalized(ss)
-N[Stainless,1.0][Fe=0.8041,Ni=0.1546,Cr=0.0412]
+N[Stainless,1.0][Fe=0.8041,Cr=0.0412,Ni=0.1546]
 ```
 
 ```julia
@@ -237,18 +240,18 @@ compare(ss, asnormalized(ss))
 
 ```
 3×11 DataFrame
- Row │ Unkown     Known             Elm     Cknown     Cresult  ΔC         
- ΔCoC     Aknown     Aresult    ΔA           ΔAoA
-     │ String     String            String  Float64    Float64  Float64    
- Float64  Float64    Float64    Float64      Float64
+ Row │ Material 1  Material 2        Elm     C₁(z)      C₂(z)    ΔC        
+  ΔC/C     A₁(z)      A₂(z)      ΔA           ΔA/A
+     │ String      String            String  Float64    Float64  Float64   
+  Float64  Float64    Float64    Float64      Float64
 ─────┼─────────────────────────────────────────────────────────────────────
-─────────────────────────────────────────────────────────
-   1 │ Stainless  N[Stainless,1.0]  Fe      0.804124      0.78  0.0241237  
-    0.03  0.807719   0.807719   2.22045e-16  2.74903e-14
-   2 │ Stainless  N[Stainless,1.0]  Ni      0.154639      0.15  0.00463918 
-    0.03  0.147793   0.147793   5.55112e-17  3.75601e-14
-   3 │ Stainless  N[Stainless,1.0]  Cr      0.0412371     0.04  0.00123711 
-    0.03  0.0444878  0.0444878  2.08167e-17  4.67919e-14
+──────────────────────────────────────────────────────────
+   1 │ Stainless   N[Stainless,1.0]  Fe      0.804124      0.78  0.0241237 
+     0.03  0.807719   0.807719   0.0          0.0
+   2 │ Stainless   N[Stainless,1.0]  Cr      0.0412371     0.04  0.00123711
+     0.03  0.0444878  0.0444878  6.93889e-18  1.55973e-16
+   3 │ Stainless   N[Stainless,1.0]  Ni      0.154639      0.15  0.00463918
+     0.03  0.147793   0.147793   2.77556e-17  1.87801e-16
 ```
 
 
@@ -259,13 +262,13 @@ It is also possible to define materials using `NeXLUncertainties.UncertainValue`
 full uncertainty calculation to perform transforms since this handles correlated quantities correctly.
 ```julia
 julia> ss=material("Stainless",n"Fe"=>uv(0.79,0.01),n"Ni"=>uv(0.15,0.003),n"Cr"=>uv(0.04,0.002))
-Stainless[Fe=0.7900,Ni=0.1500,Cr=0.0400]
+Stainless[Fe=0.7900,Cr=0.0400,Ni=0.1500]
 
 julia> ss[n"Fe"]
-0.79 ± 0.01
+0.790 ± 0.010
 
 julia> atomicfraction(ss)[n"Fe"]
-0.8097 ± 0.01
+0.810 ± 0.010
 ```
 
 
@@ -286,7 +289,27 @@ julia> NeXLCore.n(ss), NeXLCore.l(ss), NeXLCore.j(ss)
 (2, 1, 3//2)
 
 julia> allsubshells
-(K, L1, L2, L3, M1, M2, M3, M4, M5, N1, N2, N3, N4, N5, N6, N7, O1, O2, O3, O4, O5, O6, O7, O8, O9, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, Q1, Q2, Q3)
+39-element Vector{SubShell}:
+ K
+ L1
+ L2
+ L3
+ M1
+ M2
+ M3
+ M4
+ M5
+ N1
+ ⋮
+ P6
+ P7
+ P8
+ P9
+ P10
+ P11
+ Q1
+ Q2
+ Q3
 
 julia> ksubshells, lsubshells, msubshells, nsubshells
 ((K,), (L1, L2, L3), (M1, M2, M3, M4, M5), (N1, N2, N3, N4, N5, N6, N7))
@@ -386,12 +409,12 @@ julia> feka1, fela = n"Fe K-L3", n"Fe L3-M5"
 (Fe K-L3, Fe L3-M5)
 
 julia> feka = characteristic(n"Fe",kalpha) # Filters kalpha to produce only those CharXRay that exist for Fe
-2-element Array{CharXRay,1}:
+2-element Vector{CharXRay}:
  Fe K-L2
  Fe K-L3
 
 julia> fekb = characteristic(n"Fe",kbeta)
-4-element Array{CharXRay,1}:
+4-element Vector{CharXRay}:
  Fe K-M2
  Fe K-M3
  Fe K-M4
@@ -403,17 +426,17 @@ julia> fekb = characteristic(n"Fe",kbeta)
 Some properties of characteristic X-rays:
 ```julia
 julia> inner.(feka)
-2-element Array{AtomicSubShell,1}:
+2-element Vector{AtomicSubShell}:
  Fe K
  Fe K
 
 julia> outer.(feka)
-2-element Array{AtomicSubShell,1}:
+2-element Vector{AtomicSubShell}:
  Fe L2
  Fe L3
 
 julia> transition.(feka)
-2-element Array{Transition,1}:
+2-element Vector{Transition}:
  K-L2
  K-L3
 
@@ -429,12 +452,12 @@ true
 Let's extract some energy-related properties from these objects.  Of course, it is in eV.
 ```julia
 julia> energy.(feka) # The x-ray energy
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  6390.9
  6403.9
 
 julia> edgeenergy.(feka) # ionization edge energy
-2-element Array{Float64,1}:
+2-element Vector{Float64}:
  7112.0
  7112.0
 ```
@@ -444,7 +467,7 @@ julia> edgeenergy.(feka) # ionization edge energy
 Often we want to know the relative line-weights of the transitions.
 ```julia
 julia> normweight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
-6-element Array{Float64,1}:
+6-element Vector{Float64}:
  0.30154168064716697
  0.5907083508331229
  0.036316387945901134
@@ -453,7 +476,7 @@ julia> normweight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
  2.6082394074698673e-5
 
 julia> strength.(characteristic(n"Fe", ktransitions)) # Not normalized
-6-element Array{Float64,1}:
+6-element Vector{Float64}:
  0.10139102
  0.19862104
  0.0122111
@@ -470,24 +493,24 @@ Fe L3-M5
 Some other X-ray related properties...
 ```julia
 julia> λ.(feka)  # this is \lambda (wavelength in cm)
-2-element Array{Float64,1}:
- 1.9400114694331004e-8
- 1.9360732210059497e-8
+2-element Vector{Float64}:
+ 1.940011554447735e-8
+ 1.9360733058480036e-8
 
 julia> ν.(feka)  # this is \nu (frequency in 1/s)
-2-element Array{Float64,1}:
- 1.5453127450692544e18
- 1.5484561310846671e18
+2-element Vector{Float64}:
+ 1.5453127447240502e18
+ 1.5484561307387604e18
 
 julia> ω.(feka)  # this is \omega (angular frequency in radian/s)
-2-element Array{Float64,1}:
- 9.709486334816494e18
- 9.729236811643329e18
+2-element Vector{Float64}:
+ 9.70948633264751e18
+ 9.729236809469932e18
 
 julia> wavenumber.(feka) # In 1/cm
-2-element Array{Float64,1}:
- 5.154608700804303e7
- 5.165093908382337e7
+2-element Vector{Float64}:
+ 5.154608474920506e7
+ 5.16509368203906e7
 ```
 
 
@@ -501,19 +524,19 @@ julia> mac( n"Ni", n"Fe K-L3") # In cm²/g
 83.48344476953369
 
 julia> Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
-Dict{CharXRay,Tuple{Float64,Float64}} with 12 entries:
+Dict{CharXRay, Tuple{Float64, Float64}} with 12 entries:
   Ni L1-M5 => (9496.52, 0.000298443)
-  Ni L3-M2 => (1999.76, 0.00246174)
-  Ni L1-M2 => (11241.6, 0.063308)
-  Ni L3-M3 => (1999.76, 0.0023918)
-  Ni L3-M1 => (2255.04, 0.170298)
-  Ni L3-M5 => (1693.36, 1.0)
-  Ni L3-M4 => (1693.36, 0.0918605)
-  Ni L2-M4 => (9677.04, 0.52428)
-  Ni L1-M4 => (9496.52, 0.000227338)
-  Ni L2-M3 => (1910.69, 0.00233952)
   Ni L2-M1 => (2149.34, 0.0873993)
+  Ni L3-M2 => (1999.76, 0.00246174)
+  Ni L2-M3 => (1910.69, 0.00233952)
+  Ni L2-M4 => (9677.04, 0.52428)
+  Ni L1-M2 => (11241.6, 0.063308)
+  Ni L3-M1 => (2255.04, 0.170298)
+  Ni L3-M3 => (1999.76, 0.0023918)
+  Ni L3-M4 => (1693.36, 0.0918605)
   Ni L1-M3 => (11241.6, 0.0969139)
+  Ni L1-M4 => (9496.52, 0.000227338)
+  Ni L3-M5 => (1693.36, 1.0)
 
 julia> mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
 12220.92856189755
@@ -540,7 +563,7 @@ kr = KRatio(
 ```
 
 ```
-k[Fe K-L3 + 1 other, Fe2O3] = 0.3436 ± 0.012
+k[Fe K-L3 + 1 other, Fe2O3] = 0.344 ± 0.012
 ```
 
 
@@ -561,32 +584,32 @@ krs = [
 ```
 
 ```
-5-element Array{KRatio,1}:
- k[O K-L3 + 1 other, SiO2] = 0.98439 ± 0.0023
- k[Na K-L3 + 1 other, NaCl] = 0.15541 ± 0.00093
- k[Al K-L3 + 1 other, Al] = 0.06854 ± 0.00073
- k[Si K-L3 + 2 others, Si] = 0.21905 ± 0.00023
- k[Th M5-N7 + 29 others, Th] = -0.00023 ± 0.00046
+5-element Vector{KRatio}:
+ k[O K-L3 + 1 other, SiO2] = 0.9844 ± 0.0023
+ k[Na K-L3 + 1 other, NaCl] = 0.1554 ± 0.0009
+ k[Al K-L3 + 1 other, Al] = 0.0685 ± 0.0007
+ k[Si K-L3 + 2 others, Si] = 0.2190 ± 0.0002
+ k[Th M5-N7 + 29 others, Th] = -0.0002 ± 0.0005
 ```
 
 
 
 ```julia
 julia> nonnegk.(krs)
-5-element Array{UncertainValue,1}:
- 0.98439 ± 0.0023
- 0.15541 ± 0.00093
- 0.06854 ± 0.00073
- 0.21905 ± 0.00023
- 0.000e+00 ± 4.60e-04
+5-element Vector{UncertainValue}:
+ 0.9844 ± 0.0023
+ 0.1554 ± 0.0009
+ 0.0685 ± 0.0007
+ 0.2191 ± 0.0002
+ 0.0000 ± 0.0005
 
 julia> elms(krs)
 Set{Element} with 5 elements:
   Element(Aluminium)
-  Element(Silicon)
   Element(Sodium)
-  Element(Oxygen)
   Element(Thorium)
+  Element(Oxygen)
+  Element(Silicon)
 ```
 
 
@@ -618,7 +641,7 @@ end
 ```
 
 ```
-"Path length in SiO2 = 4.152164271200624 μm"
+"Path length in SiO2 = 4.153305752548608 μm"
 ```
 
 

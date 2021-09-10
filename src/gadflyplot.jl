@@ -196,7 +196,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
         for elm in element.(eachelement())
             if has(elm, sh)
                 push!(x, z(elm))
-                push!(y, fluorescenceyield(atomicsubshell(elm, sh), NeXL))
+                push!(y, fluorescenceyield(atomicsubshell(elm, sh), CullenEADL))
             end
         end
         if !isempty(x)

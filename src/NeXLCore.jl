@@ -13,6 +13,7 @@ abstract type NeXLAlgorithm end
 export NeXLAlgorithm
 
 include("ffast.jl") # Algorithms implemented in FFAST.jl
+include("dtsa_mac.jl") # Implement's Heinrich's IXCOM 11 MACs
 include("botesalvat.jl") # Algorithms implemented in BoteSalvat.jl
 include("cullen_eadl.jl") # Data from Cullen's Evaluated Atomic Data Library
 include("element.jl") # Element data from PeriodicTable.jl

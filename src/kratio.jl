@@ -47,7 +47,7 @@ with known composition and one on an unknown. Each measurement has properties
 like :BeamEnergy (req), :TakeOffAngle (req), :Coating (opt) that characterize
 the measurement.
 
-Properties: (These Symbols are intentionally the same used in NeXLSpectrum)
+Properties: (These `Symbol`s are intentionally the same used in NeXLSpectrum)
 
     :BeamEnergy incident beam energy in eV
     :TakeOffAngle in radians

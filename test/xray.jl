@@ -168,9 +168,9 @@ using NeXLCore
         @test all(tr -> shell(tr) == Shell(2), characteristic(n"Fe", ltransitions))
         @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
-        @test length(characteristic(n"Fe", ltransitions, 0.0)) == 12
+        @test length(characteristic(n"Fe", ltransitions, 0.0)) == 14
         @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6
-        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 7
+        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
         @test !isless(n"Fe K-L3", n"Fe K-L3")

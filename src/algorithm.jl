@@ -21,6 +21,7 @@ edgeenergy(z::Int, ss::Int)::Float64 =
 edgeenergy(cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
     edgeenergy(cxr.z, cxr.transition.innershell.index, alg)
 
+hasedge(z::Int, ss::Int) = hasedge(z, ss, FFASTDB)
 
 """
      energy(ass::AtomicSubShell, ty::Type{<:NeXLAlgorithm}=FFASTDB)
@@ -73,11 +74,11 @@ strength(cxr::CharXRay)::Float64 = strength(element(cxr), cxr.transition, Cullen
 
 
 """
-    subshellsindexes(z::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)
+    subshellindices(z::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)
 
 Return the shells occupied in a neutral, ground state atom of the specified atomic number.
 """
-subshellsindexes(z::Int) = subshellsindexes(z, FFASTDB)
+subshellindices(z::Int) = subshellindices(z, FFASTDB)
 
 
 """

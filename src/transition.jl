@@ -23,7 +23,7 @@ struct Transition
     innershell::SubShell
     outershell::SubShell
     function Transition(inner::SubShell, outer::SubShell)
-        if !(haskey(transitions, (inner.index, outer.index)))
+        if !(haskey(transitions(), (inner.index, outer.index)))
             error("$(inner)-$(outer) does not represent a known Transition.")
         end
         return new(inner, outer)
@@ -72,7 +72,7 @@ end
 A complete list of all the transitions present in one or more elements.
 """
 const alltransitions =
-    tuple(filter(tr -> n(shell(tr)) <= 3, everytransition(transitions))...)
+    tuple(filter(tr -> n(shell(tr)) <= 3, everytransition(transitions()))...)
 
 const transitionnames =
     tuple(map(tr -> "$(tr.innershell)-$(tr.outershell)", alltransitions)...)

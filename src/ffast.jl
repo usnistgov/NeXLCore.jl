@@ -1,4 +1,5 @@
 import FFAST # for mass absorption coefficienct
+import CSV
 
 """
 FFAST represents an implementation of mass-absorption coefficients and associated
@@ -17,11 +18,39 @@ function macU(elm::Element, energy::Float64, ::Type{FFASTDB})::UncertainValue
     )
 end
 
-edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 = FFAST.edgeenergy(z, ss)
+let superset_edge_energies_data, subshellsindexes_data
+    function load_supersetedgeenergies()
+        @info "Loading William's edge energies."
+        res = Dict{Tuple{Int,Int}, Float64}()
+        for (z, row) in enumerate(CSV.File(joinpath(dirname(pathof(@__MODULE__)), "..", "data", "WilliamsBinding.csv"), header=true))
+            for i in 1:29
+                if(!ismissing(row[i]))
+                    res[(z, i)]=row[i]
+                end
+            end
+        end
+        @info "Replacing with FFAST where available..."
+        for (idx, _) in res
+            if (idx[1] in FFAST.eachelement()) && FFAST.hasedge(idx...)
+                res[idx] = FFAST.edgeenergy(idx...)
+            end
+        end
+        return res
+    end
+    superset_edge_energies_data = load_supersetedgeenergies()
+    subshellsindexes_data = Dict(z=>filter(ss->haskey(superset_edge_energies_data, (z,ss)), 1:29) for z in 1:99)
+    
+    global superset_edge_energies() = superset_edge_energies_data
+    global subshellindices(z::Int, ::Type{FFASTDB}) = subshellsindexes_data[z] 
+end
+
+edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 = superset_edge_energies()[(z,ss)]
+
+hasedge(z::Int, ss::Int, ::Type{FFASTDB})::Bool = haskey(superset_edge_energies(), (z,ss))
 
 eachelement(::Type{FFASTDB}) = FFAST.eachelement()
 
-subshellsindexes(z::Int, ::Type{FFASTDB}) = FFAST.eachedge(z)
+# subshellindices(z::Int, ::Type{FFASTDB}) = filter(ss->haskey(superset_edge_energies(), (z,ss)), 1:29)
 
 """
     energy(z::Int, inner::Int, outer::Int)::Float64
@@ -29,7 +58,7 @@ subshellsindexes(z::Int, ::Type{FFASTDB}) = FFAST.eachedge(z)
 Return energy (in eV) of the transition by specified inner and outer sub-shell index.
 """
 energy(z::Int, inner::Int, outer::Int, ::Type{FFASTDB})::Float64 =
-    FFAST.edgeenergy(z, inner) - FFAST.edgeenergy(z, outer)
+    edgeenergy(z, inner, FFASTDB) - edgeenergy(z, outer, FFASTDB)
 
 """
     jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) =

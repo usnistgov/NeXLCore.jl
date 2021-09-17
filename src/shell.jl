@@ -320,9 +320,7 @@ struct AtomicSubShell
     z::Int
     subshell::SubShell
     function AtomicSubShell(z::Int, ss::SubShell)
-        if (!(ss.index in subshellsindexes(z)))
-            error("The sub-shell $(ss) in $(element(z)) is not occupied in the ground state.")
-        end
+        (!hasedge(z, ss.index)) && error("The $(symbol(element(z))) $(ss) sub-shell is not occupied in the ground state.")
         return new(z, ss)
     end
     AtomicSubShell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
@@ -371,7 +369,7 @@ atomicsubshell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
 Is the specified sub-shell occupied by one or more electrons in a ground-state
 atom of the specified element?
 """
-has(elm::Element, ss::SubShell) = ss.index in subshellsindexes(z(elm))
+has(elm::Element, ss::SubShell) = hasedge(z(elm), ss.index)
 
 
 
@@ -400,7 +398,7 @@ function atomicsubshells(
     eety::Type{<:NeXLAlgorithm} = FFASTDB,
 )::Vector{AtomicSubShell}
     res = Vector{AtomicSubShell}()
-    for sh in subshellsindexes(z(elm))
+    for sh in subshellindices(z(elm))
         if NeXLCore.edgeenergy(z(elm), sh, eety) < maxE
             push!(res, atomicsubshell(elm, SubShell(sh)))
         end

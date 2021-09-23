@@ -42,16 +42,26 @@ end
 """
     KRatio
 
-The k-ratio is the result of two intensity measurements - one on a standard
-with known composition and one on an unknown. Each measurement has properties
-like :BeamEnergy (req), :TakeOffAngle (req), :Coating (opt) that characterize
-the measurement.
+The k-ratio is the ratio of two similar intensity measurements - one on 
+a material of unknown composition and one on a standard with known 
+composition. Each measurement has properties like :BeamEnergy (req), 
+:TakeOffAngle (req), :Coating (opt) that characterize the measurement.  
+A minimal set of properties includes:
 
 Properties: (These `Symbol`s are intentionally the same used in NeXLSpectrum)
 
     :BeamEnergy incident beam energy in eV
     :TakeOffAngle in radians
     :Coating A NeXLCore.Film object or Film[] detailing a conductive coating
+
+Some algorithms may require additional properties.
+
+k-ratios are associated with characteristic X-rays (`CharXRay`) from a single element.
+WDS k-ratios are typically associated with a single `CharXRay` while EDS
+measurements may be associated with many `CharXRay` that are similar in energy.
+k-ratios are always relative to another material.  Usually the composition of this
+`Material` is well-known.  However, when a k-ratio is restandardized, it is possible
+for the intermediate material to be less well-known.
 """
 struct KRatio <: KRatioBase
     element::Element
@@ -144,21 +154,21 @@ end
 must be characterized by the same unknown and standard properties, the same X-ray lines and the other
 properties.
 """
-struct KRatios <: KRatioBase
+struct KRatios{T} <: KRatioBase where {T <: AbstractFloat}
     element::Element
     xrays::Vector{CharXRay} # Which CharXRays were measured?
     unkProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     stdProps::Dict{Symbol,Any} # Beam energy, take-off angle, coating, ???
     standard::Material
-    kratios::Array{<:AbstractFloat}
+    kratios::Array{T}
 
     function KRatios(
         xrays::Vector{CharXRay},
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,
-        kratios::Array{<:AbstractFloat},
-    )
+        kratios::Array{T},
+    ) where { T <: AbstractFloat }
         if length(xrays) < 1
             error("A k-ratio must specify at least one characteristic X-ray.")
         end
@@ -182,7 +192,7 @@ struct KRatios <: KRatioBase
            )
             @warn "The unknown and standard take-off angles do not match for $elm in $standard and $xrays."
         end
-        return new(elm, xrays, copy(unkProps), copy(stdProps), standard, kratios)
+        return new{T}(elm, xrays, copy(unkProps), copy(stdProps), standard, kratios)
     end
 end
 
@@ -206,8 +216,6 @@ Base.getindex(krs::KRatios, ci::CartesianIndex) = KRatio(
     krs.standard,
     getindex(krs.kratios, ci),
 )
-
-
 
 Base.size(krs::KRatios) = size(krs.kratios)
 Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)

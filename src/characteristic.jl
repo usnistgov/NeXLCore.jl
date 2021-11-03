@@ -66,13 +66,26 @@ Return the element for this CharXRay.
 element(cxr::CharXRay) = PeriodicTable.elements[cxr.z]
 
 """
-    normweight(elm::Element, tr::Transition, overvoltage = 4.0)::Float64
+    normweight(elm::Element, tr::Transition)::Float64
+    normweight(cxr::CharXRay)::Float64
 
 Return the nominal line strength for the specified transition in the specified element.
-The strength differs from the weight in that the weight is normalized to the most intense line in the shell.
+
+  * weight(...) - the most intense line in a family returns 1.0
+  * normweight(...) - the sum of all the lines in a family is 1.0
 """
-normweight(elm::Element, tr::Transition, overvoltage = 4.0) =
-    has(elm, tr) ? normweight(characteristic(elm, tr), overvoltage) : 0.0
+function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
+    ish = inner(cxr)
+    e0 = overvoltage*energy(ish)
+    safeSS(z, tr) = has(elements[z], tr) ? strength(CharXRay(z, tr)) : 0.0
+    sumw = sum(shelltosubshells[shell(ish.subshell)]) do ss
+        relativeionizationcrosssection(AtomicSubShell(cxr.z, ss), e0) * #
+            maximum(safeSS(cxr.z, tr) for tr in transitionsbysubshell[ss])
+    end
+    return strength(cxr) * relativeionizationcrosssection(ish, e0) / sumw     
+end
+normweight(elm::Element, tr::Transition) =
+    has(elm, tr) ? normweight(characteristic(elm, tr)) : 0.0    
 
 ν(cxr::CharXRay) = energy(cxr) / plancksConstant
 ω(cxr::CharXRay) = 2π * ν(cxr)
@@ -95,28 +108,21 @@ wavenumber(energy::Real) = 1.0 / λ(energy)
 """
     weight(cxr::CharXRay)
 
-The line weight of the specified characteristic X-ray relative to the other lines from the same element in the
-same shell.  The most intense line is normalized to unity.
+The line weight of the specified characteristic X-ray relative to the other lines from 
+the same element in the same shell.  The most intense line is normalized to unity.
+
+* weight(...) - the most intense line in a family returns 1.0
+* normweight(...) - the sum of all the lines in a family is 1.0
 """
 function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    return strength(cxr) / maxweight(inner(cxr))       
-end
-
-const __normWeights = Dict{AtomicSubShell, Float64}()
-
-"""
-    normweight(cxr::CharXRay)
-
-The line weight of the specified characteristic X-ray with the sum of the
-weights in a subshell equals to unity.
-"""
-function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    ass = inner(cxr)
-    if !haskey(__normWeights, ass)
-        safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-        __normWeights[ass] = sum(safeSS(element(ass), tr2) for tr2 in transitionsbysubshell[subshell(ass)])
+    ish = inner(cxr)
+    e0 = overvoltage*energy(ish)
+    safeSS(z, tr) = has(elements[z], tr) ? strength(CharXRay(z, tr)) : 0.0
+    maxw = maximum(shelltosubshells[shell(ish.subshell)]) do ss
+        relativeionizationcrosssection(AtomicSubShell(cxr.z, ss), e0) * #
+            maximum(safeSS(cxr.z, tr) for tr in transitionsbysubshell[ss])
     end
-    return strength(cxr) / __normWeights[ass]
+    return strength(cxr) * relativeionizationcrosssection(ish, e0) / maxw     
 end
 
 """

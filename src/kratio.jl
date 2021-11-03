@@ -222,14 +222,14 @@ Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 Base.CartesianIndices(krs::KRatios) = CartesianIndices(krs.kratios)
 
 """
-    LinearAlgebra.normalize(krs::AbstractVector{KRatios}; norm::Float32=1.0f)::Vector{KRatios}
+    LinearAlgebra.normalize(krs::AbstractVector{<:KRatios}; norm::Float32=1.0f)::Vector{KRatios}
     LinearAlgebra.normalize(krs::AbstractVector{KRatio}; norm::Float32=1.0f)::Vector{KRatio}
 
 Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array. `norm` specifies normalization
 constants other than 1.0.
 """
 function LinearAlgebra.normalize(
-    krs::AbstractVector{KRatios};
+    krs::AbstractVector{<:KRatios};
     norm::Float64 = 1.0,
     minsum::Float64 = 0.0
 )
@@ -264,17 +264,17 @@ brightest(krs::KRatios) = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdP
 brightest(krs::KRatio) = KRatio([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratio )
 
 """
-    colorize(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element, normalize=:All[|:Each])
-    colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, normalize=:All)
+    colorize(krs::AbstractVector{<:KRatios}, red::Element, green::Element, blue::Element, normalize=:All[|:Each])
+    colorize(krs::AbstractVector{<:KRatios}, elms::AbstractVector{Element}, normalize=:All)
 
 Create RGB colorized images from up to three `Element`s.  The elements
 are normalized relative to all `KRatios` in `krs`. The resulting images are scaled by the factor
 `scale` to allow visualization of trace elements.
 """
-function colorize(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element, normalize=:All)
+function colorize(krs::AbstractVector{<:KRatios}, red::Element, green::Element, blue::Element, normalize=:All)
     colorize(krs, [red, green, blue], normalize)
 end
-function colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, normalize=:All)
+function colorize(krs::AbstractVector{<:KRatios}, elms::AbstractVector{Element}, normalize=:All)
     idx  = collect( findfirst(kr->isequal(kr.element, elm), krs) for elm in elms )
     if normalize==:All
         # Normalize relative to sum of KRatios at each point
@@ -298,12 +298,12 @@ function colorize(krs::AbstractVector{KRatios}, elms::AbstractVector{Element}, n
     end
 end
 
-function Base.getindex(krs::AbstractVector{KRatios}, elm::Element)
+function Base.getindex(krs::AbstractVector{<:KRatios}, elm::Element)
     colorize(krs, [ elm, elm, elm ])
 end
-function Base.getindex(krs::AbstractVector{KRatios}, red::Element, green::Element)
+function Base.getindex(krs::AbstractVector{<:KRatios}, red::Element, green::Element)
     colorize(krs, [ red, green ])
 end
-function Base.getindex(krs::AbstractVector{KRatios}, red::Element, green::Element, blue::Element)
+function Base.getindex(krs::AbstractVector{<:KRatios}, red::Element, green::Element, blue::Element)
     colorize(krs, [ red, green, blue ])
 end

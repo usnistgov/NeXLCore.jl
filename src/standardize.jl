@@ -40,7 +40,7 @@ end
 """
     standardize(kr::KRatio, std::KRatio)::KRatio
     standardize(kr::KRatios, std::KRatio)::KRatios
-    standardize(kratios::Union{AbstractVector{KRatio},AbstractVector{KRatios}}, stds::AbstractVector{KRatio})
+    standardize(kratios::Union{AbstractVector{KRatio},AbstractVector{<:KRatios}}, stds::AbstractVector{KRatio})
 
 If the `std::KRatio` is a suitable match for `kr` then `kr` is restandardized using `std`.  Otherwise, the original
 `KRatio` or `KRatios` is returned.
@@ -69,7 +69,7 @@ function standardize(krs::KRatios, std::KRatio)::KRatios
         krs
     end 
 end
-function standardize(kratios::Union{AbstractVector{KRatio},AbstractVector{KRatios}}, stds::AbstractVector{KRatio})
+function standardize(kratios::Union{AbstractVector{KRatio},AbstractVector{<:KRatios}}, stds::AbstractVector{KRatio})
     return map(kratios) do kr
         i = findfirst(std->matches(kr,std), stds)
         isnothing(i) ? kr : standardize(kr, stds[i])

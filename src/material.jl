@@ -218,7 +218,7 @@ atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat, elm) for elm in keys(mat
 
 Compute the number of atoms of `elm` in 1 gram of `mat`.
 """
-atoms_per_g(elm::Element) =  ustrip(NoUnit, AvogadroConstant / (a(elm)*u"1/mol"))
+atoms_per_g(elm::Element) =  ustrip(NoUnits, AvogadroConstant / (a(elm)*u"1/mol"))
 atoms_per_g(mat::Material, elm::Element) = ustrip(NoUnits, mat[elm] * AvogadroConstant / (a(elm, mat)*u"1/mol"))
 
 """

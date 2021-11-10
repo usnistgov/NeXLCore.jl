@@ -355,6 +355,7 @@ Example:
 shell(ass::AtomicSubShell) = shell(ass.subshell)
 
 subshell(ass::AtomicSubShell) = ass.subshell
+subshellindex(ass::AtomicSubShell) = ass.subshell.index
 
 """
     atomicsubshell(elm::Element, ss::SubShell)::AtomicSubShell

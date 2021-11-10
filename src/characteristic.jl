@@ -17,6 +17,9 @@ struct CharXRay
     end
 end
 
+innerindex(cxr::CharXRay) = cxr.transition.innershell.index
+outerindex(cxr::CharXRay) = cxr.transition.outershell.index
+
 Base.hash(cxr::CharXRay, h::UInt)::UInt = hash(cxr.z, hash(cxr.transition, h))
 
 Base.isequal(cxr1::CharXRay, cxr2::CharXRay) =
@@ -118,7 +121,7 @@ function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
     ish = inner(cxr)
     e0 = overvoltage*energy(ish)
     safeSS(z, tr) = has(elements[z], tr) ? strength(CharXRay(z, tr)) : 0.0
-    maxw = maximum(shelltosubshells[shell(ish.subshell)]) do ss
+    maxw = maximum(filter(ss->has(element(cxr), ss), shelltosubshells[shell(ish.subshell)])) do ss
         relativeionizationcrosssection(AtomicSubShell(cxr.z, ss), e0) * #
             maximum(safeSS(cxr.z, tr) for tr in transitionsbysubshell[ss])
     end
@@ -181,11 +184,9 @@ function characteristic(
     filterfunc::Function,
 )::Vector{CharXRay}
     res = CharXRay[]
-    for tr in iter
-        if has(elm, tr)
-            cxr=characteristic(elm, tr)         
-            filterfunc(cxr) && push!(res, cxr)
-        end
+    for tr in filter(t->has(elm, t), iter)
+        cxr=characteristic(elm, tr)         
+        filterfunc(cxr) && push!(res, cxr)
     end
     res
 end

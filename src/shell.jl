@@ -355,6 +355,7 @@ Example:
 shell(ass::AtomicSubShell) = shell(ass.subshell)
 
 subshell(ass::AtomicSubShell) = ass.subshell
+subshellindex(ass::AtomicSubShell) = ass.subshell.index
 
 """
     atomicsubshell(elm::Element, ss::SubShell)::AtomicSubShell
@@ -392,24 +393,16 @@ Example:
      Fe M4
      Fe M2
  """
-function atomicsubshells(
+atomicsubshells(
     elm::Element,
     maxE = 1.0e6,
     eety::Type{<:NeXLAlgorithm} = FFASTDB,
-)::Vector{AtomicSubShell}
-    res = Vector{AtomicSubShell}()
-    for sh in subshellindices(z(elm))
-        if NeXLCore.edgeenergy(z(elm), sh, eety) < maxE
-            push!(res, atomicsubshell(elm, SubShell(sh)))
-        end
-    end
-    return res
-end
+) = AtomicSubShell[ atomicsubshell(elm, SubShell(sh)) #
+        for sh in filter(sh->NeXLCore.edgeenergy(z(elm), sh, eety) < maxE, subshellindices(z(elm))) ]
 
 atomicsubshells(
     ss::SubShell,
-)::Vector{AtomicSubShell} =
-    [atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
+) = AtomicSubShell[atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
 
 z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)
@@ -417,7 +410,7 @@ n(ass::AtomicSubShell) = n(ass.subshell)
 function NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSubShell})
     cva = sort(vass)
     return DataFrame(
-        Shell = cva,
+        AtomicSubShell = cva,
         SubShell = subshell.(cva),
         Energy = energy.(cva),
         ICX_U2 = map(a->ionizationcrosssection(a, 2.0*energy(a)), cva),

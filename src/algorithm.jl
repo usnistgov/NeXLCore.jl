@@ -82,11 +82,11 @@ subshellindices(z::Int) = subshellindices(z, FFASTDB)
 
 
 """
-    jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) =
+    jumpratio(z::Int, ss::Int) =
 
 Compute the jump ratio.
 """
-jumpratio(z::Int, ss::Int) = jumpratio(z, ss, FFAST)
+jumpratio(z::Int, ss::Int) = jumpratio(z::Int, ss::Int, FFASTDB)
 
 """
     mac(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Float64
@@ -140,6 +140,11 @@ and cascade (where `outer` != `ionized` due to Coster-Kronig and previous decays
 characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
     totalWeight(z, ionized, inner, outer, alg)
 
+function characteristicyield(ash::AtomicSubShell, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
+    @assert ash.z == cxr.z
+    characteristicyield(ash.z, ash.subshell.index, cxr.inner.index, cxr.outer.index, alg)
+end
+
 """
     characteristicXRayAvailable(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
 
@@ -184,11 +189,20 @@ strength(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm} = CullenEADL)::
 
 The fraction of relaxations from the specified shell that decay via radiative transition
 rather than electronic (Auger) transition.  Does not include Coster-Kronig
+
+
+    fluorescenceyield(cxr::CharXRay)
+
+The fraction of ionizations of `inner(cxr)` that decay via `cxr`.
 """
-fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64 = sum(map(
-    s -> fluorescenceyield(ass.z, ass.subshell.index, s, alg),
-    ass.subshell.index+1:length(allsubshells),
-))
+function fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
+    sum(ass.subshell.index+1:length(allsubshells)) do s
+        fluorescenceyield(ass.z, ass.subshell.index, s, alg)
+    end
+end
+function fluorescenceyield(cxr::CharXRay) 
+    fluorescenceyield(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index, CullenEADL)
+end
 
 """
     fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64

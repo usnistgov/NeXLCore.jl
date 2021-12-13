@@ -103,6 +103,7 @@ export compare # Compare compositions as a DataFrame
 export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
 export atoms_per_cm³ # Returns the number of atoms in one cm² of the Material
+export atoms_per_g # Returns the number of atoms in one gram of the Material
 export @mat_str
 export delete # Create a new Material with certain elements removed
 

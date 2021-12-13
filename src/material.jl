@@ -208,9 +208,18 @@ the `:Density` property.
 
 Total number of atoms per cm³ for all elements in mat. 
 """
-atoms_per_cm³(mat::Material, elm::Element) =
-    mat[:Density] * mat[elm] * 6.0221366516752e23 / a(elm, mat)
+atoms_per_cm³(mat::Material, elm::Element) = mat[:Density] * atoms_per_g(mat, elm)
 atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat, elm) for elm in keys(mat))
+
+
+"""
+    atoms_per_g(elm::Element)
+    atoms_per_g(mat::Material, elm::Element)
+
+Compute the number of atoms of `elm` in 1 gram of `mat`.
+"""
+atoms_per_g(elm::Element) =  ustrip(NoUnits, AvogadroConstant / (a(elm)*u"1/mol"))
+atoms_per_g(mat::Material, elm::Element) = ustrip(NoUnits, mat[elm] * AvogadroConstant / (a(elm, mat)*u"1/mol"))
 
 """
     material(

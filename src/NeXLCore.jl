@@ -175,7 +175,7 @@ include("misc.jl")
 export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
-export Burhop1965 # A fluorescence yield model
+export Burhop1965, Sogut2002, Krause1979 # Fluorescence yield models
 export CullenEADL
 export fluorescenceyield # fluorescence yield models
 export characteristicyield

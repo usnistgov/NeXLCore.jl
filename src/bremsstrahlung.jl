@@ -132,7 +132,7 @@ function bremsstrahlung(
 )
     n(e, z) = 1.0e-3 * e * (0.0739 - 0.0051 * log(z)) + 1.6561 - 0.115 * log(z)
     x(e, z) = 1.76 - 0.00145 * z / (1.0e-3 * e)
-    zz = convert(Float64, z(elm))
+    zz = Float64(z(elm))
     return ((e0 - e) / e)^x(e, zz) * zz^n(e, zz)
 end
 

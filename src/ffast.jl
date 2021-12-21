@@ -63,6 +63,6 @@ energy(z::Int, inner::Int, outer::Int, ::Type{FFASTDB})::Float64 =
 """
     jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) =
 
-Compute the jump ratio.
+Returns the jump ratio for the specified shell by index K=>1, L1=>2, L2=>3, ..., M5=>9.
 """
 jumpratio(z::Int, ss::Int, ::Type{FFASTDB}) = FFAST.jumpratio(z, ss)

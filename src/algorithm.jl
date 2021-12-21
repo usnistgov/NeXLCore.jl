@@ -196,10 +196,9 @@ rather than electronic (Auger) transition.  Does not include Coster-Kronig
 The fraction of ionizations of `inner(cxr)` that decay via `cxr`.
 """
 function fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
-    sum(ass.subshell.index+1:length(allsubshells)) do s
-        fluorescenceyield(ass.z, ass.subshell.index, s, alg)
-    end
+    sum(s->fluorescenceyield(ass.z, ass.subshell.index, s, alg), ass.subshell.index+1:length(allsubshells))
 end
+
 function fluorescenceyield(cxr::CharXRay) 
     fluorescenceyield(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index, CullenEADL)
 end
@@ -211,9 +210,6 @@ The fraction of relaxations from the specified shell that decay via radiative tr
 rather than electronic (Auger) transition.  Includes Coster-Kronig
 """
 function fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
-    f(ss) = sum(map(
-        s -> fluorescenceyield(ass.z, ass.subshell.index, s, alg),
-        ss.index+1:length(allsubshells),
-    ))
+    f(ss) = sum(s -> fluorescenceyield(ass.z, ass.subshell.index, s, alg), ss.index+1:length(allsubshells))
     return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
 end

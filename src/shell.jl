@@ -87,12 +87,6 @@ const N7 = allsubshells[16]
 
 subshell(idx::Int) = allsubshells[idx]
 
-function Base.parse(::Type{SubShell}, name::AbstractString)
-    i = findfirst(ss->repr(ss)==name, allsubshells)    
-    return !isnothing(i) ? allsubshells[i] : error("Unknown sub-shell $(name)")
-end
-
-
 """
     capacity(ss::SubShell)
 

@@ -36,10 +36,11 @@ Shown to be reliable for Z>36 or so.
 """
 klinewidths(elm::Element) = 1.73e-6 * z(elm)^3.93
 
-
 struct Burhop1965 <: NeXLAlgorithm end
 struct Sogut2002 <: NeXLAlgorithm end
 struct Krause1979 <: NeXLAlgorithm end
+struct Kahoul2012 <: NeXLAlgorithm end
+struct Reed1975ω <: NeXLAlgorithm end
 
 let krause1979_data 
     function loadKrause1979()
@@ -51,7 +52,6 @@ let krause1979_data
             # "Z","Sy","wK","wL1","wL2","wL3","f1","f1_2","f1_3","fp1_3","f2_3"
             push!(krause1979_data, (nm(row.wK), nm(row.wL1), nm(row.wL2), nm(row.wL3) ))
         end
-        @info "Krause 1979 fluorescence yield data loaded."
     end
     krause1979_data = NTuple{4, Float64}[] 
 
@@ -61,9 +61,7 @@ let krause1979_data
 An alternative for K and L-line yields.  Agrees well with others.
 """
     global function fluorescenceyield(ass::AtomicSubShell, ::Type{Krause1979})
-        if isempty(krause1979_data)
-            loadKrause1979()
-        end
+        isempty(krause1979_data) && loadKrause1979()
         if ass.subshell.index<=4
             krause1979_data[ass.z][ass.subshell.index]
         else
@@ -140,3 +138,29 @@ end
 
 fluorescenceyield(z::Int) = fluorescenceyield(z, Burhop1965)
 
+"""
+    Kahoul 2012 expression for the K-shell fluorescence yield
+"""
+function fluorescenceyield(ass::AtomicSubShell, ::Type{Kahoul2012} )
+    if ass.subshell.index==1
+        p = if ass.z in 11:20
+            Polynomial([ 1.601637, -0.298757, 0.022417, -4.92221e-4 ])
+        elseif ass.z in 21:50
+            Polynomial([ -0.17511, 0.05177, -6.4788e-4, 6.25318e-6 ]) 
+        elseif ass.z in 51:99
+            Polynomial([ 0.59013, 0.02214, -2.90802e-5 ])
+        end
+        p4=p(Float64(ass.z))^4
+        return p4/(1.0+p4)
+    else
+        error("Kahoul 2012 only implements K-shell fluorescence yields.")
+    end
+end
+
+function fluorescenceyield(ass::AtomicSubShell,::Type{Reed1975ω})
+    if ass.subshell.index==1 
+        return Float64(ass.z)^4/(1.0e6+Float64(ass.z)^4)
+    else
+        error("Reed 1975 only implements K-shell fluorescence yields.")
+    end
+end

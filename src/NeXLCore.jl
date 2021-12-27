@@ -256,6 +256,7 @@ export colorize # Maps Material to Color for all Material in a Region
 include("staging.jl")
 export StageMapping, DefaultStageMapping
 export stage2image, image2stage
+export compute_tilt # Computes the tilt and orientation from three focus points
 
 include("standardize.jl")
 export isstandard # Does a k-ratio have the necessary properties to be a standard

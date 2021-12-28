@@ -553,28 +553,3 @@ function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
 end
 meanfluorescenceyield(elm::Element, sh::Shell) =
     meanfluorescenceyield(elm, sh, Bambynek1972)
-
-function ionizationfraction(z::Int, sh::Int, over = 4.0)
-    @assert (sh >= 1) && (sh <= 16) "Shell index out of 1:16 in ionizationfraction."
-    function relativeTo(z, sh)
-        nn = (1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4)
-        # Find the largest available shell in shell
-        return findlast(ss -> (nn[ss] == nn[sh]) && FFAST.hasedge(z, ss), eachindex(nn))
-    end
-    rel = relativeTo(z, sh)
-    @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
-    ee = over * NeXLCore.edgeenergy(z, rel)
-    return rel == sh ? 1.0 :
-           ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
-end
-
-const __maxWeights = Dict{AtomicSubShell, Float64}()
-
-function maxweight(ass::AtomicSubShell)
-    if !haskey(__maxWeights, ass)
-        safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-        __maxWeights[ass] = maximum(safeSS(element(ass), tr2) for tr2 in transitionsbyshell[shell(ass)])
-    end
-    return __maxWeights[ass]
-end
-

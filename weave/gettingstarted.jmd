@@ -203,8 +203,8 @@ edgeenergy.(feka) # ionization edge energy
 
 Often we want to know the relative line-weights of the transitions.
 ```julia; term=true;
-normweight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
-strength.(characteristic(n"Fe", ktransitions)) # Not normalized
+weight.(NormalizeByShell, characteristic(n"Fe", ltransitions)) # sum(...)=1
+weight.(NormalizeBySubShell, characteristic(n"Fe", ltransitions)) # sum(...)=3
 brightest(characteristic(n"Fe", ltransitions))
 ```
 
@@ -222,7 +222,7 @@ material. MACs are available for `Element` or for `Material`.  Here we are accep
 for the MACs except in the last line.
 ```julia; term=true;
 mac( n"Ni", n"Fe K-L3") # In cm²/g
-Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
+Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(NormalizeToUnity, cxr))), characteristic(n"Ni", ltransitions)))
 mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
 mac( mat"AlNaSi3O8", n"O K-L3") # O K-L3 in Albite (interpreted as a chemical formular)
 mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.FFASTDB), mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.DTSA) # Compare and contrast...

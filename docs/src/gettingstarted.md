@@ -523,7 +523,7 @@ for the MACs except in the last line.
 julia> mac( n"Ni", n"Fe K-L3") # In cm²/g
 83.48344476953369
 
-julia> Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
+julia> Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(NormalizeToUnity, cxr))), characteristic(n"Ni", ltransitions)))
 Dict{CharXRay, Tuple{Float64, Float64}} with 12 entries:
   Ni L1-M5 => (9496.52, 0.000298443)
   Ni L2-M1 => (2149.34, 0.0873993)

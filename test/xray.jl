@@ -169,7 +169,7 @@ using NeXLCore
         @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
         @test length(characteristic(n"Fe", ltransitions, 0.0)) == 14
-        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 4
+        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6
         @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
@@ -178,8 +178,7 @@ using NeXLCore
 
         # Check that these funtions are defined for all available transitions
         @test all(energy.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(weight.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(strength.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
+        @test all(weight.(NormalizeToUnity, characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
         @test all(all(map(cxr->parse(CharXRay,repr(cxr)) == cxr, characteristic(el,alltransitions))) for el in elements[eachelement()])
     end
     @testset "Other" begin
@@ -190,9 +189,9 @@ using NeXLCore
         @test firstsubshell(Shell(2)) == n"L1"
         @test lastsubshell(Shell(2)) == n"L3"
         @test eachelement() == 1:92
-        @test NeXLCore.characteristicyield(20, 1, 4, 9, CullenEADL) == 0.0
+        @test NeXLCore.fluorescenceyield(20, 1, 4, 9, CullenEADL) == 0.0
         @test isapprox(
-            NeXLCore.characteristicyield(25, 1, 4, 9, CullenEADL),
+            NeXLCore.fluorescenceyield(25, 1, 4, 9, CullenEADL),
             0.0007828,
             atol = 0.0000001,
         )

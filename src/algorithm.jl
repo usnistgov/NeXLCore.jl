@@ -63,17 +63,6 @@ Return the range of atomic numbers for which there is a complete set of energy, 
 eachelement() = eachelement(FFASTDB)
 
 """
-    strength(cxr::CharXRay)::Float64
-
-The fraction of ionizations of `inner(cxr)` that relax via a characteristic X-ray resulting
-from an electronic transition from `outer(cxr)` to `inner(cxr)`.
-
-See also `weight(cxr)`.
-"""
-strength(cxr::CharXRay)::Float64 = strength(element(cxr), cxr.transition, CullenEADL)
-
-
-"""
     subshellindices(z::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)
 
 Return the shells occupied in a neutral, ground state atom of the specified atomic number.
@@ -122,30 +111,6 @@ macU(elm::Element, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB)::Uncerta
     macU(elm, energy(cxr), alg)
 
 """
-    fluorescenceyield(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
-
-The fraction of `inner` sub-shell ionizations that relax via a characteristic X-ray resulting from an
-electronic transition from `outer` to `inner`.
-"""
-fluorescenceyield(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
-    totalWeight(z, inner, inner, outer, alg)
-
-"""
-    characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
-
-The fraction of `ionized` sub-shell ionizations that relax via a characteristic X-ray resulting from an
-electronic transition from `outer` to `inner`.  This includes both direct transitions (where `outer`==`ionized`)
-and cascade (where `outer` != `ionized` due to Coster-Kronig and previous decays.)
-"""
-characteristicyield(z::Int, ionized::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
-    totalWeight(z, ionized, inner, outer, alg)
-
-function characteristicyield(ash::AtomicSubShell, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
-    @assert ash.z == cxr.z
-    characteristicyield(ash.z, ash.subshell.index, cxr.inner.index, cxr.outer.index, alg)
-end
-
-"""
     characteristicXRayAvailable(z::Int, inner::Int, outer::Int, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
 
 Is the weight associated with this transition greater than zero?
@@ -173,43 +138,29 @@ ionizationcrosssection(
 ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat) =
     ionizationcrosssection(z, ss, energy, Bote2009)
 
-    """
-    strength(elm::Element, tr::Transition)::Float64
-
-Return the nominal line strenth for the specified transition in the specified element.
-The strength differs from the weight by the fluorescence yield.  Assumes an overvoltage of 4.0
 """
-strength(elm::Element, tr::Transition, ty::Type{<:NeXLAlgorithm} = CullenEADL)::Float64 =
-    ionizationfraction(z(elm), tr.innershell.index, 4.0) *
-    fluorescenceyield(z(elm), tr.innershell.index, tr.outershell.index, ty)
+Represents the fractional number of X-rays emitted following the ionization of the sub-shell `ionized` via
+the characteristic X-ray `z inner-outer`.  Due to cascades, `inner` does not necessarily equal `ionized`.
+The `ionized` subshell may transition to a valency in `inner` via a combination of Auger, fluorescence or
+Koster-Kronig transitions.  The various different forms make assumptions about the relationship between
+`ionized` and `inner`, and about `outer`.
 
-
-"""
     fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
 
-The fraction of relaxations from the specified shell that decay via radiative transition
-rather than electronic (Auger) transition.  Does not include Coster-Kronig
+The fraction of relaxations from the specified shell that relax via any radiative transition. (`inner`==`ionized`)
 
+    fluorescenceyield(cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=CullenEADL)
 
-    fluorescenceyield(cxr::CharXRay)
+The fraction of ionizations of `inner(cxr)` that relax via the one path `cxr`. `ionized==inner` && outer(cxr)
 
-The fraction of ionizations of `inner(cxr)` that decay via `cxr`.
+    fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = CullenEADL)::Float64
+
+The fractional number of `cxr` X-rays emitted (on average) for each ionization of `ash`.  This makes no 
+assumptions about `inner`, `outer` and `ionized`
 """
-function fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
-    sum(s->fluorescenceyield(ass.z, ass.subshell.index, s, alg), ass.subshell.index+1:length(allsubshells))
-end
-
-function fluorescenceyield(cxr::CharXRay) 
-    fluorescenceyield(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index, CullenEADL)
-end
-
-"""
-    fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
-
-The fraction of relaxations from the specified shell that decay via radiative transition
-rather than electronic (Auger) transition.  Includes Coster-Kronig
-"""
-function fluorescenceyieldcc(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL)::Float64
-    f(ss) = sum(s -> fluorescenceyield(ass.z, ass.subshell.index, s, alg), ss.index+1:length(allsubshells))
-    return sum(map(ss -> f(ss), ass.subshell.index+1:lastsubshell(shell(ass)).index))
-end
+fluorescenceyield(ass::AtomicSubShell, alg::Type{<:NeXLAlgorithm}=CullenEADL) =
+    fluorescenceyield(ass.z, ass.subshell.index, alg)
+fluorescenceyield(cxr::CharXRay, alg::Type{<:NeXLAlgorithm}=CullenEADL) =
+    fluorescenceyield(cxr.z, cxr.transition.innershell.index, cxr.transition.outershell.index, alg)
+fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = CullenEADL) =
+    ash.z == cxr.z ? fluorescenceyield(ash.z, ash.subshell.index, cxr.inner.index, cxr.outer.index, alg) : 0.0

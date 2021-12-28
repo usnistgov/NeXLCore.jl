@@ -5,6 +5,7 @@ using Pkg.Artifacts
 using CSV
 using DataFrames
 using Statistics
+using CategoricalArrays
 
 const NeXLPalette =
     convert.(
@@ -83,11 +84,7 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
         for elm in element.(eachelement())
             if has(elm, tr)
                 push!(x, z(elm))
-                push!(
-                    y,
-                    schoonjan ? normweight(characteristic(elm, tr)) :
-                    strength(characteristic(elm, tr)),
-                )
+                push!(y, weight(schoonjan ? NormalizeBySubShell : NormalizeByShell, characteristic(elm, tr)))
             end
         end
         if !isempty(x)
@@ -131,12 +128,12 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
             ignorerepeated = true,
             header = 0,
         )
-        insertcols!(csv, 3, Column2p = parse2.(csv[!, :Column2]))
+        insertcols!(csv, 3, :Column2p => parse2.(csv[!, :Column2]))
         filter!(r -> (!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
         insertcols!(
             csv,
             3,
-            Column2pp = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2p])),
+            :Column2pp => CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2p])),
         )
         append!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2pp))
     end

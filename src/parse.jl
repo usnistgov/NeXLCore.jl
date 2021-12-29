@@ -6,7 +6,9 @@ Transition or CharXRay objects.  The only oddity is that to get SubShell(\"K\") 
 must enter n\"K1\" to differentiate the sub-shell from potassium.
 Examples:
 
-    n"Fe" == element(26)
+    n"Fe" == elements[26]
+    n"K" == elements[19]
+    n"K1" == subshell("K")
     n"L3" == subshell("L3")
     n"Fe L3" == AtomicSubShell(elements[26],subshell("L3"))
     n"L3-M5" == Transition(SubShell("L3"),"SubShell("M5"))
@@ -42,16 +44,14 @@ Base.parse(::Type{Element}, str::AbstractString) = element(str)
 Parses a string to determine if the string represents an Element by atomic number, symbol or name.
 """
 function element(str::AbstractString)::Element
-    elm = get(PeriodicTable.elements, str, get(PeriodicTable.elements, Symbol(str), missing))
+    elm = get(PeriodicTable.elements, str, 
+            get(PeriodicTable.elements, Symbol(str), missing))
     if ismissing(elm)
         try
-            elm = get(PeriodicTable.element, Base.parse(Int, str), missing)
+            elm = PeriodicTable.elements[parse(Int, str)]
         catch
-            # elm = missing # Redundant...
+            error("Unable to parse ", str, " as an Element.")
         end
-    end
-    if ismissing(elm)
-        error("Unable to parse ", str, " as an Element.")
     end
     return elm
 end
@@ -127,15 +127,19 @@ Base.parse(::Type{CharXRay}, str::AbstractString)::CharXRay = characteristic(str
 
 Implements compile time parsing of strings to produce Element, SubShell, AtomicSubShell,
 Transition or CharXRay objects. The only oddity is that to get SubShell(\"K\") you
-must enter n\"K1\" to differentiate the sub-shell from potassium.
+must enter n\"K1\" to differentiate the sub-shell from potassium. `parsex(...)` provides
+the implementation for `n"..."`.
 
 Examples:
 
-  * "Fe" => Element 
-  * "L3" => SubShell
-  * "Fe L3" => AtomicSubShell
-  * "L3-M5" => Transition
-  * "Fe L3-M5" => CharXRay.
+  * n"Fe" => Element 
+  * n"L3" => SubShell
+  * n"K" => Element
+  * n"K1" => SubShell ("K" would be the element potassium)
+  * n"Fe K" => AtomicSubShell ("K" not ambiguous here...)
+  * n"Fe L3" => AtomicSubShell
+  * n"L3-M5" => Transition
+  * n"Fe L3-M5" => CharXRay.
 """
 function parsex(
     str::AbstractString,

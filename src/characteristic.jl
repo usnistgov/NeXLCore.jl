@@ -12,7 +12,7 @@ struct CharXRay
             transition.innershell.index,
             transition.outershell.index
         ) "$z $transition unknown!"
-        "$(symbol(element(z))) $(transition) does not occur."
+        "$(symbol(elements[z])) $(transition) does not occur."
         return new(z, transition)
     end
 end
@@ -30,7 +30,7 @@ Base.isless(cxr1::CharXRay, cxr2::CharXRay) =
 
 characteristic(elm::Element, tr::Transition) = CharXRay(z(elm), tr)
 
-Base.show(io::IO, cxr::CharXRay) = print(io, element(cxr.z).symbol, " ", cxr.transition)
+Base.show(io::IO, cxr::CharXRay) = print(io, elements[cxr.z].symbol, " ", cxr.transition)
 
 """
     inner(cxr::CharXRay)

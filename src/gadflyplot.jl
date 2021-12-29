@@ -30,73 +30,54 @@ function Gadfly.plot(
     palette = NeXLPalette,
 )
     if mode == :Energy
-        plotXrayEnergies(transitions)
+        plotXrayEnergies(transitions, palette=palette)
     elseif mode == :Weight
-        plotXrayWeights(transitions)
+        plotXrayWeights(transitions, palette=palette)
     end
 end
 
 function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeXLPalette)
-    layers, names = [], String[]
-    colors = distinguishable_colors(
-        length(transitions) + 2,
-        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
-    )
-    for (i, tr) in enumerate(transitions)
-        x, y = [], []
-        for elm in element.(eachelement())
-            if has(elm, tr)
-                push!(x, z(elm))
-                push!(y, energy(characteristic(elm, tr)))
-            end
-        end
-        if !isempty(x)
+    layers, names, colors = [], String[], []
+    for (tr, col) in zip(transitions, Iterators.cycle(palette))
+        elems = filter(e->has(e, tr), eachelement())
+        if !isempty(elems)
             push!(names, repr(tr))
-            append!(
-                layers,
+            push!(colors, col)
+            push!(layers, #
                 Gadfly.layer(
-                    x = x,
-                    y = y,
+                    x = [ z(e) for e in elems ],
+                    y = [ energy(characteristic(e, tr)) for e in elems ],
                     Geom.point,
-                    Gadfly.Theme(default_color = colors[i+2]),
-                ),
+                    Gadfly.Theme(default_color = col),
+                )
             )
         end
     end
     Gadfly.plot(
         layers...,
         Gadfly.Guide.title("Characteristic X-ray Energies"),
-        Gadfly.Guide.manual_color_key("Type", names, color = colors[3:end]),
+        Gadfly.Guide.manual_color_key("Type", names, color = colors),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
+        Gadfly.Coord.cartesian(xmin = z(eachelement()[1]), xmax = z(eachelement()[end])),
     )
 end
 
-function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Bool = false)
-    layers, names = [], String[]
-    colors = distinguishable_colors(
-        length(transitions) + 2,
-        Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
-    )
-    for (i, tr) in enumerate(transitions)
-        x, y = [], []
-        for elm in element.(eachelement())
-            if has(elm, tr)
-                push!(x, z(elm))
-                push!(y, weight(schoonjan ? NormalizeBySubShell : NormalizeByShell, characteristic(elm, tr)))
-            end
-        end
-        if !isempty(x)
+function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Bool = false; palette = NeXLPalette)
+    layers, names, colors = [], String[], []
+    for (tr, col) in zip(transitions, Iterators.cycle(palette))
+        elems = filter(e->has(e,tr), eachelement())
+        if !isempty(elems)
             push!(names, repr(tr))
+            push!(colors, col)
             append!(
                 layers,
                 Gadfly.layer(
-                    x = x,
-                    y = y,
+                    x = [ z(elm) for elm in elems ],
+                    y = [weight(schoonjan ? NormalizeBySubShell : NormalizeByShell, characteristic(elm, tr)) for elm in elems ],
                     Geom.point,
-                    Gadfly.Theme(default_color = colors[i+2]),
-                ),
+                    Gadfly.Theme(default_color = col),
+                )
             )
         end
     end
@@ -140,10 +121,11 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
     Gadfly.plot(
         layers...,
         Gadfly.Guide.title("Characteristic X-ray Weights"),
-        Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
+        Gadfly.Guide.manual_color_key("Type", names, colors),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Weight"),
-        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
+        Gadfly.Scale.y_log10(),
+        Gadfly.Coord.cartesian(xmin = z(eachelement()[1]), xmax = z(eachelement()[end])),
     )
 end
 
@@ -189,23 +171,17 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
         Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
     )
     for (i, sh) in enumerate(sss)
-        x, y = [], []
-        for elm in element.(eachelement())
-            if has(elm, sh)
-                push!(x, z(elm))
-                push!(y, fluorescenceyield(atomicsubshell(elm, sh), CullenEADL))
-            end
-        end
-        if !isempty(x)
+        elems = filter(e->has(e,sh), eachelement())
+        if !isempty(elems)
             push!(names, repr(sh))
             append!(
                 layers,
                 Gadfly.layer(
-                    x = x,
-                    y = y,
+                    x = [ z(elm) for elm in elems],
+                    y = [ fluorescenceyield(atomicsubshell(elm, sh), CullenEADL) for elm in elems ],
                     Geom.point,
                     Gadfly.Theme(default_color = colors[i+2]),
-                ),
+                )
             )
         end
     end
@@ -234,7 +210,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Yield (Fractional)"),
         Scale.y_log10(maxvalue = 1.0),
-        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
+        Gadfly.Coord.cartesian(xmin = z(eachelement()[1]), xmax = z(eachelement()[end])),
     )
 end
 
@@ -246,23 +222,17 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
         Color[RGB(253 / 255, 253 / 255, 241 / 255), RGB(0, 0, 0)],
     )
     for (i, sh) in enumerate(sss)
-        x, y = [], []
-        for elm in element.(eachelement())
-            if has(elm, sh)
-                push!(x, z(elm))
-                push!(y, energy(atomicsubshell(elm, sh)))
-            end
-        end
-        if !isempty(x)
+        elems = filter(e->has(e, sh), eachelement())
+        if !isempty(elems)
             push!(names, repr(sh))
             append!(
                 layers,
                 Gadfly.layer(
-                    x = x,
-                    y = y,
+                    x = [ z(elm) for elm in elems ],
+                    y = [ energy(atomicsubshell(elm, sh)) for elm in elems ],
                     Geom.point,
                     Gadfly.Theme(default_color = colors[i+2]),
-                ),
+                )
             )
         end
     end
@@ -272,7 +242,7 @@ function plotEdgeEnergies(sss::AbstractVector{SubShell})
         Gadfly.Guide.manual_color_key("Type", names, colors[3:end]),
         Gadfly.Guide.xlabel("Atomic Number"),
         Guide.ylabel("Edge Energy (eV)"),
-        Gadfly.Coord.cartesian(xmin = eachelement()[1], xmax = eachelement()[end]),
+        Gadfly.Coord.cartesian(xmin = z(eachelement()[1]), xmax = z(eachelement()[end])),
     )
 end
 
@@ -282,23 +252,19 @@ end
 Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified Element.
 """
 function compareMACs(elm::Element; palette = NeXLPalette)
-    l1 = layer(
-        ev -> log10(mac(elm, ev, FFASTDB)),
-        100.0,
-        20.0e3,
-        Geom.line,
-        Gadfly.Theme(default_color = palette[1]),
-    )
-    l2 = layer(
-        ev -> log10(mac(elm, ev, DTSA)),
-        100.0,
-        20.0e3,
-        Geom.line,
-        Gadfly.Theme(default_color = palette[2]),
-    )
+    names = String[]
+    layers = map( enumerate([FFASTDB, DTSA, ])) do (i, alg)
+        push!(names, repr(alg))
+        layer(
+            ev -> log10(mac(elm, ev, alg)),
+            100.0,
+            20.0e3,
+            Geom.line,
+            Gadfly.Theme(default_color = palette[i]),
+        )
+    end
     Gadfly.plot(
-        l1,
-        l2,
+        layers...,
         Gadfly.Guide.title("MAC - $elm"),
         Gadfly.Guide.manual_color_key("Type", ["Default/FFAST", "Heinrich"], palette[1:2]),
         Gadfly.Guide.xlabel("Energy (eV)"),

@@ -55,12 +55,18 @@ energy(cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) = energy(
     )
     
 
+Base.:(==)(elm1::Element, elm2::Element) = z(elm1) == z(elm2)
+
 """
-    eachelement(alg::Type{<:NeXLAlgorithm} = FFASTDB)
+    eachelement()
 
 Return the range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data
 """
-eachelement() = eachelement(FFASTDB)
+eachelement
+
+let allelements = NTuple{length(FFAST.eachelement()), Element}( elements[FFAST.eachelement()] )
+    global eachelement() = allelements
+end
 
 """
     subshellindices(z::Int, alg::Type{<:NeXLAlgorithm} = FFASTDB)

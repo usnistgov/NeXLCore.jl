@@ -314,7 +314,7 @@ struct AtomicSubShell
     z::Int
     subshell::SubShell
     function AtomicSubShell(z::Int, ss::SubShell)
-        (!hasedge(z, ss.index)) && error("The $(symbol(element(z))) $(ss) sub-shell is not occupied in the ground state.")
+        (!hasedge(z, ss.index)) && error("The $(symbol(elements[z])) $(ss) sub-shell is not occupied in the ground state.")
         return new(z, ss)
     end
     AtomicSubShell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
@@ -327,7 +327,7 @@ jumpratio(ass::AtomicSubShell) = jumpratio(ass.z, ass.subshell.index, FFASTDB)
 
 The Element associated with the specified sub-shell.
 """
-element(ass::AtomicSubShell) = element(ass.z)
+element(ass::AtomicSubShell) = elements[ass.z]
 
 Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) =
     (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
@@ -336,7 +336,7 @@ Base.isless(ass1::AtomicSubShell, ass2::AtomicSubShell) =
     return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : isless(ass1.z, ass2.z)
 
 Base.show(io::IO, ass::AtomicSubShell) =
-    print(io, "$(element(ass.z).symbol) $(ass.subshell)")
+    print(io, "$(elements[ass.z].symbol) $(ass.subshell)")
 
 """
     shell(ass::AtomicSubShell)

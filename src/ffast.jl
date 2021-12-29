@@ -48,7 +48,6 @@ edgeenergy(z::Int, ss::Int, ::Type{FFASTDB})::Float64 = superset_edge_energies()
 
 hasedge(z::Int, ss::Int, ::Type{FFASTDB})::Bool = haskey(superset_edge_energies(), (z,ss))
 
-eachelement(::Type{FFASTDB}) = FFAST.eachelement()
 
 # subshellindices(z::Int, ::Type{FFASTDB}) = filter(ss->haskey(superset_edge_energies(), (z,ss)), 1:29)
 

@@ -14,5 +14,5 @@ ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009})
         z,
         ss,
         energy,
-        edgeenergy(z, ss),
+        BoteSalvatICX.edgeenergy(z, ss),
     ) : 0.0

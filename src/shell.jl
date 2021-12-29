@@ -314,7 +314,7 @@ struct AtomicSubShell
     z::Int
     subshell::SubShell
     function AtomicSubShell(z::Int, ss::SubShell)
-        (!hasedge(z, ss.index)) && error("The $(symbol(element(z))) $(ss) sub-shell is not occupied in the ground state.")
+        (!hasedge(z, ss.index)) && error("The $(symbol(elements[z])) $(ss) sub-shell is not occupied in the ground state.")
         return new(z, ss)
     end
     AtomicSubShell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
@@ -327,7 +327,7 @@ jumpratio(ass::AtomicSubShell) = jumpratio(ass.z, ass.subshell.index, FFASTDB)
 
 The Element associated with the specified sub-shell.
 """
-element(ass::AtomicSubShell) = element(ass.z)
+element(ass::AtomicSubShell) = elements[ass.z]
 
 Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) =
     (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
@@ -336,7 +336,7 @@ Base.isless(ass1::AtomicSubShell, ass2::AtomicSubShell) =
     return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : isless(ass1.z, ass2.z)
 
 Base.show(io::IO, ass::AtomicSubShell) =
-    print(io, "$(element(ass.z).symbol) $(ass.subshell)")
+    print(io, "$(elements[ass.z].symbol) $(ass.subshell)")
 
 """
     shell(ass::AtomicSubShell)
@@ -553,28 +553,3 @@ function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
 end
 meanfluorescenceyield(elm::Element, sh::Shell) =
     meanfluorescenceyield(elm, sh, Bambynek1972)
-
-function ionizationfraction(z::Int, sh::Int, over = 4.0)
-    @assert (sh >= 1) && (sh <= 16) "Shell index out of 1:16 in ionizationfraction."
-    function relativeTo(z, sh)
-        nn = (1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4)
-        # Find the largest available shell in shell
-        return findlast(ss -> (nn[ss] == nn[sh]) && FFAST.hasedge(z, ss), eachindex(nn))
-    end
-    rel = relativeTo(z, sh)
-    @assert !isnothing(rel) "Relative to is nothing for $(element(z)) $(subshell(sh))"
-    ee = over * NeXLCore.edgeenergy(z, rel)
-    return rel == sh ? 1.0 :
-           ionizationcrosssection(z, sh, ee) / ionizationcrosssection(z, rel, ee)
-end
-
-const __maxWeights = Dict{AtomicSubShell, Float64}()
-
-function maxweight(ass::AtomicSubShell)
-    if !haskey(__maxWeights, ass)
-        safeSS(elm, tr) = has(elm, tr) ? strength(elm, tr) : 0.0
-        __maxWeights[ass] = maximum(safeSS(element(ass), tr2) for tr2 in transitionsbyshell[shell(ass)])
-    end
-    return __maxWeights[ass]
-end
-

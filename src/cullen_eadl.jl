@@ -25,52 +25,71 @@ let transitions_data, xrayweights_data
             (7 for _ in 1:13)...
         ) # = collect(Iterators.flatten(collect(i for _ in 1:(2i-1)) for i in 1:7 ))
         trans = Dict{Tuple{Int,Int},Int}()
-        xrw = Dict{Tuple{Int,Int},Dict{Tuple{Int,Int},Float64}}()
+        xrw = [ Dict{NTuple{3, Int}, Float64}() for _ in 1:99 ]
         for row in CSV.File(joinpath(dirname(pathof(@__MODULE__)), "..", "data", "relax.csv"))
-            z, ionized, inner, outer, weight = row.ZZ, row.II, row.NN, row.OO, row.PP
-            if (z <= 99) && hasedge(z, inner, FFASTDB) && hasedge(z, outer, FFASTDB) &&
-            (nn[inner] != nn[outer])
+            z, ionized, inn, out, weight = row.ZZ, row.II, row.NN, row.OO, row.PP
+            if (z <= 99) && hasedge(z, inn, FFASTDB) && hasedge(z, out, FFASTDB) && (nn[inn] != nn[out])
                 # There seems to be a problem with the L2-M1 and L3-M1 weights which I resolve with this ad-hoc fix.
-                if (outer == 5) && ((inner == 4) || (inner == 3))
+                if (out == 5) && ((inn == 4) || (inn == 3))
                     if z >= 29
                         weight *= max(0.1, 0.1 + ((0.9 * (z - 29.0)) / (79.0 - 29.0)))
                     else
                         weight *= max(0.1, 0.2 - ((0.1 * (z - 22.0)) / (29.0 - 22.0)))
                     end
                 end
-                get!(xrw, (z, ionized), Dict{Tuple{Int,Int}, Float64}())[(inner, outer)] = weight
-                trans[(inner, outer)] = get(trans, (inner, outer), 0) + 1
+                xrw[z][(ionized, inn, out)] = weight
+                trans[(inn, out)] = get(trans, (inn, out), 0) + 1
             end
         end
         # Add these which aren't in Cullen (The weights are WAGs)
         for x in ((3, 1, 1, 2, 0.00001), (4, 1, 1, 2, 0.00005), (5, 1, 1, 3, 0.0002))
-            xrw[(x[1], x[2])] = Dict( (x[3], x[4]) =>x[5] )
+            xrw[x[1]] = Dict( (x[2], x[3], x[4]) => x[5] )
         end
-        return ( trans, xrw )
+        # Now compute some of the normalized weights
+        xrw2 = [ Dict{NTuple{3, Int}, NTuple{4,Float64}}() for _ in 1:99 ]
+        for (z, id) in enumerate(xrw)
+            sum_s = Dict{Int, Float64}() # Normalize over all in shell
+            sum_ss = Dict{Int, Float64}() # Normalize over all in sub-shell
+            max_s = Dict{Int, Float64}() # Normalize most intense in sub-shell to 1.0
+            for ((ionized, inn, _), w) in id
+                # Assume large overvoltage so ignore differences in ionization rates
+                if inn==ionized
+                    icx = ionizationcrosssection(z, inn, 4.0*edgeenergy(z, inn, FFASTDB), Bote2009)
+                    sum_ss[inn] = get(sum_ss, inn, 0.0) + w
+                    sum_s[nn[inn]] = get(sum_s, nn[inn], 0.0) + icx*w
+                    max_s[nn[inn]] = max(icx*w, get(max_s, nn[inn], 0.0))
+                end
+            end
+            for ((ionized, inn, out), w) in id
+                icx = ionizationcrosssection(z, inn, 4.0*edgeenergy(z, inn, FFASTDB), Bote2009)
+                if inn == ionized
+                    # Yield, norm[sub_shell], norm[shell], norm[max=1]
+                    xrw2[z][(ionized, inn, out)] = (w, w/sum_ss[inn], (icx*w)/sum_s[nn[inn]], (icx*w)/max_s[nn[inn]])
+                else
+                    xrw2[z][(ionized, inn, out)] = (w, 0.0, 0.0, 0.0 )
+                end
+            end
+        end
+        return ( trans, xrw2 )
     end
     transitions_data, xrayweights_data = loadAltWeights()
     global transitions()::Dict{Tuple{Int,Int},Int} = transitions_data
-    global xrayweights()::Dict{Tuple{Int,Int},Dict{Tuple{Int,Int},Float64}} = xrayweights_data
+    global xrayweights()::Vector{Dict{NTuple{3, Int}, NTuple{4, Float64}}} = xrayweights_data
 end
 
-"""
-    totalWeight(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{CullenEADL})
-
-The line weight for the transition `(inner,outer)` which results from an ionization of `ionized`.
-"""
-function totalWeight(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{CullenEADL})
-    trs = get(xrayweights(), (z, ionized), nothing)
-    return isnothing(trs) ? 0.0 : get(trs, (inner,outer), 0.0)
+fluorescenceyield(z::Int, ionized::Int, inner::Int, outer::Int, ::Type{CullenEADL})::Float64 =
+    get(xrayweights()[z], (ionized, inner, outer), (0.0, 0.0, 0.0, 0.0))[1]
+fluorescenceyield(z::Int, inner::Int, outer::Int, ::Type{CullenEADL})::Float64 =
+    get(xrayweights()[z], (inner, inner, outer), (0.0, 0.0, 0.0, 0.0))[1]
+function fluorescenceyield(z::Int, inner::Int, ::Type{CullenEADL})
+    sum=0.0
+    for ((ion,inn,_), ws) in xrayweights()[z]
+        if (ion==inn) && (inner==inn)
+            sum+=ws[1]
+        end
+    end
+    return sum
 end
 
-"""
-    allTotalWeights(z::Int, ionized::Int)
-
-Returns a Vector containing tuples `(inner, outer, weight)` for each transition which could
-result when the specified shell is ionized.
-"""
-allTotalWeights(z::Int, ionized::Int, ::Type{CullenEADL})::Dict{Tuple{Int,Int},Float64} =
-    get(xrayweights(), (z, ionized), Dict{Tuple{Int,Int},Float64}())
-
-isAvailable(z::Int, inner::Int, outer::Int, ::Type{CullenEADL}) =
-    totalWeight(z, inner, inner, outer, CullenEADL) > 0.0
+isAvailable(z::Int, inner::Int, outer::Int, ::Type{CullenEADL}) = 
+    fluorescenceyield(z, inner, inner, outer, CullenEADL) > 0.0

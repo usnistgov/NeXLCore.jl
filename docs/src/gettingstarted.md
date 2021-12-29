@@ -25,7 +25,9 @@ Primarily `NeXLCore` provides:
   - `NeXL` uses [Gadfly](https://github.com/GiovineItalia/Gadfly.jl) for plotting.
     - Many things you'd want to plot can be plotted using `using Gadfly; plot(x)`
     - However, to minimize overhead, plotting support is not loaded (thanks to [Requires](https://github.com/JuliaPackaging/Requires.jl)) until Gadfly is explicitly loaded by the user.
+    - Plots can be readily embedded into Jupyter notebooks and Weave documents.
   - `NeXL` uses [DataFrames](https://github.com/JuliaData/DataFrames.jl) for tabular data.
+
 
 **Let's get this party started...**
 
@@ -79,6 +81,41 @@ en oxidized. The element normally exhibits six allotropes and four oxidatio
 n states.
    discovered by: Glenn T. Seaborg
           source: https://en.wikipedia.org/wiki/Plutonium
+```
+
+
+
+
+
+To help you to iterate over all elements for which there is a complete set of atomic and X-ray data there is the function
+```julia
+eachelement()
+```
+
+```
+(Element(Hydrogen), Element(Helium), Element(Lithium), Element(Beryllium), 
+Element(Boron), Element(Carbon), Element(Nitrogen), Element(Oxygen), Elemen
+t(Fluorine), Element(Neon), Element(Sodium), Element(Magnesium), Element(Al
+uminium), Element(Silicon), Element(Phosphorus), Element(Sulfur), Element(C
+hlorine), Element(Argon), Element(Potassium), Element(Calcium), Element(Sca
+ndium), Element(Titanium), Element(Vanadium), Element(Chromium), Element(Ma
+nganese), Element(Iron), Element(Cobalt), Element(Nickel), Element(Copper),
+ Element(Zinc), Element(Gallium), Element(Germanium), Element(Arsenic), Ele
+ment(Selenium), Element(Bromine), Element(Krypton), Element(Rubidium), Elem
+ent(Strontium), Element(Yttrium), Element(Zirconium), Element(Niobium), Ele
+ment(Molybdenum), Element(Technetium), Element(Ruthenium), Element(Rhodium)
+, Element(Palladium), Element(Silver), Element(Cadmium), Element(Indium), E
+lement(Tin), Element(Antimony), Element(Tellurium), Element(Iodine), Elemen
+t(Xenon), Element(Cesium), Element(Barium), Element(Lanthanum), Element(Cer
+ium), Element(Praseodymium), Element(Neodymium), Element(Promethium), Eleme
+nt(Samarium), Element(Europium), Element(Gadolinium), Element(Terbium), Ele
+ment(Dysprosium), Element(Holmium), Element(Erbium), Element(Thulium), Elem
+ent(Ytterbium), Element(Lutetium), Element(Hafnium), Element(Tantalum), Ele
+ment(Tungsten), Element(Rhenium), Element(Osmium), Element(Iridium), Elemen
+t(Platinum), Element(Gold), Element(Mercury), Element(Thallium), Element(Le
+ad), Element(Bismuth), Element(Polonium), Element(Astatine), Element(Radon)
+, Element(Francium), Element(Radium), Element(Actinium), Element(Thorium), 
+Element(Protactinium), Element(Uranium))
 ```
 
 
@@ -341,7 +378,7 @@ julia> shell(ass), ass.subshell
 (L, L3)
 
 julia> jumpratio(ass)
-6.34014793507294
+6.3305
 
 julia> has(n"C",n"L3"), has(n"C",n"L2")  # Carbon Kα1 is K-L2!!!
 (false, true)
@@ -371,19 +408,19 @@ julia> trs = n"K-L3", n"L3-M5", n"M5-N7"
 (K-L3, L3-M5, M5-N7)
 
 julia> alltransitions
-(K-L2, K-L3, K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, K-P3, L1-M2, L1-M3, L1-M4, L1-M5, L1-N2, L1-N3, L1-N4, L1-N5, L1-O2, L1-O3, L1-O4, L1-O5, L1-P2, L1-P3, L2-M1, L2-M3, L2-M4, L2-N1, L2-N3, L2-N4, L2-N6, L2-O1, L2-O3, L2-O4, L2-P1, L2-P3, L3-M1, L3-M2, L3-M3, L3-M4, L3-M5, L3-N1, L3-N2, L3-N3, L3-N4, L3-N5, L3-N6, L3-N7, L3-O1, L3-O2, L3-O3, L3-O4, L3-O5, L3-P1, L3-P2, L3-P3, M1-N2, M1-N3, M1-O2, M1-O3, M1-P2, M1-P3, M2-N1, M2-N4, M2-O1, M2-O4, M2-P1, M3-N1, M3-N4, M3-N5, M3-O1, M3-O4, M3-O5, M3-P1, M4-N2, M4-N3, M4-N6, M4-O2, M4-O3, M4-P2, M4-P3, M5-N3, M5-N6, M5-N7, M5-O3, M5-P3)
+(K-L2, K-L3, K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, L1-M2, L1-M3, L1-M4, L1-M5, L1-N2, L1-N3, L1-N4, L1-N5, L1-O2, L1-O3, L1-O4, L1-O5, L1-P2, L2-M1, L2-M3, L2-M4, L2-N1, L2-N3, L2-N4, L2-N6, L2-O1, L2-O3, L2-O4, L2-O6, L2-P1, L3-M1, L3-M2, L3-M3, L3-M4, L3-M5, L3-N1, L3-N2, L3-N3, L3-N4, L3-N5, L3-N6, L3-N7, L3-O1, L3-O2, L3-O3, L3-O4, L3-O5, L3-O6, L3-O7, L3-P1, L3-P2, M1-N2, M1-N3, M1-O2, M1-O3, M1-P2, M2-N1, M2-N4, M2-O1, M2-O4, M2-P1, M3-N1, M3-N4, M3-N5, M3-O1, M3-O4, M3-O5, M3-P1, M4-N2, M4-N3, M4-N6, M4-O2, M4-O3, M4-O6, M4-P2, M5-N3, M5-N6, M5-N7, M5-O3, M5-O6, M5-O7)
 
 julia> ktransitions
-(K-L2, K-L3, K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, K-P3)
+(K-L2, K-L3, K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2)
 
 julia> kalpha, kbeta, kother
-((K-L2, K-L3), (K-M2, K-M3, K-M4, K-M5), (K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2, K-P3))
+((K-L2, K-L3), (K-M2, K-M3, K-M4, K-M5), (K-M2, K-M3, K-M4, K-M5, K-N2, K-N3, K-N4, K-N5, K-O2, K-O3, K-O4, K-O5, K-P2))
 
 julia> ltransitions
-(L1-M2, L1-M3, L1-M4, L1-M5, L1-N2, L1-N3, L1-N4, L1-N5, L1-O2, L1-O3, L1-O4, L1-O5, L1-P2, L1-P3, L2-M1, L2-M3, L2-M4, L2-N1, L2-N3, L2-N4, L2-N6, L2-O1, L2-O3, L2-O4, L2-P1, L2-P3, L3-M1, L3-M2, L3-M3, L3-M4, L3-M5, L3-N1, L3-N2, L3-N3, L3-N4, L3-N5, L3-N6, L3-N7, L3-O1, L3-O2, L3-O3, L3-O4, L3-O5, L3-P1, L3-P2, L3-P3)
+(L1-M2, L1-M3, L1-M4, L1-M5, L1-N2, L1-N3, L1-N4, L1-N5, L1-O2, L1-O3, L1-O4, L1-O5, L1-P2, L2-M1, L2-M3, L2-M4, L2-N1, L2-N3, L2-N4, L2-N6, L2-O1, L2-O3, L2-O4, L2-O6, L2-P1, L3-M1, L3-M2, L3-M3, L3-M4, L3-M5, L3-N1, L3-N2, L3-N3, L3-N4, L3-N5, L3-N6, L3-N7, L3-O1, L3-O2, L3-O3, L3-O4, L3-O5, L3-O6, L3-O7, L3-P1, L3-P2)
 
 julia> mtransitions
-(M1-N2, M1-N3, M1-O2, M1-O3, M1-P2, M1-P3, M2-N1, M2-N4, M2-O1, M2-O4, M2-P1, M3-N1, M3-N4, M3-N5, M3-O1, M3-O4, M3-O5, M3-P1, M4-N2, M4-N3, M4-N6, M4-O2, M4-O3, M4-P2, M4-P3, M5-N3, M5-N6, M5-N7, M5-O3, M5-P3)
+(M1-N2, M1-N3, M1-O2, M1-O3, M1-P2, M2-N1, M2-N4, M2-O1, M2-O4, M2-P1, M3-N1, M3-N4, M3-N5, M3-O1, M3-O4, M3-O5, M3-P1, M4-N2, M4-N3, M4-N6, M4-O2, M4-O3, M4-O6, M4-P2, M5-N3, M5-N6, M5-N7, M5-O3, M5-O6, M5-O7)
 
 julia> shell.( trs )
 (K, L, M)
@@ -466,23 +503,39 @@ julia> edgeenergy.(feka) # ionization edge energy
 
 Often we want to know the relative line-weights of the transitions.
 ```julia
-julia> normweight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
-6-element Vector{Float64}:
- 0.30154168064716697
- 0.5907083508331229
- 0.036316387945901134
- 0.07138962415597284
- 1.7874023761566593e-5
- 2.6082394074698673e-5
+julia> weight.(NormalizeByShell, characteristic(n"Fe", ltransitions)) # sum(...)=1
+14-element Vector{Float64}:
+ 0.04304167415466284
+ 0.06389899746585781
+ 0.0001306859940597016
+ 0.0001774748067477429
+ 0.08193870819313345
+ 0.0013040610916394452
+ 0.19915910782871307
+ 0.011753596374972516
+ 0.1588979621813908
+ 0.0013520694901178318
+ 0.0013165665713401205
+ 0.034020671918741675
+ 0.3802392186858509
+ 0.022769205242772064
 
-julia> strength.(characteristic(n"Fe", ktransitions)) # Not normalized
-6-element Vector{Float64}:
- 0.10139102
- 0.19862104
- 0.0122111
- 0.0240042
- 6.01e-6
- 8.77e-6
+julia> weight.(NormalizeBySubShell, characteristic(n"Fe", ltransitions)) # sum(...)=3
+14-element Vector{Float64}:
+ 0.4013253401731517
+ 0.5958013343663264
+ 0.001218530692682046
+ 0.0016547947678398158
+ 0.2785557828362096
+ 0.0044332375535096466
+ 0.6770538908110011
+ 0.039957088799279755
+ 0.26545122818314754
+ 0.002258735743451679
+ 0.0021994253957024006
+ 0.05683414073074585
+ 0.6352187669237488
+ 0.03803770302320376
 
 julia> brightest(characteristic(n"Fe", ltransitions))
 Fe L3-M5
@@ -523,19 +576,21 @@ for the MACs except in the last line.
 julia> mac( n"Ni", n"Fe K-L3") # In cm²/g
 83.48344476953369
 
-julia> Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
-Dict{CharXRay, Tuple{Float64, Float64}} with 12 entries:
-  Ni L1-M5 => (9496.52, 0.000298443)
-  Ni L2-M1 => (2149.34, 0.0873993)
+julia> Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(NormalizeToUnity, cxr))), characteristic(n"Ni", ltransitions)))
+Dict{CharXRay, Tuple{Float64, Float64}} with 14 entries:
+  Ni L1-M5 => (9496.52, 0.000291368)
+  Ni L2-M1 => (2149.34, 0.0870678)
   Ni L3-M2 => (1999.76, 0.00246174)
-  Ni L2-M3 => (1910.69, 0.00233952)
-  Ni L2-M4 => (9677.04, 0.52428)
-  Ni L1-M2 => (11241.6, 0.063308)
+  Ni L2-M3 => (1910.69, 0.00233065)
+  Ni L2-M4 => (9677.04, 0.522291)
+  Ni L1-M2 => (11241.6, 0.0618071)
+  Ni L2-N1 => (9643.95, 0.0181068)
   Ni L3-M1 => (2255.04, 0.170298)
   Ni L3-M3 => (1999.76, 0.0023918)
   Ni L3-M4 => (1693.36, 0.0918605)
-  Ni L1-M3 => (11241.6, 0.0969139)
-  Ni L1-M4 => (9496.52, 0.000227338)
+  Ni L3-N1 => (1688.47, 0.0342265)
+  Ni L1-M3 => (11241.6, 0.0946162)
+  Ni L1-M4 => (9496.52, 0.000221948)
   Ni L3-M5 => (1693.36, 1.0)
 
 julia> mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
@@ -587,9 +642,9 @@ krs = [
 5-element Vector{KRatio}:
  k[O K-L3 + 1 other, SiO2] = 0.9844 ± 0.0023
  k[Na K-L3 + 1 other, NaCl] = 0.1554 ± 0.0009
- k[Al K-L3 + 1 other, Al] = 0.0685 ± 0.0007
+ k[Al K-L3 + 2 others, Al] = 0.0685 ± 0.0007
  k[Si K-L3 + 2 others, Si] = 0.2190 ± 0.0002
- k[Th M5-N7 + 29 others, Th] = -0.0002 ± 0.0005
+ k[Th M5-N7 + 26 others, Th] = -0.0002 ± 0.0005
 ```
 
 
@@ -641,7 +696,7 @@ end
 ```
 
 ```
-"Path length in SiO2 = 4.153305752548608 μm"
+"Path length in SiO2 = 0.806127654431344 μm"
 ```
 
 
@@ -662,9 +717,9 @@ display(plot(collect(ltransitions), mode = :Energy))
 display(plot(collect(mtransitions), mode = :Energy))
 ```
 
-![](figures/gettingstarted_27_1.svg)
-![](figures/gettingstarted_27_2.svg)
-![](figures/gettingstarted_27_3.svg)
+![](figures/gettingstarted_28_1.svg)
+![](figures/gettingstarted_28_2.svg)
+![](figures/gettingstarted_28_3.svg)
 
 
 
@@ -675,9 +730,9 @@ display(plot(collect(ltransitions), mode = :Weight))
 display(plot(collect(mtransitions), mode = :Weight))
 ```
 
-![](figures/gettingstarted_28_1.svg)
-![](figures/gettingstarted_28_2.svg)
-![](figures/gettingstarted_28_3.svg)
+![](figures/gettingstarted_29_1.svg)
+![](figures/gettingstarted_29_2.svg)
+![](figures/gettingstarted_29_3.svg)
 
 
 
@@ -688,9 +743,9 @@ display(plot(collect(lsubshells), :EdgeEnergy))
 display(plot(collect(msubshells), :EdgeEnergy))
 ```
 
-![](figures/gettingstarted_29_1.svg)
-![](figures/gettingstarted_29_2.svg)
-![](figures/gettingstarted_29_3.svg)
+![](figures/gettingstarted_30_1.svg)
+![](figures/gettingstarted_30_2.svg)
+![](figures/gettingstarted_30_3.svg)
 
 
 
@@ -701,9 +756,9 @@ display(plot(collect(lsubshells), :FluorescenceYield))
 display(plot(collect(msubshells), :FluorescenceYield))
 ```
 
-![](figures/gettingstarted_30_1.svg)
-![](figures/gettingstarted_30_2.svg)
-![](figures/gettingstarted_30_3.svg)
+![](figures/gettingstarted_31_1.svg)
+![](figures/gettingstarted_31_2.svg)
+![](figures/gettingstarted_31_3.svg)
 
 
 
@@ -714,8 +769,8 @@ display(NeXLCore.compareMACs(n"C"))
 display(NeXLCore.compareMACs(n"U"))
 ```
 
-![](figures/gettingstarted_31_1.svg)
-![](figures/gettingstarted_31_2.svg)
+![](figures/gettingstarted_32_1.svg)
+![](figures/gettingstarted_32_2.svg)
 
 
 Or MAC algorithms one at a time...
@@ -724,8 +779,8 @@ display(plot(NeXLCore.FFASTDB, n"Ag"))
 display(plot(NeXLCore.DTSA, n"Au"))
 ```
 
-![](figures/gettingstarted_32_1.svg)
-![](figures/gettingstarted_32_2.svg)
+![](figures/gettingstarted_33_1.svg)
+![](figures/gettingstarted_33_2.svg)
 
 
 Or many elements at once...
@@ -733,7 +788,7 @@ Or many elements at once...
 plot(NeXLCore.FFASTDB, collect(keys(albite)),xmax=5.0e3)
 ```
 
-![](figures/gettingstarted_33_1.svg)
+![](figures/gettingstarted_34_1.svg)
 
 
 
@@ -742,4 +797,4 @@ Or a Material MAC...
 plot(NeXLCore.FFASTDB, [keys(albite)..., albite], xmax=5.0e3)
 ```
 
-![](figures/gettingstarted_34_1.svg)
+![](figures/gettingstarted_35_1.svg)

@@ -25,7 +25,9 @@ Primarily `NeXLCore` provides:
   - `NeXL` uses [Gadfly](https://github.com/GiovineItalia/Gadfly.jl) for plotting.
     - Many things you'd want to plot can be plotted using `using Gadfly; plot(x)`
     - However, to minimize overhead, plotting support is not loaded (thanks to [Requires](https://github.com/JuliaPackaging/Requires.jl)) until Gadfly is explicitly loaded by the user.
+    - Plots can be readily embedded into Jupyter notebooks and Weave documents.
   - `NeXL` uses [DataFrames](https://github.com/JuliaData/DataFrames.jl) for tabular data.
+
 
 **Let's get this party started...**
 
@@ -45,6 +47,11 @@ Note the use of `n"??"`.  We'll see a lot of this.
 Elements come with lots of useful information...
 ```julia
 e3
+```
+
+To help you to iterate over all elements for which there is a complete set of atomic and X-ray data there is the function
+```julia
+eachelement()
 ```
 
 As you can see, each element comes with many different properties which can be accessed by the field names.
@@ -203,8 +210,8 @@ edgeenergy.(feka) # ionization edge energy
 
 Often we want to know the relative line-weights of the transitions.
 ```julia; term=true;
-normweight.(characteristic(n"Fe", ktransitions)) # sum(...)=1
-strength.(characteristic(n"Fe", ktransitions)) # Not normalized
+weight.(NormalizeByShell, characteristic(n"Fe", ltransitions)) # sum(...)=1
+weight.(NormalizeBySubShell, characteristic(n"Fe", ltransitions)) # sum(...)=3
 brightest(characteristic(n"Fe", ltransitions))
 ```
 
@@ -222,7 +229,7 @@ material. MACs are available for `Element` or for `Material`.  Here we are accep
 for the MACs except in the last line.
 ```julia; term=true;
 mac( n"Ni", n"Fe K-L3") # In cm²/g
-Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(cxr))), characteristic(n"Ni", ltransitions)))
+Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(NormalizeToUnity, cxr))), characteristic(n"Ni", ltransitions)))
 mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
 mac( mat"AlNaSi3O8", n"O K-L3") # O K-L3 in Albite (interpreted as a chemical formular)
 mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.FFASTDB), mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.DTSA) # Compare and contrast...

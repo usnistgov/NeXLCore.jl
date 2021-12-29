@@ -56,9 +56,8 @@ export energy # Returns CharXRay and AtomicSubShell eneries
 export density # Returns Element or Mateial data
 export λ, ν, ω, wavenumber # wavelength, frequency, angular frequency and wavenumber of X-ray
 export edgeenergy # Ionization edge energy for an X-ray
-export weight # Returns CharXRay weights with the most intense in a shell = 1
-export normweight # Returns CharXRay weights normalized by shell to a sum of one.
-export strength #
+export NormalizeBySubShell, NormalizeByShell, NormalizeToUnity, RawYield
+export weight # Returns CharXRay weights as scaled by NormalizeBySubShell, NormalizeByShell, NormalizeToUnity
 export has # Element has a specific Transition
 export FFASTDB # Chantler's FFAST database
 export DTSA   # Heinrich's IXCOM 11 MACs
@@ -175,10 +174,10 @@ include("misc.jl")
 export Poehn1985 # A jump ratio model
 export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
-export Burhop1965, Sogut2002, Krause1979 # Fluorescence yield models
+export Burhop1965, Sogut2002, Krause1979, Kahoul2012, Reed1975ω # Fluorescence yield models
+
 export CullenEADL
 export fluorescenceyield # fluorescence yield models
-export characteristicyield
 
 include("matu.jl")
 export MaterialLabel
@@ -256,6 +255,7 @@ export colorize # Maps Material to Color for all Material in a Region
 include("staging.jl")
 export StageMapping, DefaultStageMapping
 export stage2image, image2stage
+export compute_tilt # Computes the tilt and orientation from three focus points
 
 include("standardize.jl")
 export isstandard # Does a k-ratio have the necessary properties to be a standard

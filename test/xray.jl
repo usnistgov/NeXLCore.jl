@@ -40,6 +40,10 @@ using NeXLCore
         @test e2 > e1
         @test e3 > e2
         @test e3 > e1
+
+        @test n"Os" == elements[76]
+        @test n"Osmium" == elements[76]
+        @test n"76" == elements[76] 
     end
 
     @testset "Shells" begin
@@ -101,11 +105,11 @@ using NeXLCore
         @test !isless(n"Fe K", n"Fe K")
  
         # Check that these funtions are defined for all available AtomicSubShell
-        @test all(energy.(atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(fluorescenceyield.(atomicsubshells(el), CullenEADL) ≠ 0.0 for el in elements[eachelement()])
-        @test all(map(sh->ionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(map(sh->relativeionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(all(map(ass->parse(AtomicSubShell,repr(ass)) == ass, atomicsubshells(el))) for el in elements[eachelement()])
+        @test all(energy.(atomicsubshells(el)) ≠ 0.0 for el in eachelement())
+        @test all(fluorescenceyield.(atomicsubshells(el), CullenEADL) ≠ 0.0 for el in eachelement())
+        @test all(map(sh->ionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in eachelement())
+        @test all(map(sh->relativeionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in eachelement())
+        @test all(all(map(ass->parse(AtomicSubShell,repr(ass)) == ass, atomicsubshells(el))) for el in eachelement())
     end
 
     @testset "Transitions" begin
@@ -169,7 +173,7 @@ using NeXLCore
         @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
         @test length(characteristic(n"Fe", ltransitions, 0.0)) == 14
-        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 4
+        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6
         @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
@@ -177,10 +181,11 @@ using NeXLCore
         @test !isless(n"Fe K-L2", n"Fe K-L3")
 
         # Check that these funtions are defined for all available transitions
-        @test all(energy.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(weight.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(strength.(characteristic(el,alltransitions)) ≠ 0.0 for el in elements[eachelement()])
-        @test all(all(map(cxr->parse(CharXRay,repr(cxr)) == cxr, characteristic(el,alltransitions))) for el in elements[eachelement()])
+        @test all(energy.(characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
+        @test all(weight.(NormalizeToUnity, characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
+        @test all(weight.(NormalizeByShell, characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
+        @test all(weight.(NormalizeBySubShell, characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
+        @test all(all(map(cxr->parse(CharXRay,repr(cxr)) == cxr, characteristic(el,alltransitions))) for el in eachelement())
     end
     @testset "Other" begin
         @test firstsubshell(Shell(3)) == n"M1"
@@ -189,10 +194,16 @@ using NeXLCore
         @test lastsubshell(Shell(1)) == n"K1"
         @test firstsubshell(Shell(2)) == n"L1"
         @test lastsubshell(Shell(2)) == n"L3"
-        @test eachelement() == 1:92
-        @test NeXLCore.characteristicyield(20, 1, 4, 9, CullenEADL) == 0.0
+        @test length(eachelement()) == 92
+        @test isequal(eachelement()[1], n"H")
+        @test isequal(eachelement()[end], n"U")
+        @test eachelement()[26]==n"Fe"
+        @test eachelement()[41]==n"Nb"
+
+        @test all(ze -> ze[1]==z(ze[2]), zip(1:92, eachelement()))
+        @test NeXLCore.fluorescenceyield(20, 1, 4, 9, CullenEADL) == 0.0
         @test isapprox(
-            NeXLCore.characteristicyield(25, 1, 4, 9, CullenEADL),
+            NeXLCore.fluorescenceyield(25, 1, 4, 9, CullenEADL),
             0.0007828,
             atol = 0.0000001,
         )

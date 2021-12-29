@@ -45,3 +45,17 @@ function stage2image(::Type{DefaultStageMapping}, stage_coord::Dict, centered_co
     xy = roti * ([ centered_coord[:X], centered_coord[:Y] ] - [ stage_coord[:X], stage_coord[:Y] ])
     return Dict{Symbol,Float64}(:X=>xy[1], :Y=>xy[2])
 end
+
+
+"""
+    compute_tilt(v1::Vector, v2::Vector, v3::Vector)
+
+Compute the tilt and angle of tilt of the sample where `v1`, `v2` and `v3` are three points
+forming a triangle with each focused on the surface of the sample.  Assumes a right-handed 
+coordinate system which may/may not match your stage.
+"""
+function compute_tilt(v1::Vector, v2::Vector, v3::Vector)
+    vz = cross(v2-v1, v3-v1)
+    n = vz / norm(vz)
+    return rad2deg.( (acos(n[3]), atan(n[2],n[1])) )
+end

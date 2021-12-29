@@ -12,7 +12,7 @@ struct CharXRay
             transition.innershell.index,
             transition.outershell.index
         ) "$z $transition unknown!"
-        "$(symbol(element(z))) $(transition) does not occur."
+        "$(symbol(elements[z])) $(transition) does not occur."
         return new(z, transition)
     end
 end
@@ -30,7 +30,7 @@ Base.isless(cxr1::CharXRay, cxr2::CharXRay) =
 
 characteristic(elm::Element, tr::Transition) = CharXRay(z(elm), tr)
 
-Base.show(io::IO, cxr::CharXRay) = print(io, element(cxr.z).symbol, " ", cxr.transition)
+Base.show(io::IO, cxr::CharXRay) = print(io, elements[cxr.z].symbol, " ", cxr.transition)
 
 """
     inner(cxr::CharXRay)
@@ -68,28 +68,6 @@ Return the element for this CharXRay.
 """
 element(cxr::CharXRay) = PeriodicTable.elements[cxr.z]
 
-"""
-    normweight(elm::Element, tr::Transition)::Float64
-    normweight(cxr::CharXRay)::Float64
-
-Return the nominal line strength for the specified transition in the specified element.
-
-  * weight(...) - the most intense line in a family returns 1.0
-  * normweight(...) - the sum of all the lines in a family is 1.0
-"""
-function normweight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    ish = inner(cxr)
-    e0 = overvoltage*energy(ish)
-    safeSS(z, tr) = has(elements[z], tr) ? strength(CharXRay(z, tr)) : 0.0
-    sumw = sum(shelltosubshells[shell(ish.subshell)]) do ss
-        relativeionizationcrosssection(AtomicSubShell(cxr.z, ss), e0) * #
-            maximum(safeSS(cxr.z, tr) for tr in transitionsbysubshell[ss])
-    end
-    return strength(cxr) * relativeionizationcrosssection(ish, e0) / sumw     
-end
-normweight(elm::Element, tr::Transition) =
-    has(elm, tr) ? normweight(characteristic(elm, tr)) : 0.0    
-
 ν(cxr::CharXRay) = energy(cxr) / plancksConstant
 ω(cxr::CharXRay) = 2π * ν(cxr)
 
@@ -108,24 +86,60 @@ X-ray wavenumber in cm¯¹.
 wavenumber(cxr::CharXRay) = 1.0 / λ(cxr)
 wavenumber(energy::Real) = 1.0 / λ(energy)
 
+abstract type WeightNormalization end
 """
-    weight(cxr::CharXRay)
+`NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
+Example: 
 
-The line weight of the specified characteristic X-ray relative to the other lines from 
-the same element in the same shell.  The most intense line is normalized to unity.
-
-* weight(...) - the most intense line in a family returns 1.0
-* normweight(...) - the sum of all the lines in a family is 1.0
+    sum(cxr=>weight(NormalizeByShell, cxr), characteristic(n"Fe", ltransitions))==1.0 
 """
-function weight(cxr::CharXRay, overvoltage = 4.0)::Float64
-    ish = inner(cxr)
-    e0 = overvoltage*energy(ish)
-    safeSS(z, tr) = has(elements[z], tr) ? strength(CharXRay(z, tr)) : 0.0
-    maxw = maximum(filter(ss->has(element(cxr), ss), shelltosubshells[shell(ish.subshell)])) do ss
-        relativeionizationcrosssection(AtomicSubShell(cxr.z, ss), e0) * #
-            maximum(safeSS(cxr.z, tr) for tr in transitionsbysubshell[ss])
-    end
-    return strength(cxr) * relativeionizationcrosssection(ish, e0) / maxw     
+struct NormalizeByShell <: WeightNormalization end
+"""
+`NormalizeBySubShell` normalizes the sum of all the weights associated with a sub-shell to unity.
+
+Example: 
+
+    sum(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0+1.0+1.0
+"""
+struct NormalizeBySubShell <: WeightNormalization end
+"""
+`NormalizeToUnity` normalizes intensities such that the most intense line in each shell to 1.0.
+
+Example: 
+
+    sum(cxr=>weight(NormalizeBySubShell, cxr), n"Fe K-L3")==1.0
+"""
+struct NormalizeToUnity <: WeightNormalization end
+
+"""
+    weight(::Type{<:WeightNormalization}, cxr::CharXRay)
+
+where `WeightNormalization` is one of the following:
+
+  * `NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
+  * `NormalizeBySubShell` normalizes the sum of all the weights associated with each sub-shell to unity.
+  * `NormalizeToUnity` normalizes intensities such that the most intense line in each shell to 1.0.
+
+Computes a rough estimate of the relative intensity of `cxr` relative to the other characteristic
+X-rays in its shell, sub-shell etc. The different `WeightNormalization` modes reflect different ways
+that the `weight(...)` function is used.
+
+The difference between `fluorescenceyield(...)` and `weight(...)` is that
+
+  * fluorescenceyield assumes that a sub-shell in the atom is already ionized
+  * weight also considers the relative likelihood of ionization of each sub-shell assuming an overvoltage of 4.0.
+"""
+function weight(::Type{NormalizeBySubShell}, cxr::CharXRay)
+    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
+    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[2]
+end
+function weight(::Type{NormalizeByShell}, cxr::CharXRay)
+    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
+    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[3]
+end
+function weight(::Type{NormalizeToUnity}, cxr::CharXRay)
+    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
+    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[4]
 end
 
 """
@@ -148,7 +162,7 @@ characteristic(
 ) = characteristic(
     elm,
     iter,
-    cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE),
+    cxr -> (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE),
 )
 characteristic(
     elm::Element,
@@ -158,7 +172,7 @@ characteristic(
 ) = characteristic(
     elm,
     iter,
-    cxr -> (weight(cxr) > minweight) && (energy(inner(cxr)) <= maxE),
+    cxr -> (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE),
 )
 
 """
@@ -223,7 +237,7 @@ function splitbyshell(cxrs)
     return res
 end
 
-brightest(cxrs::Vector{CharXRay})::CharXRay = cxrs[findmax(weight.(cxrs))[2]]
+brightest(cxrs::Vector{CharXRay})::CharXRay = cxrs[findmax(weight.(NormalizeToUnity, cxrs))[2]]
 
 """
     name(cxrs::AbstractVector{CharXRay}, byfamily=false)
@@ -281,7 +295,8 @@ function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay}
         Inner = inner.(cc),
         Outer = outer.(cc),
         Energy = energy.(cc),
-        Strength = strength.(cc),
-        Weight = weight.(cc),
+        WgtByShell = map(cxr->weight(NormalizeToShell, cxr), cc),
+        WgtBySubShell = map(cxr->weight(NormalizeToSubShell, cxr), cc),
+        Weight = map(cxr->weight(NormalizeToUnity, cxr), cc),
     )
 end

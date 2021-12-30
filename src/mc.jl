@@ -270,7 +270,7 @@ function take_step(
 end
 
 """
-trajectory(p::T, reg::Region, scf::Function=transport; minE::Float64=50.0) where {T <: Particle}
+trajectory(eval::Function, p::T, reg::Region, scf::Function=transport; minE::Float64=50.0) where {T <: Particle}
 trajectory(eval::Function, p::T, reg::Region, scf::Function, terminate::Function) where { T <: Particle }
 
 Run a single particle trajectory from `p` to `minE` or until the particle exits `reg`.
@@ -299,7 +299,6 @@ function trajectory(
         eval(pc, prevr)
     end
 end
-
 function trajectory(
     eval::Function,
     p::T,

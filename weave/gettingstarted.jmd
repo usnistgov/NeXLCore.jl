@@ -1,8 +1,18 @@
-# ![](NeXL_sm.png)Core - Part of the NeXL X-ray Microanalysis Library
-
 ## Getting Started With NeXLCore
 
-[NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
+[NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) is a Julia language library that provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
+
+It can be installed from the Julia package repo.
+
+```
+using Pkg 
+Pkg.add("NeXLCore")
+```
+or
+
+```
+> ]add NeXLCore
+```
 
 Primarily `NeXLCore` provides:
 
@@ -45,12 +55,12 @@ es = [ n"Ca", n"21", n"Ti", n"Vanadium" ]
 Note the use of `n"??"`.  We'll see a lot of this.
 
 Elements come with lots of useful information...
-```julia
+```julia; term=true
 e3
 ```
 
 To help you to iterate over all elements for which there is a complete set of atomic and X-ray data there is the function
-```julia
+```julia; term=true
 eachelement()
 ```
 
@@ -80,7 +90,7 @@ collect(keys(albite)) # Now maybe this is a little more clear
 a(n"Na", albite)
 ```
 You can enter mass fractions in directly using the `mat"??"` syntax.
-```julia
+```julia; term=true
 mat = mat"0.8*Fe+0.15*Ni+0.05*Cr"
 ```
 
@@ -101,7 +111,7 @@ because the assumed atomic weight of sodium is different.
 ```julia; term=true;
 albite2 = atomicfraction("Albite", n"Al"=>1, n"Na"=>1, n"Si"=>3, n"O"=>8, properties=Dict{Symbol,Any}(:Density=>2.6), atomicweights=Dict(n"Na"=>22.0))
 ```
-```julia
+```julia; term=true
 using DataFrames
 asa(DataFrame, albite2)
 ```
@@ -114,7 +124,7 @@ atomicfraction(ss)
 normalizedmassfraction(ss)
 asnormalized(ss)
 ```
-```julia
+```julia; term=true
 compare(ss, asnormalized(ss))
 ```
 
@@ -238,7 +248,7 @@ mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.FFASTDB), mac( mat"AlNaSi3O8", n"O K-L3
 #### KRatio
 k-ratios are the core quantity for X-ray microanalysis.  We measure intensities but k-ratios make the intensities
 meaningful.
-```julia
+```julia; term=true
 kr = KRatio(
       [n"Fe K-L3", n"Fe K-L2" ],
       Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Unknown properties
@@ -248,7 +258,7 @@ kr = KRatio(
 ```
 
 Combine k-ratios together in `Vector`.
-```julia
+```julia; term=true
 props =  ( Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)),
            Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)))
 krs = [
@@ -271,24 +281,47 @@ the entries in the object so it maintains only one copy.
 
 #### Monte Carlo
 NeXLCore also includes a rudimentary Monte Carlo simulator of electron trajectories.  While it is currently limited
-to modeling element trajectories, it can be extended to handle quite complex sample geometries because it is based on 
-the `GeometryBasics` package that defines both simple and meshed shapes.  Currently, basic blocks and spheres have
-been implemented.
+to modeling electron trajectories, it can be extended to handle quite complex sample geometries because it is based on 
+the [`GeometryBasics`](https://github.com/JuliaGeometry/GeometryBasics.jl) package that defines both simple and meshed shapes.  
+Currently, basic blocks and spheres have been implemented.
 
-```julia
+```julia; term=true
 # Build a alumina coated silica particle on a carbon substrate
 mat = material("SiO2",2.648)
 sample = coated_particle(mat, 1.0e-4, material("Al2O3", 3.99), 0.1e-4, material("C",2.0))
-# Accumulate the path length inside the SiO2.
-len = 0.0
+```
+
+Now let's run a MC simulation to compute the path length of an electron in a material.
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
+using Gadfly # for plot(...)
+
 # Each call to the trajectory function runs a single electron trajecory while calling the `do`
-# clause at each elastic scatter point.  The arguments to the do clasuse are a representation
-# of thelectron and the Region in which the last step occured.
-e0=20.0e3 # eV
-trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
-   global len += region.material == mat ? NeXLCore.pathlength(electron) : 0.0
+# clause at each elastic scatter point.  The arguments to the do clause are a representation
+# of the electron and the Region in which the last step occured.
+function mc_path_length(e0, mat)
+  len=0.0
+  trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
+    len += region.material == mat ? NeXLCore.pathlength(electron) : 0.0
+  end
+  return len
 end
-"Path length in SiO2 = $(1.0e4*len) μm"
+# Let's look at the path-length as a function of incident energy.
+# The downward spikes are ???                (Backscattered e⁻)
+plot(e0->mc_path_length(e0,mat), 1.0e3, 20.0e3)
+```
+Or a second example...
+
+```julia; fig_width=8; fig_height=4; fig_ext=".svg";
+# Let's look at the number of scatter events as a function of incident energy.
+function mc_n_scatters(e0, mat)
+  cx=0
+  trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
+    cx += 1
+  end
+  return cx
+end
+
+plot(e0->mc_n_scatters(e0, mat), 1.0e3, 20.0e3)
 ```
 
 There is more but this should get you started.  As always, the code is the ultimate resource and you have it in your

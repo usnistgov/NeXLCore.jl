@@ -25,13 +25,15 @@ end
 include(joinpath("..","weave","buildweave.jl"))
 
 pages = [
+            # "Start Page" => "index.md",
             "Getting Started" => "gettingstarted.md",
             "Bremsstrahlung" => "bremsstrahlung.md",
             "Mass Fraction Uncertainty" => "Au60Ag40unc.md",
             "Backscatter" => "eta.md",
             "Fluorescence Yield" => "fluoryield.md",
             "O by Stoichiometry" => "OByStoic.md",
-            "Mean Ionization Potential" => "meanionizationpotential.md"
+            "Mean Ionization Potential" => "meanionizationpotential.md",
+            "API: Structures and Methods" => "methods.md"
          ]
 
 makedocs(

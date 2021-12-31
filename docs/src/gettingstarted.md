@@ -621,9 +621,9 @@ the entries in the object so it maintains only one copy.
 
 #### Monte Carlo
 NeXLCore also includes a rudimentary Monte Carlo simulator of electron trajectories.  While it is currently limited
-to modeling element trajectories, it can be extended to handle quite complex sample geometries because it is based on 
-the `GeometryBasics` package that defines both simple and meshed shapes.  Currently, basic blocks and spheres have
-been implemented.
+to modeling electron trajectories, it can be extended to handle quite complex sample geometries because it is based on 
+the [`GeometryBasics`](https://github.com/JuliaGeometry/GeometryBasics.jl) package that defines both simple and meshed shapes.  
+Currently, basic blocks and spheres have been implemented.
 
 ```julia
 julia> # Build a alumina coated silica particle on a carbon substrate

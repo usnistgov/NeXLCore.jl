@@ -43,6 +43,3 @@ Examples:
     n"L3-M5" == transition(shell("L3"),shell("M5"))
     n"Fe L3-M5" == CharXRay(26, transition(shell("L3"),shell("M5")))
 
-```@autodocs
-Modules = [NeXLCore]
-```

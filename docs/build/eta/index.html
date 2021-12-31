@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Backscatter · NeXLCore</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+<script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js" type="text/javascript" defer="defer"></script>
+<script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+</head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../gettingstarted/"><img src="../assets/logo.png" alt="NeXLCore logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../gettingstarted/">NeXLCore</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../gettingstarted/">Getting Started</a></li><li><a class="tocitem" href="../bremsstrahlung/">Bremsstrahlung</a></li><li><a class="tocitem" href="../Au60Ag40unc/">Mass Fraction Uncertainty</a></li><li class="is-active"><a class="tocitem" href>Backscatter</a><ul class="internal"><li><a class="tocitem" href="#Comparing-η-(Backscatter-Coefficient)-Expressions"><span>Comparing η (Backscatter Coefficient) Expressions</span></a></li></ul></li><li><a class="tocitem" href="../fluoryield/">Fluorescence Yield</a></li><li><a class="tocitem" href="../OByStoic/">O by Stoichiometry</a></li><li><a class="tocitem" href="../meanionizationpotential/">Mean Ionization Potential</a></li><li><a class="tocitem" href="../methods/">API: Structures and Methods</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Backscatter</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Backscatter</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/usnistgov/NeXLCore.jl/blob/master/docs/src/eta.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h2 id="Comparing-η-(Backscatter-Coefficient)-Expressions"><a class="docs-heading-anchor" href="#Comparing-η-(Backscatter-Coefficient)-Expressions">Comparing η (Backscatter Coefficient) Expressions</a><a id="Comparing-η-(Backscatter-Coefficient)-Expressions-1"></a><a class="docs-heading-anchor-permalink" href="#Comparing-η-(Backscatter-Coefficient)-Expressions" title="Permalink"></a></h2><pre><code class="language-julia hljs">using NeXLCore
+using Gadfly</code></pre><p>It seems that Donovan used measured values of the backscatter coefficient for Cu, Ag and Au in his paper (Donovan, John J., Nicholas E. Pingitore, and Andrew Westphal. <em>Compositional averaging of backscatter intensities in compounds.</em> Microscopy and Microanalysis <strong>9</strong>, no. 3 (2003): 202-215.)</p><pre><code class="language-julia hljs">struct Donovanη &lt;: NeXLCore.BackscatterCoefficient end
+
+# Use Donovan&#39;s measured Cu, Ag and Au values
+function NeXLCore.η(::Type{Donovanη}, elm::Element, e0::Float64)
+    if elm==n&quot;Au&quot;
+        return 0.48523489932885905
+    elseif elm==n&quot;Cu&quot;
+        return 0.31744966442953015
+    elseif elm==n&quot;Ag&quot;
+        return 0.4118568232662192
+    else
+        return NaN64
+    end
+end</code></pre><p>Compare the measured backscatter coefficient with various empirical expressions.</p><pre><code class="language-julia hljs">elms = elements[1:99]
+algs = ( Donovanη, LoveScott1978η, August1989η, Pouchou1991η, Tomlin1963 )
+lyrs = map(l-&gt;layer(x=z.(elms), y=map(elm-&gt;η(l[1], elm, 15.0e3), elms), Gadfly.Theme(default_color = l[2])), zip(algs, NeXLPalette[1:5]))
+plot(lyrs..., Guide.xlabel(&quot;Atomic Number&quot;), Guide.ylabel(&quot;η&quot;), #
+    Guide.manual_color_key(&quot;Algorithm&quot;, [ repr.(algs)... ], color = NeXLPalette[1:5]))</code></pre><p><img src="../figures/eta_3_1.svg" alt/></p><p>Compare the empirical expressions with measured values taken from Donovan&#39;s paper.</p><pre><code class="language-julia hljs">#These values are extracted from Figure 2c in Donovan.
+donovanelastic = (
+ ( &quot;20Au80Cu&quot;, &quot;0.201*Au+0.798*Cu&quot;, 0.3577, 0.3569 ),
+ ( &quot;40Au60Cu&quot;, &quot;0.401*Au+0.599*Cu&quot;, 0.3949, 0.3928 ),
+ ( &quot;60Au40Cu&quot;, &quot;0.603*Au+0.396*Cu&quot;, 0.4326, 0.4264 ),
+ ( &quot;80Au20Cu&quot;, &quot;0.801*Au+0.198*Cu&quot;, 0.4679, 0.4569 ),
+ ( &quot;20Au80Ag&quot;, &quot;0.224*Au+0.775*Ag&quot;, 0.4290, 0.4297 ),
+ ( &quot;40Au60Ag&quot;, &quot;0.400*Au+0.599*Ag&quot;, 0.4386, 0.4427 ),
+ ( &quot;60Au40Ag&quot;, &quot;0.600*Au+0.399*Ag&quot;, 0.4604, 0.4575 ),
+ ( &quot;80Au20Ag&quot;, &quot;0.800*Au+0.199*Ag&quot;, 0.4829, 0.4714 ))
+
+data = layer(x=collect(map(de-&gt;de[3], donovanelastic)), y=collect(map(de-&gt;de[4], donovanelastic)), shape=[Shape.star1], Gadfly.Theme(default_color=NeXLPalette[6]))
+calcs = map(l-&gt;layer(x=collect(map(de-&gt;de[3], donovanelastic)), y=collect(map(de-&gt;η(l[1], parse(Material,de[2]), 20.0e3), donovanelastic)), Gadfly.Theme(default_color=l[2])), zip(algs, NeXLPalette[1:4]))
+# map(de-&gt;η(Donovanη, parse(Material, de[2]), 20.0e3), donovanelastic)
+plot(data, calcs..., Guide.xlabel(&quot;Measured&quot;), Guide.ylabel(&quot;Computed&quot;), #
+    Guide.manual_color_key(&quot;Algorithm&quot;, [ repr.(algs)...,&quot;Data&quot; ], color = NeXLPalette[1:6]),
+    Geom.abline(color=&quot;red&quot;, style=:dash), intercept=[0,], slope=[1,])</code></pre><p><img src="../figures/eta_4_1.svg" alt/></p><p>This plot demonstrates that Dononvan used the measured values for the Au, Ag and Cu backscatter coefficients for the computations in his article.</p><pre><code class="language-julia hljs">
+display(plot(x=collect(map(de-&gt;de[4], donovanelastic)), y=collect(map(de-&gt;η(Donovanη, parse(Material,de[2]), 20.0e3), donovanelastic)),
+    Geom.point, Guide.xlabel(&quot;Article&quot;), Guide.ylabel(&quot;Computed&quot;), #
+        intercept=[0], slope=[1], Geom.abline(color=&quot;red&quot;, style=:dash)))</code></pre><p><img src="../figures/eta_5_1.svg" alt/></p><p>Compare to backscatter data extracted from Figure 1 in August 1989. August, H‐J., and J. Wernisch. <em>Analytical expressions for the electron backscattering coefficient.</em> Physica Status Solidi (a) <strong>114</strong>, no. 2 (1989): 629-633.</p><pre><code class="language-julia hljs">backscatterdata = (
+  ( n&quot;C&quot;, 3.977556222841125, 0.08356768966987504 ),
+  ( n&quot;C&quot;, 5.038510038011086, 0.08062840761673218 ),
+  ( n&quot;C&quot;, 7.389708884070725, 0.07251136250238138 ),
+  ( n&quot;C&quot;, 9.888325425696948, 0.06740617430668328 ),
+  ( n&quot;C&quot;, 15.036604947791457, 0.05720486977347572 ),
+  ( n&quot;C&quot;, 19.956500439985124, 0.048491349983217136 ),
+  ( n&quot;C&quot;, 30.83002966497628, 0.05064591630303639 ),
+  ( n&quot;C&quot;, 40.95195543903258, 0.04975233827144809 ),
+  ( n&quot;Si&quot;, 3.9070225254238835, 0.2044343242826428 ),
+  ( n&quot;Si&quot;, 4.909689651731364, 0.18722727726320182 ),
+  ( n&quot;Si&quot;, 7.482922226959749, 0.18287732126171402 ),
+  ( n&quot;Si&quot;, 9.908737106621547, 0.17551550834157365 ),
+  ( n&quot;Si&quot;, 15.134354219774838, 0.16381734720722846 ),
+  ( n&quot;Si&quot;, 17.230860647186365, 0.17895827852419005 ),
+  ( n&quot;Si&quot;, 20.277190626956124, 0.15812022026471678 ),
+  ( n&quot;Si&quot;, 30.932314866054014, 0.15350491241120917 ),
+  ( n&quot;Si&quot;, 25.101604811713585, 0.16591748237791543 ),
+  ( n&quot;Si&quot;, 40.913173245275836, 0.14434460360515639 ),
+  ( n&quot;Cu&quot;, 3.9802777802977403, 0.33131560087452716 ),
+  ( n&quot;Cu&quot;, 5.045767524562056, 0.32462283749580423 ),
+  ( n&quot;Cu&quot;, 7.472489590042729, 0.3165103283105478 ),
+  ( n&quot;Cu&quot;, 9.891046983153558, 0.3151540855113353 ),
+  ( n&quot;Cu&quot;, 15.10940660975588, 0.30946149449791804 ),
+  ( n&quot;Cu&quot;, 19.948335767615283, 0.3052476163692609 ),
+  ( n&quot;Cu&quot;, 30.829122479157412, 0.3013966125681523 ),
+  ( n&quot;Cu&quot;, 40.806352115103735, 0.2952390888225635 ),
+  ( n&quot;Ag&quot;, 3.9058885431502954, 0.39287269461403784 ),
+  ( n&quot;Ag&quot;, 4.887690395623737, 0.39293166169226446 ),
+  ( n&quot;Ag&quot;, 7.681142328383123, 0.3938501873338716 ),
+  ( n&quot;Ag&quot;, 9.872222877411982, 0.39323103301249196 ),
+  ( n&quot;Ag&quot;, 15.157941051065492, 0.39429924431421287 ),
+  ( n&quot;Ag&quot;, 19.988705536555056, 0.39684163257159966 ),
+  ( n&quot;Ag&quot;, 30.71481706597963, 0.3959843419727663 ),
+  ( n&quot;Ag&quot;, 39.92320672043255, 0.40104190291297365 ),
+  ( n&quot;Ag&quot;, 3.910651268699368, 0.4514315392221789 ),
+  ( n&quot;Ag&quot;, 40.8376500258548, 0.39434006767606206 ),
+  ( n&quot;Au&quot;, 5.1727735392040355, 0.46952536037956655 ),
+  ( n&quot;Au&quot;, 7.4457276083860275, 0.46365586813146936 ),
+  ( n&quot;Au&quot;, 9.999002095599241, 0.47582122996253323 ),
+  ( n&quot;Au&quot;, 15.123694786403103, 0.48513802832234126 ),
+  ( n&quot;Au&quot;, 20.032704048770313, 0.48543286371347444 ),
+  ( n&quot;Au&quot;, 25.07461603360216, 0.500750696265116 ),
+  ( n&quot;Au&quot;, 30.828895682702694, 0.4890842866344313 ),
+  ( n&quot;Au&quot;, 40.86804075078699, 0.4941917427946766 ),
+  ( n&quot;C&quot;, 19.639892589199047, 0.060484346508695386 ),
+  ( n&quot;C&quot;, 29.76907584980632, 0.05358519835617925 ),
+  ( n&quot;C&quot;, 39.96561765746478, 0.053446852518801324 ),
+  ( n&quot;C&quot;, 48.729032667761345, 0.05172093149839885 ),
+  ( n&quot;Si&quot;, 19.741270604457913, 0.1640940388819842 ),
+  ( n&quot;Si&quot;, 29.794023459825283, 0.15794105106548972 ),
+  ( n&quot;Si&quot;, 39.76943872413387, 0.15328491985013287 ),
+  ( n&quot;Si&quot;, 48.83766816957118, 0.14932505375075977 ),
+  ( n&quot;Cu&quot;, 9.887418239878073, 0.3181568705717992 ),
+  ( n&quot;Cu&quot;, 15.108499423937008, 0.310212190763034 ),
+  ( n&quot;Cu&quot;, 19.86827661909989, 0.3089965617657464 ),
+  ( n&quot;Cu&quot;, 29.841877511770733, 0.3058418230806216 ),
+  ( n&quot;Cu&quot;, 39.890094438043754, 0.30344231658970705 ),
+  ( n&quot;Cu&quot;, 48.88642940733551, 0.2964751295007756 ),
+  ( n&quot;Ag&quot;, 19.74671371937114, 0.40958986129128827 ),
+  ( n&quot;Ag&quot;, 25.04241093703223, 0.4024004136767334 ),
+  ( n&quot;Ag&quot;, 29.795837831463018, 0.40643965853525776 ),
+  ( n&quot;Ag&quot;, 48.83494661211457, 0.40157714254610766 ),
+  ( n&quot;Au&quot;, 9.989023051591658, 0.48407888887880907 ),
+  ( n&quot;Au&quot;, 19.783454745035428, 0.504186662554091 ),
+  ( n&quot;Au&quot;, 29.74616940787982, 0.5100402790503579 ),
+  ( n&quot;Au&quot;, 39.94361840135715, 0.509151236947864 ),
+  ( n&quot;Au&quot;, 49.0810207654834, 0.5104507806333971 ),
+  ( n&quot;C&quot;, 4.804682893197015, 0.08662036995037692 ),
+  ( n&quot;C&quot;, 9.731835871941648, 0.07190128003919039 ),
+  ( n&quot;C&quot;, 29.683573586377705, 0.06183832134336076 ),
+  ( n&quot;Si&quot;, 5.048035489109235, 0.1977460968330143 ),
+  ( n&quot;Si&quot;, 9.896036505157351, 0.18602525605319736 ),
+  ( n&quot;Si&quot;, 29.712149939672138, 0.16319138899220725 ),
+  ( n&quot;Cu&quot;, 4.936678429842786, 0.3523940633760013 ),
+  ( n&quot;Cu&quot;, 10.013063475791746, 0.3391854378532355 ),
+  ( n&quot;Cu&quot;, 29.824640981212184, 0.3201050521178253 ),
+  ( n&quot;Ag&quot;, 4.860474821057599, 0.41545254964574396 ),
+  ( n&quot;Ag&quot;, 9.91599459317252, 0.41950993822064575 ),
+  ( n&quot;Ag&quot;, 29.855031706144374, 0.41995672723643984 ),
+  ( n&quot;Au&quot;, 5.075477860130091, 0.4875375348132558 ),
+  ( n&quot;Au&quot;, 9.893541744155456, 0.5005896707822663 ),
+  ( n&quot;Au&quot;, 19.782547559216557, 0.504937358819207 ),
+  ( n&quot;Au&quot;, 29.733468806415623, 0.5205500267619817 ),
+  ( n&quot;Si&quot;, 10.880559915087407, 0.18383213433607604 ),
+  ( n&quot;Si&quot;, 13.298210122379366, 0.18322658780197948 ),
+  ( n&quot;Si&quot;, 41.34816884542461, 0.15938574448204218 ),
+  ( n&quot;Cu&quot;, 10.87738476472136, 0.311459571263982 ),
+  ( n&quot;Cu&quot;, 13.217697380954544, 0.312350881331023 ),
+  ( n&quot;Cu&quot;, 25.00294835391133, 0.3100557012092787 ),
+  ( n&quot;Cu&quot;, 41.3250356070434, 0.3035284992424998 ),
+  ( n&quot;Ag&quot;, 9.103382895918571, 0.40444611769828814 ),
+  ( n&quot;Ag&quot;, 10.842231314240099, 0.40304905153722637 ),
+  ( n&quot;Ag&quot;, 13.410020774555253, 0.40320327312643445 ),
+  ( n&quot;Ag&quot;, 41.43004236557774, 0.40413540655532465 ),
+  ( n&quot;Au&quot;, 9.159174823779157, 0.48327829739365513 ),
+  ( n&quot;Au&quot;, 10.817056907766418, 0.4863808728941949 ),
+  ( n&quot;Au&quot;, 13.380310438987216, 0.490288575808983 ),
+  ( n&quot;Au&quot;, 17.23018025782221, 0.4920213007230271 ),
+  ( n&quot;Au&quot;, 41.30847946584899, 0.5047287060808665 ) )
+calcs = Layer[]
+e0s = 5:5:50
+algs = ( LoveScott1978η, August1989η, Pouchou1991η, Tomlin1963 )
+for (alg,col) in zip(algs, NeXLPalette[1:length(algs)]), elm in [n&quot;C&quot;, n&quot;Si&quot;, n&quot;Cu&quot;, n&quot;Ag&quot;, n&quot;Au&quot; ]
+  append!(calcs, layer(x=collect(e0s), y=collect(map(x-&gt;η(alg, elm, x*1000.0), e0s)), Geom.line, Gadfly.Theme(default_color=col)))
+end
+data = layer(x=collect(map(d-&gt;d[2],backscatterdata)), y=collect(map(d-&gt;d[3],backscatterdata)), Geom.point, Gadfly.Theme(default_color=NeXLPalette[length(algs)+1]) )
+plot(data, calcs..., Guide.manual_color_key(&quot;Algorithm&quot;, [ repr.(algs)...,&quot;Data&quot;], color = NeXLPalette[1:length(algs)+1]))</code></pre><p><img src="../figures/eta_6_1.svg" alt/></p><p>Overall, August1989η looks the best.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../Au60Ag40unc/">« Mass Fraction Uncertainty</a><a class="docs-footer-nextpage" href="../fluoryield/">Fluorescence Yield »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Friday 31 December 2021 06:59">Friday 31 December 2021</span>. Using Julia version 1.7.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

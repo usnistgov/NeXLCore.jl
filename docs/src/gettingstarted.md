@@ -1,8 +1,18 @@
-# ![](NeXL_sm.png)Core - Part of the NeXL X-ray Microanalysis Library
-
 ## Getting Started With NeXLCore
 
-[NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
+[NeXLCore](https://github.com/NicholasWMRitchie/NeXLCore.jl) is a Julia language library that provides the core data, algorithms and data structures for the `NeXL` collection of microanalysis libraries.
+
+It can be installed from the Julia package repo.
+
+```
+using Pkg 
+Pkg.add("NeXLCore")
+```
+or
+
+```
+> ]add NeXLCore
+```
 
 Primarily `NeXLCore` provides:
 
@@ -58,10 +68,7 @@ Note the use of `n"??"`.  We'll see a lot of this.
 
 Elements come with lots of useful information...
 ```julia
-e3
-```
-
-```
+julia> e3
 Plutonium (Pu), number 94:
         category: actinide
      atomic mass: 244.0 u
@@ -71,54 +78,21 @@ Plutonium (Pu), number 94:
    boiling point: 3505.0 K
            phase: Solid
           shells: [2, 8, 18, 32, 24, 8, 2]
-e⁻-configuration: 1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d
-¹⁰ 6p⁶ 7s² 5f⁶
+e⁻-configuration: 1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ 4p⁶ 5s² 4d¹⁰ 5p⁶ 6s² 4f¹⁴ 5d¹⁰ 6p⁶ 7s² 5f⁶
       appearance: silvery white, tarnishing to dark gray in air
-         summary: Plutonium is a transuranic radioactive chemical element w
-ith symbol Pu and atomic number 94. It is an actinide metal of silvery-gray
- appearance that tarnishes when exposed to air, and forms a dull coating wh
-en oxidized. The element normally exhibits six allotropes and four oxidatio
-n states.
+         summary: Plutonium is a transuranic radioactive chemical element with symbol Pu and atomic number 94. It is an actinide metal of silvery-gray appearance that tarnishes when exposed to air, and forms a dull coating when oxidized. The element normally exhibits six allotropes and four oxidation states.
    discovered by: Glenn T. Seaborg
           source: https://en.wikipedia.org/wiki/Plutonium
+
 ```
-
-
 
 
 
 To help you to iterate over all elements for which there is a complete set of atomic and X-ray data there is the function
 ```julia
-eachelement()
+julia> eachelement()
+(Element(Hydrogen), Element(Helium), Element(Lithium), Element(Beryllium), Element(Boron), Element(Carbon), Element(Nitrogen), Element(Oxygen), Element(Fluorine), Element(Neon), Element(Sodium), Element(Magnesium), Element(Aluminium), Element(Silicon), Element(Phosphorus), Element(Sulfur), Element(Chlorine), Element(Argon), Element(Potassium), Element(Calcium), Element(Scandium), Element(Titanium), Element(Vanadium), Element(Chromium), Element(Manganese), Element(Iron), Element(Cobalt), Element(Nickel), Element(Copper), Element(Zinc), Element(Gallium), Element(Germanium), Element(Arsenic), Element(Selenium), Element(Bromine), Element(Krypton), Element(Rubidium), Element(Strontium), Element(Yttrium), Element(Zirconium), Element(Niobium), Element(Molybdenum), Element(Technetium), Element(Ruthenium), Element(Rhodium), Element(Palladium), Element(Silver), Element(Cadmium), Element(Indium), Element(Tin), Element(Antimony), Element(Tellurium), Element(Iodine), Element(Xenon), Element(Cesium), Element(Barium), Element(Lanthanum), Element(Cerium), Element(Praseodymium), Element(Neodymium), Element(Promethium), Element(Samarium), Element(Europium), Element(Gadolinium), Element(Terbium), Element(Dysprosium), Element(Holmium), Element(Erbium), Element(Thulium), Element(Ytterbium), Element(Lutetium), Element(Hafnium), Element(Tantalum), Element(Tungsten), Element(Rhenium), Element(Osmium), Element(Iridium), Element(Platinum), Element(Gold), Element(Mercury), Element(Thallium), Element(Lead), Element(Bismuth), Element(Polonium), Element(Astatine), Element(Radon), Element(Francium), Element(Radium), Element(Actinium), Element(Thorium), Element(Protactinium), Element(Uranium))
 ```
-
-```
-(Element(Hydrogen), Element(Helium), Element(Lithium), Element(Beryllium), 
-Element(Boron), Element(Carbon), Element(Nitrogen), Element(Oxygen), Elemen
-t(Fluorine), Element(Neon), Element(Sodium), Element(Magnesium), Element(Al
-uminium), Element(Silicon), Element(Phosphorus), Element(Sulfur), Element(C
-hlorine), Element(Argon), Element(Potassium), Element(Calcium), Element(Sca
-ndium), Element(Titanium), Element(Vanadium), Element(Chromium), Element(Ma
-nganese), Element(Iron), Element(Cobalt), Element(Nickel), Element(Copper),
- Element(Zinc), Element(Gallium), Element(Germanium), Element(Arsenic), Ele
-ment(Selenium), Element(Bromine), Element(Krypton), Element(Rubidium), Elem
-ent(Strontium), Element(Yttrium), Element(Zirconium), Element(Niobium), Ele
-ment(Molybdenum), Element(Technetium), Element(Ruthenium), Element(Rhodium)
-, Element(Palladium), Element(Silver), Element(Cadmium), Element(Indium), E
-lement(Tin), Element(Antimony), Element(Tellurium), Element(Iodine), Elemen
-t(Xenon), Element(Cesium), Element(Barium), Element(Lanthanum), Element(Cer
-ium), Element(Praseodymium), Element(Neodymium), Element(Promethium), Eleme
-nt(Samarium), Element(Europium), Element(Gadolinium), Element(Terbium), Ele
-ment(Dysprosium), Element(Holmium), Element(Erbium), Element(Thulium), Elem
-ent(Ytterbium), Element(Lutetium), Element(Hafnium), Element(Tantalum), Ele
-ment(Tungsten), Element(Rhenium), Element(Osmium), Element(Iridium), Elemen
-t(Platinum), Element(Gold), Element(Mercury), Element(Thallium), Element(Le
-ad), Element(Bismuth), Element(Polonium), Element(Astatine), Element(Radon)
-, Element(Francium), Element(Radium), Element(Actinium), Element(Thorium), 
-Element(Protactinium), Element(Uranium))
-```
-
-
 
 
 
@@ -185,14 +159,9 @@ julia> a(n"Na", albite)
 
 You can enter mass fractions in directly using the `mat"??"` syntax.
 ```julia
-mat = mat"0.8*Fe+0.15*Ni+0.05*Cr"
-```
-
-```
+julia> mat = mat"0.8*Fe+0.15*Ni+0.05*Cr"
 0.8⋅Fe+0.15⋅Ni+0.05⋅Cr[Fe=0.8000,Cr=0.0500,Ni=0.1500]
 ```
-
-
 
 
 
@@ -228,11 +197,9 @@ Albite[Al=0.1033,Na=0.0842,Si=0.3225,O=0.4900,2.60 g/cm³]
 ```
 
 ```julia
-using DataFrames
-asa(DataFrame, albite2)
-```
+julia> using DataFrames
 
-```
+julia> asa(DataFrame, albite2)
 4×7 DataFrame
  Row │ Material  Element  Z      A        C(z)       Norm[C(z)]  A(z)
      │ String    String   Int64  Float64  Float64    Float64     Float64
@@ -242,8 +209,6 @@ asa(DataFrame, albite2)
    3 │ Albite    Al          13  26.9815  0.103287    0.103287   0.0769231
    4 │ Albite    Si          14  28.085   0.322534    0.322534   0.230769
 ```
-
-
 
 
 
@@ -272,26 +237,15 @@ N[Stainless,1.0][Fe=0.8041,Cr=0.0412,Ni=0.1546]
 ```
 
 ```julia
-compare(ss, asnormalized(ss))
-```
-
-```
+julia> compare(ss, asnormalized(ss))
 3×11 DataFrame
- Row │ Material 1  Material 2        Elm     C₁(z)      C₂(z)    ΔC        
-  ΔC/C     A₁(z)      A₂(z)      ΔA           ΔA/A
-     │ String      String            String  Float64    Float64  Float64   
-  Float64  Float64    Float64    Float64      Float64
-─────┼─────────────────────────────────────────────────────────────────────
-──────────────────────────────────────────────────────────
-   1 │ Stainless   N[Stainless,1.0]  Fe      0.804124      0.78  0.0241237 
-     0.03  0.807719   0.807719   0.0          0.0
-   2 │ Stainless   N[Stainless,1.0]  Cr      0.0412371     0.04  0.00123711
-     0.03  0.0444878  0.0444878  6.93889e-18  1.55973e-16
-   3 │ Stainless   N[Stainless,1.0]  Ni      0.154639      0.15  0.00463918
-     0.03  0.147793   0.147793   2.77556e-17  1.87801e-16
+ Row │ Material 1  Material 2        Elm     C₁(z)      C₂(z)    ΔC          ΔC/C     A₁(z)      A₂(z)      ΔA           ΔA/A
+     │ String      String            String  Float64    Float64  Float64     Float64  Float64    Float64    Float64      Float64
+─────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ Stainless   N[Stainless,1.0]  Fe      0.804124      0.78  0.0241237      0.03  0.807719   0.807719   0.0          0.0
+   2 │ Stainless   N[Stainless,1.0]  Cr      0.0412371     0.04  0.00123711     0.03  0.0444878  0.0444878  6.93889e-18  1.55973e-16
+   3 │ Stainless   N[Stainless,1.0]  Ni      0.154639      0.15  0.00463918     0.03  0.147793   0.147793   2.77556e-17  1.87801e-16
 ```
-
-
 
 
 
@@ -609,36 +563,30 @@ julia> mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.FFASTDB), mac( mat"AlNaSi3O8", n
 k-ratios are the core quantity for X-ray microanalysis.  We measure intensities but k-ratios make the intensities
 meaningful.
 ```julia
-kr = KRatio(
-      [n"Fe K-L3", n"Fe K-L2" ],
-      Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Unknown properties
-      Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Standard properties
-      mat"Fe2O3", # Standard composition
-      uv(0.343563,0.0123105)) # The k-ratio value
-```
-
-```
+julia> kr = KRatio(
+             [n"Fe K-L3", n"Fe K-L2" ],
+             Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Unknown properties
+             Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)), # Standard properties
+             mat"Fe2O3", # Standard composition
+             uv(0.343563,0.0123105)) # The k-ratio value
 k[Fe K-L3 + 1 other, Fe2O3] = 0.344 ± 0.012
 ```
 
 
 
-
-
 Combine k-ratios together in `Vector`.
 ```julia
-props =  ( Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)),
-           Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)))
-krs = [
-  KRatio(characteristic(n"O", ktransitions), props..., mat"SiO2", uv(0.984390, 0.00233)),
-  KRatio(characteristic(n"Na", ktransitions), props..., mat"NaCl", uv(0.155406, 0.00093)),
-  KRatio(characteristic(n"Al", ktransitions), props..., mat"Al", uv(0.068536, 0.000733)),
-  KRatio(characteristic(n"Si", ktransitions), props..., mat"Si", uv(0.219054, 0.00023)),
-  KRatio(characteristic(n"Th", mtransitions), props..., mat"Th", uv(-0.00023, 0.00046)),
-]
-```
+julia> props =  ( Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)),
+                  Dict(:BeamEnergy=>20.0e3, :TakeOffAngle=>deg2rad(40.0)))
+(Dict(:BeamEnergy => 20000.0, :TakeOffAngle => 0.6981317007977318), Dict(:BeamEnergy => 20000.0, :TakeOffAngle => 0.6981317007977318))
 
-```
+julia> krs = [
+         KRatio(characteristic(n"O", ktransitions), props..., mat"SiO2", uv(0.984390, 0.00233)),
+         KRatio(characteristic(n"Na", ktransitions), props..., mat"NaCl", uv(0.155406, 0.00093)),
+         KRatio(characteristic(n"Al", ktransitions), props..., mat"Al", uv(0.068536, 0.000733)),
+         KRatio(characteristic(n"Si", ktransitions), props..., mat"Si", uv(0.219054, 0.00023)),
+         KRatio(characteristic(n"Th", mtransitions), props..., mat"Th", uv(-0.00023, 0.00046)),
+       ]
 5-element Vector{KRatio}:
  k[O K-L3 + 1 other, SiO2] = 0.9844 ± 0.0023
  k[Na K-L3 + 1 other, NaCl] = 0.1554 ± 0.0009
@@ -646,8 +594,6 @@ krs = [
  k[Si K-L3 + 2 others, Si] = 0.2190 ± 0.0002
  k[Th M5-N7 + 26 others, Th] = -0.0002 ± 0.0005
 ```
-
-
 
 ```julia
 julia> nonnegk.(krs)
@@ -675,31 +621,59 @@ the entries in the object so it maintains only one copy.
 
 #### Monte Carlo
 NeXLCore also includes a rudimentary Monte Carlo simulator of electron trajectories.  While it is currently limited
-to modeling element trajectories, it can be extended to handle quite complex sample geometries because it is based on 
-the `GeometryBasics` package that defines both simple and meshed shapes.  Currently, basic blocks and spheres have
-been implemented.
+to modeling electron trajectories, it can be extended to handle quite complex sample geometries because it is based on 
+the [`GeometryBasics`](https://github.com/JuliaGeometry/GeometryBasics.jl) package that defines both simple and meshed shapes.  
+Currently, basic blocks and spheres have been implemented.
 
 ```julia
-# Build a alumina coated silica particle on a carbon substrate
-mat = material("SiO2",2.648)
-sample = coated_particle(mat, 1.0e-4, material("Al2O3", 3.99), 0.1e-4, material("C",2.0))
-# Accumulate the path length inside the SiO2.
-len = 0.0
+julia> # Build a alumina coated silica particle on a carbon substrate
+       mat = material("SiO2",2.648)
+SiO2[Si=0.4674,O=0.5326,2.65 g/cm³]
+
+julia> sample = coated_particle(mat, 1.0e-4, material("Al2O3", 3.99), 0.1e-4, material("C",2.0))
+Region[Chamber, GeometryBasics.Rect3D{Float64}([-100.0, -100.0, -100.0], [200.0, 200.0, 200.0]), H[H=1.0000,0.00 g/cm³], 2 children]
+```
+
+
+
+Now let's run a MC simulation to compute the path length of an electron in a material.
+```julia
+using Gadfly # for plot(...)
+
 # Each call to the trajectory function runs a single electron trajecory while calling the `do`
-# clause at each elastic scatter point.  The arguments to the do clasuse are a representation
-# of thelectron and the Region in which the last step occured.
-e0=20.0e3 # eV
-trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
-   global len += region.material == mat ? NeXLCore.pathlength(electron) : 0.0
+# clause at each elastic scatter point.  The arguments to the do clause are a representation
+# of the electron and the Region in which the last step occured.
+function mc_path_length(e0, mat)
+  len=0.0
+  trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
+    len += region.material == mat ? NeXLCore.pathlength(electron) : 0.0
+  end
+  return len
 end
-"Path length in SiO2 = $(1.0e4*len) μm"
+# Let's look at the path-length as a function of incident energy.
+# The downward spikes are ???                (Backscattered e⁻)
+plot(e0->mc_path_length(e0,mat), 1.0e3, 20.0e3)
 ```
 
-```
-"Path length in SiO2 = 0.806127654431344 μm"
-```
+![](figures/gettingstarted_28_1.svg)
 
 
+Or a second example...
+
+```julia
+# Let's look at the number of scatter events as a function of incident energy.
+function mc_n_scatters(e0, mat)
+  cx=0
+  trajectory(gun(Electron, e0, 1.0e-6), bulk(mat)) do electron, region
+    cx += 1
+  end
+  return cx
+end
+
+plot(e0->mc_n_scatters(e0, mat), 1.0e3, 20.0e3)
+```
+
+![](figures/gettingstarted_29_1.svg)
 
 
 
@@ -717,9 +691,9 @@ display(plot(collect(ltransitions), mode = :Energy))
 display(plot(collect(mtransitions), mode = :Energy))
 ```
 
-![](figures/gettingstarted_28_1.svg)
-![](figures/gettingstarted_28_2.svg)
-![](figures/gettingstarted_28_3.svg)
+![](figures/gettingstarted_30_1.svg)
+![](figures/gettingstarted_30_2.svg)
+![](figures/gettingstarted_30_3.svg)
 
 
 
@@ -730,9 +704,9 @@ display(plot(collect(ltransitions), mode = :Weight))
 display(plot(collect(mtransitions), mode = :Weight))
 ```
 
-![](figures/gettingstarted_29_1.svg)
-![](figures/gettingstarted_29_2.svg)
-![](figures/gettingstarted_29_3.svg)
+![](figures/gettingstarted_31_1.svg)
+![](figures/gettingstarted_31_2.svg)
+![](figures/gettingstarted_31_3.svg)
 
 
 
@@ -743,9 +717,9 @@ display(plot(collect(lsubshells), :EdgeEnergy))
 display(plot(collect(msubshells), :EdgeEnergy))
 ```
 
-![](figures/gettingstarted_30_1.svg)
-![](figures/gettingstarted_30_2.svg)
-![](figures/gettingstarted_30_3.svg)
+![](figures/gettingstarted_32_1.svg)
+![](figures/gettingstarted_32_2.svg)
+![](figures/gettingstarted_32_3.svg)
 
 
 
@@ -756,9 +730,9 @@ display(plot(collect(lsubshells), :FluorescenceYield))
 display(plot(collect(msubshells), :FluorescenceYield))
 ```
 
-![](figures/gettingstarted_31_1.svg)
-![](figures/gettingstarted_31_2.svg)
-![](figures/gettingstarted_31_3.svg)
+![](figures/gettingstarted_33_1.svg)
+![](figures/gettingstarted_33_2.svg)
+![](figures/gettingstarted_33_3.svg)
 
 
 
@@ -769,8 +743,8 @@ display(NeXLCore.compareMACs(n"C"))
 display(NeXLCore.compareMACs(n"U"))
 ```
 
-![](figures/gettingstarted_32_1.svg)
-![](figures/gettingstarted_32_2.svg)
+![](figures/gettingstarted_34_1.svg)
+![](figures/gettingstarted_34_2.svg)
 
 
 Or MAC algorithms one at a time...
@@ -779,8 +753,8 @@ display(plot(NeXLCore.FFASTDB, n"Ag"))
 display(plot(NeXLCore.DTSA, n"Au"))
 ```
 
-![](figures/gettingstarted_33_1.svg)
-![](figures/gettingstarted_33_2.svg)
+![](figures/gettingstarted_35_1.svg)
+![](figures/gettingstarted_35_2.svg)
 
 
 Or many elements at once...
@@ -788,7 +762,7 @@ Or many elements at once...
 plot(NeXLCore.FFASTDB, collect(keys(albite)),xmax=5.0e3)
 ```
 
-![](figures/gettingstarted_34_1.svg)
+![](figures/gettingstarted_36_1.svg)
 
 
 
@@ -797,4 +771,4 @@ Or a Material MAC...
 plot(NeXLCore.FFASTDB, [keys(albite)..., albite], xmax=5.0e3)
 ```
 
-![](figures/gettingstarted_35_1.svg)
+![](figures/gettingstarted_37_1.svg)

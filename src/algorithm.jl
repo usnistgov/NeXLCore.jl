@@ -53,9 +53,6 @@ energy(cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) = energy(
         cxr.transition.outershell.index,
         alg
     )
-    
-
-Base.:(==)(elm1::Element, elm2::Element) = z(elm1) == z(elm2)
 
 """
     eachelement()

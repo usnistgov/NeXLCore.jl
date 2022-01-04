@@ -295,8 +295,8 @@ function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay}
         Inner = inner.(cc),
         Outer = outer.(cc),
         Energy = energy.(cc),
-        WgtByShell = map(cxr->weight(NormalizeToShell, cxr), cc),
-        WgtBySubShell = map(cxr->weight(NormalizeToSubShell, cxr), cc),
+        WgtByShell = map(cxr->weight(NormalizeByShell, cxr), cc),
+        WgtBySubShell = map(cxr->weight(NormalizeBySubShell, cxr), cc),
         Weight = map(cxr->weight(NormalizeToUnity, cxr), cc),
     )
 end

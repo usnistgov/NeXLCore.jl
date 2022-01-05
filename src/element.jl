@@ -2,6 +2,7 @@
 using Unitful
 using Pkg
 using NumberIntervals
+using Markdown
 
 """
     configuration(elm::Element)
@@ -159,3 +160,41 @@ const atomic_weight = Dict{Element, AbstractFloat}(
 )
 
 NeXLUncertainties.value(r::NumberInterval) = mid(r)
+
+"""
+    asa(::Type{DataFrame}, links::Dict{Element,String})
+
+Create a DataFrame which contains a periodic table with links to URLs.
+This doesn't work so well at the REPL when represented as text but works
+nicely in HTML.
+"""
+function NeXLUncertainties.asa(::Type{DataFrame}, links::Dict{Element,String})
+    df=DataFrame(
+        IA=Markdown.MD[],
+        IIA=Markdown.MD[],
+        IIIB=Markdown.MD[],
+        IVB=Markdown.MD[],
+        VB=Markdown.MD[],
+        VIB=Markdown.MD[],
+        VIIB=Markdown.MD[],
+        VIII_1=Markdown.MD[],
+        VIII_2=Markdown.MD[],
+        VIII_3=Markdown.MD[],
+        IB=Markdown.MD[],
+        IIB=Markdown.MD[],
+        IIIA=Markdown.MD[],
+        IVA=Markdown.MD[],
+        VA=Markdown.MD[],
+        VIA=Markdown.MD[],
+        VIIA=Markdown.MD[],
+        VIIIA=Markdown.MD[]
+    )
+    for row in 1:10
+        r = fill(Markdown.parse(""), 18)
+        for el in filter(e->e.ypos==row, collect(elements))
+            r[el.xpos]= Markdown.parse(haskey(links,el) ? "[$(el.symbol)]($(links[el]))" : el.symbol)
+        end
+        push!(df, r)
+    end
+    return df
+end

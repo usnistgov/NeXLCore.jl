@@ -41,8 +41,8 @@ let transitions_data, xrayweights_data
                 trans[(inn, out)] = get(trans, (inn, out), 0) + 1
             end
         end
-        # Add these which aren't in Cullen (The weights are WAGs)
-        for x in ((3, 1, 1, 2, 0.00001), (4, 1, 1, 2, 0.00005), (5, 1, 1, 3, 0.0002))
+        # Add these which aren't in Cullen (The weights are from the Practical Handbook of Spectroscopy pg 834)
+        for x in ((3, 1, 1, 2, 1.06e-4), (4, 1, 1, 2, 3.2e-4), (5, 1, 1, 3, 7.1e-4))
             xrw[x[1]] = Dict( (x[2], x[3], x[4]) => x[5] )
         end
         # Now compute some of the normalized weights

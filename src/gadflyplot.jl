@@ -22,7 +22,7 @@ const NeXLColorblind = NeXLPalette
 """
     Gadfly.plot(transitions::AbstractVector{Transition}; mode=:Energy|:Weight, palette=NeXLPalette)
 
-Plot either the :Energies or :Weights associated with the specified transitions over the range of supported elements.
+Plot either the `:Energy` or `:Weight` associated with the specified transitions over the range of supported elements.
 """
 function Gadfly.plot(
     transitions::AbstractVector{Transition};

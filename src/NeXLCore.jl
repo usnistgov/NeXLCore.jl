@@ -3,6 +3,7 @@ module NeXLCore
 using Requires
 using Reexport
 using LinearAlgebra
+using DataFrames
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties

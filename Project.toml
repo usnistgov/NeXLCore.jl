@@ -2,7 +2,7 @@ name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
 authors = ["Nicholas W.M. Ritchie <nicholas.ritchie@nist.gov>"]
 repo-url = "https://github.com/usnistgov/NeXLCore.jl"
-version = "0.3.0"
+version = "0.3.1-dev"
 
 [deps]
 BoteSalvatICX = "fe54227b-96c7-489b-9963-dd1ce2905f30"
@@ -19,6 +19,7 @@ GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 Measures = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 NeXLUncertainties = "7127f3d6-1721-46bc-bb38-8fc703dd438e"
 NumberIntervals = "978898f6-561e-11e9-3f66-13949d9e5c8a"

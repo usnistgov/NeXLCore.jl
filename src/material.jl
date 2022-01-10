@@ -224,13 +224,13 @@ atoms_per_g(mat::Material, elm::Element) = ustrip(NoUnits, mat[elm] * AvogadroCo
 """
     material(
         name::AbstractString,
-        massfrac::Pair{Element,<:AbstractFloat}...;
-        properties::Dict{Symbol,Any}=Dict{Symbol,Any)(),
-        atomicweights::Dict{Element, <:AbstractFloat}=Dict{Element,Float64}(),
-        density::Union{Missing, AbstractFloat}=missing,
-        description::Union{Missing, AbstractString}=missing,
-        pedigree::Union{Missing, AbstractString}=missing,
-        conductivity::Union{Missing, Symbol}=missing, # :Conductor, :Semiconductor, :Insulator
+        massfrac::Dict{Element,U};
+        properties::Union{Missing,Dict{Symbol,Any}} = missing,
+        atomicweights::Union{Missing, Dict{Element,Float64}} = missing,
+        density::Union{Missing,AbstractFloat} = missing,
+        description::Union{Missing,AbstractString} = missing,
+        pedigree::Union{Missing,AbstractString} = missing,
+        conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
     )
     material(
         name::AbstractString,
@@ -248,14 +248,15 @@ Constuct a material from mass fraction pairs.
 function material(
     name::AbstractString,
     massfrac::Dict{Element,U};
-    properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
-    atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
+    properties::Union{Missing,Dict{Symbol,Any}} = missing,
+    atomicweights::Union{Missing, Dict{Element,Float64}} = missing,
     density::Union{Missing,AbstractFloat} = missing,
     description::Union{Missing,AbstractString} = missing,
     pedigree::Union{Missing,AbstractString} = missing,
     conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
-) where {U<:AbstractFloat,V<:AbstractFloat}
-    props = copy(properties)
+) where {U<:AbstractFloat}
+    props = ismissing(properties) ? Dict{Symbol,Any}() : copy(properties)
+    atomicweights = ismissing(atomicweights) ? Dict{Element,Float64}() : copy(atomicweights)
     (!ismissing(density)) && ((props[:Density] = density) == density)
     (!ismissing(description)) && ((props[:Description] = description) == description)
     (!ismissing(pedigree)) && ((props[:Pedigree] = pedigree) == pedigree)
@@ -266,39 +267,27 @@ end
 material(
     name::AbstractString,
     massfrac::Pair{Element,U}...;
-    properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
-    atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
+    properties::Union{Missing,Dict{Symbol,Any}} = missing,
+    atomicweights::Union{Missing, Dict{Element,Float64}} = missing,
     density::Union{Missing,AbstractFloat} = missing,
     description::Union{Missing,AbstractString} = missing,
     pedigree::Union{Missing,AbstractString} = missing,
     conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
-) where {U<:AbstractFloat,V<:AbstractFloat} = material(
-    name,
-    Dict(massfrac);
-    properties = properties,
-    atomicweights = atomicweights,
-    density = density,
-    description = description,
-    pedigree = pedigree,
-    conductivity = conductivity,
+) where {U<:AbstractFloat} = # 
+    material(
+        name,
+        Dict(massfrac);
+        properties=properties,
+        atomicweights=atomicweights,
+        density=density,
+        description=description,
+        pedigree=pedigree,
+        conductivity=conductivity
 )
-material(
-    name::AbstractString,
-    massfrac::Pair{Element,U}...
-) where { U<:AbstractFloat } = Material(name, Dict(massfrac), Dict{Element,Float64}(), Dict{Symbol,Any}())
-material(
-    name::AbstractString,
-    massfrac::Dict{Element,U}
-) where { U<:AbstractFloat } = Material(name, massfrac, Dict{Element,Float64}(), Dict{Symbol,Any}())
 
 """
      material(str::String, density::Float64)
-
-Similar to `mat"..."` except requires you to specify a density.
-"""
-material(str::String, density::Float64) = parse(Material, str, density = density)
-
-"""
+     nargs...
     pure(elm::Element)
 
 Construct a Material to represent a pure element.

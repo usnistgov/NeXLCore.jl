@@ -282,7 +282,14 @@ material(
     pedigree = pedigree,
     conductivity = conductivity,
 )
-
+material(
+    name::AbstractString,
+    massfrac::Pair{Element,U}...
+) where { U<:AbstractFloat } = Material(name, Dict(massfrac), Dict{Element,Float64}(), Dict{Symbol,Any}())
+material(
+    name::AbstractString,
+    massfrac::Dict{Element,U}
+) where { U<:AbstractFloat } = Material(name, massfrac, Dict{Element,Float64}(), Dict{Symbol,Any}())
 
 """
      material(str::String, density::Float64)

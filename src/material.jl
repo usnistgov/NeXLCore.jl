@@ -11,6 +11,8 @@ import Statistics
 
 Holds basic data about a material including name, composition in mass fraction and optional propreties.
 
+The mass fraction and atomic weight are immutable but the `Properties` can be modified.
+
 **Properties**
 
   - `:Density` Density in g/cm³
@@ -20,32 +22,32 @@ Holds basic data about a material including name, composition in mass fraction a
 """
 struct Material{U<:AbstractFloat,V<:AbstractFloat}
     name::String
-    properties::Dict{Symbol,Any} # :Density, :Description, :Pedigree, :Conductivity, ... + user defined
     massfraction::Dict{Element,U}
     a::Dict{Element,V} # Optional: custom atomic weights for the keys in this Material
+    properties::Dict{Symbol,Any} # :Density, :Description, :Pedigree, :Conductivity, ... + user defined
     
     """
         Material(
             name::AbstractString,
-            massfrac::Dict{Int,U},
-            atomicweights::Dict{Int,V} = Dict{Int,Float64}(),
-            properties::Dict{Symbol, Any} = Dict{Symbol, Any}()
-        )
+            massfrac::AbstractDict{Element,U},
+            atomicweights::AbstractDict{Element,V} = Dict{Element,Float64}(),
+            properties::AbstractDict{Symbol,Any} = Dict{Symbol,Any}(),
+        ) where { U <: AbstractFloat, V <: AbstractFloat }
     """
     function Material(
         name::AbstractString,
-        massfrac::Dict{Element,U},
-        atomicweights::Dict{Element,V} = Dict{Element,Float64}(),
-        properties::Dict{Symbol,Any} = Dict{Symbol,Any}(),
+        massfrac::AbstractDict{Element,U},
+        atomicweights::AbstractDict{Element,V} = Dict{Element,Float64}(),
+        properties::AbstractDict{Symbol,Any} = Dict{Symbol,Any}(),
     ) where {U<:AbstractFloat, V<:AbstractFloat}
-        if sum(value.(values(massfrac))) > 10.0
+        if sum(value.(values(massfrac))) > 50.0
             @warn "The sum mass fraction is $(sum(values(massfrac))) which is much larger than unity."
         end
-        new{U,V}(name, properties, massfrac, atomicweights)
+        new{U,V}(name, massfrac, atomicweights, properties)
     end
 end
 
-const NULL_MATERIAL = Material("Null Material",Dict{Element,Float64}())
+const NULL_MATERIAL = Material("Null Material", Dict{Element,Float64}())
 """
     rename(mat::Material, newname::AbstractString)
 

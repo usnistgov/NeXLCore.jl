@@ -222,13 +222,13 @@ Base.size(krs::KRatios, idx::Int) = size(krs.kratios, idx)
 Base.CartesianIndices(krs::KRatios) = CartesianIndices(krs.kratios)
 
 """
-    LinearAlgebra.normalize(krs::AbstractVector{<:KRatios}; norm::Float32=1.0f)::Vector{KRatios}
-    LinearAlgebra.normalize(krs::AbstractVector{KRatio}; norm::Float32=1.0f)::Vector{KRatio}
+    normalizek(krs::AbstractVector{<:KRatios}; norm::Float32=1.0f)::Vector{KRatios}
+    normalizek(krs::AbstractVector{KRatio}; norm::Float32=1.0f)::Vector{KRatio}
 
 Computes the pixel-by-pixel normalized k-ratio for each point in the KRatios data array. `norm` specifies normalization
 constants other than 1.0.
 """
-function LinearAlgebra.normalize(
+function normalizek(
     krs::AbstractVector{<:KRatios};
     norm::Float64 = 1.0,
     minsum::Float64 = 0.0
@@ -240,10 +240,10 @@ function LinearAlgebra.normalize(
         ss<=minsum ? 1.0e100 : ss
     end
     return map(krs) do kr
-        KRatios(kr.xrays, copy(kr.unkProps), copy(kr.stdProps), kr.standard, norm .* (kr.kratios ./ s))
+        KRatios(kr.xrays, copy(kr.unkProps), copy(kr.stdProps), kr.standard, norm * (kr.kratios ./ s))
     end
 end
-function LinearAlgebra.normalize(
+function normalizek(
     krs::AbstractVector{KRatio};
     norm::Float64 = 1.0,
     minsum::Float64 = 0.0

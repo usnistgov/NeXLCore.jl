@@ -6,6 +6,7 @@ using NeXLCore
     include("element.jl")
     include("xray.jl")
     include("material.jl")
+    include("matparser.jl")
     include("stoichiometry.jl")
     include("matu.jl")
     include("kratio.jl")

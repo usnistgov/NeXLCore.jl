@@ -87,6 +87,7 @@ export comptonEnergy # Computes the resulting Compton-shifted X-ray energy
 export comptonDifferential # Computes the differential Compton cross-section
 
 include("material.jl")
+include("matparser.jl")
 export material # Construct a Material struct
 export pure # Construct a pure element material
 export massfraction # Returns the composition as mass fraction

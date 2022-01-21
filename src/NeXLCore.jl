@@ -4,6 +4,7 @@ using Requires
 using Reexport
 using LinearAlgebra
 using DataFrames
+using DataDeps
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
@@ -267,6 +268,21 @@ export standardize # Apply similar standards to a KRatio or KRatios
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
     @require MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11" include("meshcat.jl")
+    @require SQLite = "0aa819cd-b072-5ff4-a722-6bc24af294d9" include("materialdb.jl")
+
+    register(
+        DataDep(
+            "RUFFDatabase",
+            """
+            Dataset: RUFF Mineral Database
+            Website: https://rruff.info/ima/
+            License: Creative Commons Attribution-ShareAlike 3.0 Unported License (http://creativecommons.org/licenses/by-sa/3.0/)
+            """,
+            "https://drive.google.com/uc?export=download&id=1Ackbz0YtaliQNCdZmPfj9uWTwhVNBzy8",
+            "c87ce711c6fa9d8a012e29f949c075e176ea9a7c753e9e79270e4e9fd988e613",
+            post_fetch_method = unpack
+        )
+    )
 end
 
 end

@@ -40,7 +40,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 BoteSalvatICX = "2"
-CSV = "^0.7, ^0.8, ^0.9"
+CSV = "^0.7, ^0.8, ^0.9, ^0.10"
 CategoricalArrays = "^0.10"
 Colors = "^0.12"
 Compose = "^0.9"

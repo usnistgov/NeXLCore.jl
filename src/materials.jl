@@ -263,97 +263,77 @@ const mengason_mineral_mount2 = (
     mmm_copper,
 )
 
-function createmineralartifact()
-    # This is the path to the Artifacts.toml we will manipulate
-    artifacts_toml = joinpath(@__DIR__, "Artifacts.toml")
-
-    # Query the `Artifacts.toml` file for the hash bound to the name "iris"
-    # (returns `nothing` if no such binding exists)
-    mineral_hash = artifact_hash("rplraw", artifacts_toml)
-
-    # If the name was not bound, or the hash it was bound to does not exist, create it!
-    if mineral_hash === nothing || !artifact_exists(mineral_hash)
-        # create_artifact() returns the content-hash of the artifact directory once we're finished creating it
-        mineral_hash = create_artifact() do artifact_dir
-            print("Downloading mineral database.")
-            tarball = joinpath(artifact_dir, "mineral.tar.gz")
-            download(
-                "https://drive.google.com/uc?export=download&id=1Ackbz0YtaliQNCdZmPfj9uWTwhVNBzy8",
-                tarball,
-            )
-            Pkg.probe_platform_engines!()
-            Pkg.unpack(tarball, artifact_dir, verbose = true)
-            rm(tarball)
-        end
-        # Now bind that hash within our `Artifacts.toml`.  `force = true` means that if it already exists,
-        # just overwrite with the new content-hash.  Unless the source files change, we do not expect
-        # the content hash to change, so this should not cause unnecessary version control churn.
-        bind_artifact!(artifacts_toml, "rplraw", mineral_hash)
-    end
-
-    # Get the path of the iris dataset, either newly created or previously generated.
-    # this should be something like `~/.julia/artifacts/dbd04e28be047a54fbe9bf67e934be5b5e0d357a`
-    return artifact_path(mineral_hash)
-end
-
 function loadmineraldata(parseit::Bool = false)::DataFrame
-    minpath = createmineralartifact()
+    minpath = datadep"RUFFDatabase"
     res = CSV.File(joinpath(minpath, "RRUFF_Export_20191025_022204.csv")) |> DataFrame
+    function parseelm(str)
+        if str == "Ln" # Lanthanide
+            return Set{Element}(elements[z(n"La"):z(n"Lu")])
+        elseif str == "An" # Actinide
+            return Set{Element}(elements[z(n"Ac"):z(n"U")])
+        elseif str == "REE" # Rare-earth element
+            return Set{Element}([
+                n"Ce",
+                n"Dy",
+                n"Er",
+                n"Eu",
+                n"Gd",
+                n"Ho",
+                n"La",
+                n"Lu",
+                n"Nd",
+                n"Pr",
+                n"Pm",
+                n"Sm",
+                n"Sc",
+                n"Tb",
+                n"Tm",
+                n"Yb",
+                n"Y",
+            ])
+        else
+            return Set{Element}([parse(Element, str)])
+        end
+    end
+    function parseelms(str)
+        if !ismissing(str)
+            return mapreduce(
+                parseelm,
+                union,
+                filter(s -> length(s) > 0, split(str, c -> isspace(c))),
+                init = Set{Element}(),
+            )
+        else
+            return Set{Element}()
+        end
+    end
+    function matormissing(row)
+        str = row["IMA Chemistry (plain)"]
+        try
+            # The formula with '+' represent valences not sums, ',' represent alternative elements
+            if !(('+' in str) || (',' in str))
+                writeProp(prps, col, key) = 
+                    (!ismissing(row[col])) && ( row[col] isa AbstractString) && (length(row[col])>0) && (prps[key]=row[col])
+                props = Dict{Symbol,Any}()
+                writeProp(props, "IMA Number", :IMANumber)
+                writeProp(props, "IMA Status", :IMAStatus)
+                writeProp(props, "Structural Groupname", :StructuralGroup)
+                writeProp(props, "Fleischers Groupname", :FleischersGroup)
+                writeProp(props, "RRUFF Chemistry (plain)", :RUFFChemistry)
+                writeProp(props, "RRUFF IDs", :RUFF_IDS)
+                writeProp(props, "Crystal Systems", :CrystalSystem)
+                writeProp(props,"Oldest Known Age (Ma)", :OldestAge)
+                writeProp(props, "IMA Chemistry (plain)", :IMAChemistry)
+                writeProp(props, "Status Notes", :StatusNotes)
+                (!ismissing(row["Year First Published"])) && (props[:YearPublished]="$(row["Year First Published"])")
+                return parse(Material, str, properties=props, name = row["Mineral Name"])
+            end
+        catch e
+            @warn "\"" * str * "\"  " * repr(e)
+            return missing
+        end
+    end
     if parseit
-        function parseelm(str)
-            if str == "Ln" # Lanthanide
-                return Set{Element}(elements[z(n"La"):z(n"Lu")])
-            elseif str == "An" # Actinide
-                return Set{Element}(elements[z(n"Ac"):z(n"U")])
-            elseif str == "REE" # Rare-earth element
-                return Set{Element}([
-                    n"Ce",
-                    n"Dy",
-                    n"Er",
-                    n"Eu",
-                    n"Gd",
-                    n"Ho",
-                    n"La",
-                    n"Lu",
-                    n"Nd",
-                    n"Pr",
-                    n"Pm",
-                    n"Sm",
-                    n"Sc",
-                    n"Tb",
-                    n"Tm",
-                    n"Yb",
-                    n"Y",
-                ])
-            else
-                return Set{Element}([parse(Element, str)])
-            end
-        end
-        function parseelms(str)
-            if !ismissing(str)
-                return mapreduce(
-                    parseelm,
-                    union,
-                    filter(s -> length(s) > 0, split(str, c -> isspace(c))),
-                    init = Set{Element}(),
-                )
-            else
-                return Set{Element}()
-            end
-        end
-        function matormissing(row)
-            str = row["IMA Chemistry (plain)"]
-            try
-                # The formula with '+' represent valences not sums
-                if isnothing(findfirst(c -> c == '+', str))
-                    m = parse(Material, str, name = row["Mineral Name"])
-                else
-                    return missing
-                end
-            catch
-                return missing
-            end
-        end
         res[:, :Elements] .= parseelms.(res[:, "Chemistry Elements"])
         res[:, :Material] .= matormissing.(eachrow(res))
     end

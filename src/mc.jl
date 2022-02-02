@@ -1,4 +1,4 @@
-using GeometryBasics: Point, Rect3D, Sphere, GeometryPrimitive, origin, widths, radius
+using GeometryBasics: Point, Rect3, Sphere, GeometryPrimitive, origin, widths, radius
 using LinearAlgebra: dot, norm
 using Random: rand
 
@@ -23,7 +23,7 @@ first intersects the `Shape` `r`.  The intersection point will equal `pos0 .+ f*
 If `f` is between 0.0 and 1.0 then the intersection is on the interval between `pos0` and `pos1`.
 If the ray from `pos0` towards `pos2` does not intersect `r` then this function returns Inf64.
 """
-const RectangularShape = Rect3D{Float64}
+const RectangularShape = Rect3{Float64}
 
 isinside(rr::RectangularShape, pos::AbstractArray{Float64}) =
     all(pos .> minimum(rr)) && all(pos .< maximum(rr))

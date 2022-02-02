@@ -21,7 +21,6 @@ using Test
 
     @test NeXLCore._mp_level3("Ca5(PO4)3⋅OH") == Dict{Element, Int}(n"P" => 3, n"Ca" => 5, n"H" => 1, n"O" => 13)
     @test NeXLCore._mp_level3("Ca5(PO4)3⋅1OH") == Dict{Element, Int}(n"P" => 3, n"Ca" => 5, n"H" => 1, n"O" => 13)
-    @test_throws ErrorException NeXLCore._mp_level3("Ca5(PO4)3⋅1OHNa")
 
     function cda(d1, d2)
         all(isapprox(uv(get(d1,el, zero(valtype(d1)))), uv(get(d2,el,zero(valtype(d2)))), atol=1.0e-4) for el in intersect(keys(d1), keys(d2)))
@@ -53,4 +52,8 @@ using Test
     res = Dict(elm=>sum(uv(get(res1, elm, zero(valtype(res1)))), uv(get(res2, elm, zero(valtype(res2))))) for elm in union(keys(res1),keys(res2)))
     @test cda(parse(Material, "0.34*Arsenopyrite+0.62*NaAlSi3O8", lookup=luf).massfraction, res)
 
+    @test isapprox(mat"RbTiO.PO4"[n"P"], 0.1268, atol=0.0001)
+    @test isapprox(mat"Ca5(PO4)3⋅1OHNa"[n"H"], 0.0019, atol=0.0001)
+    @test isapprox(mat"Ca5(PO4)3⋅1OHNa"[n"O"], 0.3959, atol=0.0001)
+    
 end

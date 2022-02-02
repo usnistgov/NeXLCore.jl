@@ -13,6 +13,7 @@ function Base.parse(
     lookup::Function = s->nothing
 )::Material where {V<:AbstractFloat}
     mf, pex = _mp_level1(expr, lookup=lookup)
+    pex = replace(pex, "*"=>"⋅")
     result = material(
         ismissing(name) ? pex : name,
         mf;
@@ -90,25 +91,19 @@ function _mp_level2(expr::AbstractString, raw::AbstractString, lookup::Function)
 end
 
 """
-Parses "something⋅#H2O" or "something⋅#OH" or "something"
+Parses "something⋅#H2O" or "something⋅#OH" or "something.PO4" or "something"
 """
 function _mp_level3(expr::AbstractString)::Dict{Element, Int}
     plus(d1,d2) = Dict{Element,Int}( elm => get(d1,elm,0.0) + get(d2,elm,0.0) for elm in union(keys(d1), keys(d2)))
-    # Check for waters
-    rh2o=r"^(.*)(⋅|·|\.)(\d*)(H2O|OH)$" # 1=>pre 2=>[⋅|.|·] 3=># 4=>H2O|OH
-    m = match(rh2o, expr)
+    mult(n,d) = Dict{Element,Int}(elm => n*q for (elm, q) in d)
+    # Check for waters and other items postpended with an ⋅, · or . 
+    rjoined=r"^(.*)(⋅|·|\.)(\d*)(.*)$" # 1=>pre 2=>[⋅|.|·] 3=># 4=>post
+    m = match(rjoined, expr)
     if !isnothing(m)
-        # There is an H2O or OH terminator
-        res=_mp_level4(m[1])
+        res1=_mp_level4(m[1])
         n = length(m[3]) > 0 ? parse(Int,m[3]) : 1
-        if m[4] == "H2O" 
-            res[n"H"] = get(res, n"H",0) + 2*n
-            res[n"O"] = get(res, n"O",0) + n
-        else
-            res[n"H"] = get(res, n"H",0) + n
-            res[n"O"] = get(res, n"O",0) + n
-        end
-        return res
+        res2=_mp_level3(m[4])
+        return plus(res1, mult(n, res2))
     end
     return _mp_level4(expr)
 end

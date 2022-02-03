@@ -46,7 +46,8 @@ function _mp_level1(expr::AbstractString; lookup::Function=s->nothing)
         return (d3, "$(d1[2])+$(d2[2])")
     end
     function f(s) # Lookup while maintaining the raw representation
-        t = replace(s, '₀'=>'0', '₁'=>'1', '₂'=>'2', '₃'=>'3', '₄'=>'4', '₅'=>'5', '₆'=>'6', '₇'=>'7', '₈'=>'8', '₉'=>'9')
+        # Julia 1.6 fails when this is reduced to a single call to replace
+        t = reduce((a,b)->replace(a, b), ( "₀"=>"0", "₁"=>"1", "₂"=>"2", "₃"=>"3", "₄"=>"4", "₅"=>"5", "₆"=>"6", "₇"=>"7", "₈"=>"8", "₉"=>"9" ), init=string(s))
         return ( _mp_level2(t, s, lookup), s) # Finally parse expression
     end
     return mapreduce(f, plus, split(expr, "+"))

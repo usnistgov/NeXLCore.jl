@@ -713,14 +713,28 @@ function compositionlibrary()::Dict{String,Material}
     return result
 end
 
+
 """
-    z(mat::Material)
+    z(mat::Material) = z(Naive, mat)
+    z(::Type{Naive}, mat::Material)
+    z(::Type{Donovan2002}, mat::Material)
 
-
-Computes the mean atomic number for a material. (Naive algorithm.)
+Compute the mean atomic number for a material.
 """
-z(mat::Material) = sum(c * z(elm) for (elm, c) in mat.massfraction)
+struct Naive <: NeXLAlgorithm end
+z(::Type{Naive}, mat::Material) = sum(c * z(elm) for (elm, c) in mat.massfraction)
+z(mat::Material) = z(Naive, mat)
 
+"""
+Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
+(also see Microsc. Microanal. 27 (Suppl 1), 2021))
+"""
+struct Donovan2002 <: NeXLAlgorithm end
+function z(::Type{Donovan2002}, mat::Material)
+    af = atomicfraction(mat)
+    return sum(NeXLUncertainties.value(a)*z(elm)^1.7 for (elm, a) in af) / #
+        sum(NeXLUncertainties.value(a)*z(elm)^0.7 for (elm, a) in af)
+end
 
 """
     a(mat::Material)

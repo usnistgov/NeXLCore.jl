@@ -158,8 +158,9 @@ export LoveScott1978η
 export Tomlin1963
 export August1989η
 export Pouchou1991η
+export Reimer1998
 export η
-export zbar  # Calculated using Donovan /
+export zbar  # Calculated using Donovan's elastic fraction algorithm
 
 include("bethe.jl")
 export BetheEnergyLoss # <: BetheEnergyLoss

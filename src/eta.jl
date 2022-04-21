@@ -77,6 +77,11 @@ function η(::Type{August1989η}, elm::Element, e0::Float64)
            (0.001 * e0)^(0.1382 - 0.9211 / sqrt(z(elm)))
 end
 
+struct Reimer1998 <: BackscatterCoefficient end
+
+η(::Type{Reimer1998}, mat::Material, e0::Float64) = #
+    evalpoly(sum(elm->value(mat[elm])*z(elm),keys(mat)), (-0.0254, 0.016, -1.86e-4, 8.3e-7))
+
 """
     η(elm::Element, e0::Real)
 
@@ -130,8 +135,8 @@ function elasticfraction(elm::Element, mat::Material, e0::Float64)::Float64
         # Which is very close to zz^1.33 for except for large z at low ek
     end
     aw, ek = atomicfraction(mat), 0.001 * e0
-    den = mapreduce(el -> aw[el] * elasticcrosssection(z(el), ek), +, keys(mat))
-    return get(aw, elm, 0.0) * elasticcrosssection(z(elm), ek) / den
+    den = mapreduce(el -> value(aw[el]) * elasticcrosssection(z(el), ek), +, keys(mat))
+    return value(get(aw, elm, zero(valtype(aw)))) * elasticcrosssection(z(elm), ek) / den
 end
 
 """
@@ -152,7 +157,7 @@ The electron fraction as defined in:
 """
 function electronfraction(elm::Element, mat::Material)::Float64
     aw = atomicfraction(mat)
-    return get(aw, elm, 0.0) * z(elm) / mapreduce(el -> aw[el] * z(el), +, keys(mat))
+    return value(get(aw, elm, zero(valtype(aw)))) * z(elm) / mapreduce(el -> value(aw[el]) * z(el), +, keys(mat))
 end
 
 """

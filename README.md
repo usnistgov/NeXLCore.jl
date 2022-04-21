@@ -21,6 +21,13 @@ or
     > using Pkg
     > Pkg.add("NeXLCore")
 
+While you're at it, you might as well also add DataFrames and Gadfly, two libraries that you'll probably also want...
+
+    > ]add DataFrames, Gadfly
+
+or
+
+    > Pkg.add(["DataFrames", "Gadfly"])
 
 NeXLCore is part of the NeXL collection of Julia language packages.
 #### Released

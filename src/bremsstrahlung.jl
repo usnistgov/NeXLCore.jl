@@ -195,7 +195,7 @@ function bremsstrahlung(
 )
     af = atomicfraction(mat) # According to Trincavelli1997
     return mapreduce(
-        elm -> af[elm] * bremsstrahlung(ty, e, e0, elm; kwargs...),
+        elm -> value(af[elm]) * bremsstrahlung(ty, e, e0, elm; kwargs...),
         +,
         keys(af),
     )

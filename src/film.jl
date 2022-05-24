@@ -1,5 +1,5 @@
 """
-    A structure defining a thin film or layer of a Material.
+A structure defining a thin film or layer of a Material.
 """
 struct Film
     material::Material
@@ -49,11 +49,11 @@ transmission(flm::Film, xrayE::AbstractFloat, alg::Type{<:NeXLAlgorithm} = FFAST
     flm.thickness > 0.0 ? exp(-mac(flm.material, xrayE, alg) * massthickness(flm)) : 1.0
 
 """
-    transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) =
+    transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat = π/2)
 
 Compute the transmission fraction of an X-ray at the specified angle through a Film.
 """
-transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat) = transmission(flm, energy(cxr), θ)
+transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat=π/2.0) = transmission(flm, energy(cxr), θ)
 
 material(film::Film) = film.material
 thickness(film::Film) = film.thickness

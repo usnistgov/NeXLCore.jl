@@ -170,7 +170,6 @@ end
 function asoxide( 
     elms::Dict{Element, <:AbstractFloat};
     valences = NeXLCore.defaultValences,
-    name = nothing, 
     atomicweights::Dict{Element,<:AbstractFloat} = Dict{Element,Float64}()
 )
     return  Dict{Material, AbstractFloat}(

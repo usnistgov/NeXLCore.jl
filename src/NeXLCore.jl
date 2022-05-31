@@ -266,6 +266,8 @@ include("standardize.jl")
 export isstandard # Does a k-ratio have the necessary properties to be a standard
 export standardize # Apply similar standards to a KRatio or KRatios
 
+export disp
+
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
     @require MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11" include("meshcat.jl")

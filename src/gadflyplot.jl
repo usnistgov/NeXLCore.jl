@@ -435,3 +435,5 @@ function plot2(
         Guide.ylabel("Mass Fraction by Element"),
     )
 end
+
+disp(p) = display(Gadfly.GadflyDisplay(), p)

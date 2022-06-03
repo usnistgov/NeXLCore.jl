@@ -23,7 +23,7 @@ struct Transition
     innershell::SubShell
     outershell::SubShell
     function Transition(inner::SubShell, outer::SubShell)
-        if !(haskey(transitions(), (inner.index, outer.index)))
+        if !((inner.index, outer.index) in transitions())
             error("$(inner)-$(outer) does not represent a known Transition.")
         end
         return new(inner, outer)
@@ -62,7 +62,7 @@ function everytransition(trs)
     lttr(tr1, tr2) = (tr1[1] == tr2[1] ? isless(tr1[2], tr2[2]) : isless(tr1[1], tr2[1]))
     return map(
         tr -> Transition(SubShell(tr[1]), SubShell(tr[2])),
-        sort([keys(trs)...], lt = lttr),
+        sort!(collect(trs), lt = lttr),
     )
 end
 

@@ -14,10 +14,9 @@ using DataDeps
 abstract type NeXLAlgorithm end
 export NeXLAlgorithm
 
-include("ffast.jl") # Algorithms implemented in FFAST.jl
+include("atomicdb.jl") # Interface to the atomic DB
 include("dtsa_mac.jl") # Implement's Heinrich's IXCOM 11 MACs
 include("botesalvat.jl") # Algorithms implemented in BoteSalvat.jl
-include("cullen_eadl.jl") # Data from Cullen's Evaluated Atomic Data Library
 include("element.jl") # Element data from PeriodicTable.jl
 include("shell.jl") # Atomic shell methods
 include("transition.jl") # Atomic transition methods
@@ -39,6 +38,7 @@ export AtomicSubShell # A SubShell plus an Element
 export atomicsubshell # Construct AtomicSubShell structs from a string
 export capacity # The total shell capacity
 export jumpratio # The jump ratio for the specified shell
+export fluorescenceyield # fluorescence yield models
 export meanfluorescenceyield # The mean shell-based fluorescence yield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
@@ -180,9 +180,6 @@ export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
 export Burhop1965, Sogut2002, Krause1979, Kahoul2012, Reed1975ω # Fluorescence yield models
 
-export CullenEADL
-export fluorescenceyield # fluorescence yield models
-
 include("matu.jl")
 export MaterialLabel
 export MassFractionLabel
@@ -231,10 +228,6 @@ export minproperties # A list of the minimum required properties
 export hasminrequired # Checks whether a spectrum has necessary properties
 export requiredbutmissing # Lists missing properties
 
-include("custommac.jl")
-export CustomMAC  # Tied to "data\specialmacs.csv"
-export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke1982, :Bastin19XX, etc. (see specialmacs.csv))
-
 include("materials.jl")
 export loadsmithsoniandata, parsedsmithsoniandata
 export loadmineraldata
@@ -266,12 +259,13 @@ include("standardize.jl")
 export isstandard # Does a k-ratio have the necessary properties to be a standard
 export standardize # Apply similar standards to a KRatio or KRatios
 
+include("materialdb.jl")
+
 export disp
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
     @require MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11" include("meshcat.jl")
-    @require SQLite = "0aa819cd-b072-5ff4-a722-6bc24af294d9" include("materialdb.jl")
 
     register(
         DataDep(

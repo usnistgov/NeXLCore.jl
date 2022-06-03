@@ -58,7 +58,7 @@ const subshellnames = (
     ( "N$i" for i in 1:7 )...,
     ( "O$i" for i in 1:9 )...,
     ( "P$i" for i in 1:11 )...,
-    ( "Q$i" for i in 1:3 )...
+    ( "Q$i" for i in 1:13 )...
 )
 
 """
@@ -97,45 +97,13 @@ have in that sub-shell.
 capacity(ss::SubShell) = convert(Int, 2 * j(ss)) + 1
 
 n(ss::SubShell) = (
-    1,
-    2,
-    2,
-    2,
-    3,
-    3,
-    3,
-    3,
-    3,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    5,
-    5,
-    5,
-    5,
-    5,
-    5,
-    5,
-    5,
-    5,
-    6,
-    6,
-    6,
-    6,
-    6,
-    6,
-    6,
-    6,
-    6,
-    6,
-    6,
-    7,
-    7,
-    7,
+    1, 
+    (2 for _ in 1:3)...,
+    (3 for _ in 1:5)...,
+    (4 for _ in 1:7)...,
+    (5 for _ in 1:9)...,
+    (6 for _ in 1:11)...,
+    (7 for _ in 1:13)...
 )[ss.index]
 
 """
@@ -144,23 +112,23 @@ n(ss::SubShell) = (
 Orbital angular momentum quantum number
 """
 l(ss::SubShell) = (
-    0,
-    0,
-    1,
-    1,
-    0,
-    1,
-    1,
-    2,
-    2,
-    0,
-    1,
-    1,
-    2,
-    2,
-    3,
-    3,
-    0,
+    0, # 1S
+    0, # 2S
+    1, # 2P1/2
+    1, # 2P3/2
+    0, # 3S1/2
+    1, # 3P1/2
+    1, # 3P3/2
+    2, # 3D3/2
+    2, # 3D5/2
+    0, # 4S1/2
+    1, # 4P1/2
+    1, # 4P3/2
+    2, # 4D3/2
+    2, # 4D5/2
+    3, # 4F5/2
+    3, # 4F7/2
+    0, # 5
     1,
     1,
     2,
@@ -169,7 +137,18 @@ l(ss::SubShell) = (
     3,
     4,
     4,
-    0,
+    0, # 6
+    1, 
+    1,
+    2,
+    2,
+    3,
+    3,
+    4,
+    4,
+    5,
+    5,
+    0, # 7
     1,
     1,
     2,
@@ -180,9 +159,8 @@ l(ss::SubShell) = (
     4,
     5,
     5,
-    0,
-    1,
-    1,
+    6,
+    6,
 )[ss.index]
 
 """
@@ -191,32 +169,32 @@ l(ss::SubShell) = (
 Total angular momentum quantum number
 """
 j(ss::SubShell) = (
-    1 // 2,
-    1 // 2,
-    1 // 2,
-    3 // 2,
-    1 // 2,
+    1 // 2, # 1
+    1 // 2, # 2
     1 // 2,
     3 // 2,
-    3 // 2,
-    5 // 2,
-    1 // 2,
+    1 // 2, # 3
     1 // 2,
     3 // 2,
     3 // 2,
     5 // 2,
-    5 // 2,
-    7 // 2,
-    1 // 2,
+    1 // 2, # 4
     1 // 2,
     3 // 2,
     3 // 2,
     5 // 2,
     5 // 2,
     7 // 2,
-    7 // 2,
-    9 // 2,
+    1 // 2, # 5
     1 // 2,
+    3 // 2,
+    3 // 2,
+    5 // 2,
+    5 // 2,
+    7 // 2,
+    7 // 2,
+    9 // 2, 
+    1 // 2, # 6
     1 // 2,
     3 // 2,
     3 // 2,
@@ -227,9 +205,19 @@ j(ss::SubShell) = (
     9 // 2,
     9 // 2,
     11 // 2,
-    1 // 2,
+    1 // 2, # 7
     1 // 2,
     3 // 2,
+    3 // 2,
+    5 // 2,
+    5 // 2,
+    7 // 2,
+    7 // 2,
+    9 // 2,
+    9 // 2,
+    11 // 2,
+    11 // 2,
+    13 // 2
 )[ss.index]
 
 function NeXLUncertainties.asa(::Type{DataFrame}, vss::AbstractVector{SubShell})
@@ -367,7 +355,6 @@ atom of the specified element?
 has(elm::Element, ss::SubShell) = hasedge(z(elm), ss.index)
 
 
-
 """
      atomicsubshells(elm::Element, maxE=1.0e6)::Vector{AtomicSubShell}
 
@@ -387,16 +374,9 @@ Example:
      Fe M4
      Fe M2
  """
-atomicsubshells(
-    elm::Element,
-    maxE = 1.0e6,
-    eety::Type{<:NeXLAlgorithm} = FFASTDB,
-) = AtomicSubShell[ atomicsubshell(elm, SubShell(sh)) #
-        for sh in filter(sh->NeXLCore.edgeenergy(z(elm), sh, eety) < maxE, subshellindices(z(elm))) ]
-
-atomicsubshells(
-    ss::SubShell,
-) = AtomicSubShell[atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), elements[1:92])]
+atomicsubshells(elm::Element) = map(ss->atomicsubshell(elm, ss), filter(ss->hasedge(z(elm), ss), 1:29))
+atomicsubshells(elm::Element, maxE::Float64) = filter(ass->energy(ass)<maxE, atomicsubshells(elm))
+atomicsubshells(ss::SubShell) = AtomicSubShell[atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), eachelement())]
 
 z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)

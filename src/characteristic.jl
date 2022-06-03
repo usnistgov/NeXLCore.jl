@@ -67,6 +67,7 @@ shell(cxr::CharXRay) = shell(cxr.transition)
 Return the element for this CharXRay.
 """
 element(cxr::CharXRay) = PeriodicTable.elements[cxr.z]
+z(cxr::CharXRay) = cxr.z
 
 ν(cxr::CharXRay) = energy(cxr) / plancksConstant
 ω(cxr::CharXRay) = 2π * ν(cxr)
@@ -86,31 +87,6 @@ X-ray wavenumber in cm¯¹.
 wavenumber(cxr::CharXRay) = 1.0 / λ(cxr)
 wavenumber(energy::Real) = 1.0 / λ(energy)
 
-abstract type WeightNormalization end
-"""
-`NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
-Example: 
-
-    sum(cxr=>weight(NormalizeByShell, cxr), characteristic(n"Fe", ltransitions))==1.0 
-"""
-struct NormalizeByShell <: WeightNormalization end
-"""
-`NormalizeBySubShell` normalizes the sum of all the weights associated with a sub-shell to unity.
-
-Example: 
-
-    sum(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0+1.0+1.0
-"""
-struct NormalizeBySubShell <: WeightNormalization end
-"""
-`NormalizeToUnity` normalizes intensities such that the most intense line in each shell to 1.0.
-
-Example: 
-
-    sum(cxr=>weight(NormalizeBySubShell, cxr), n"Fe K-L3")==1.0
-"""
-struct NormalizeToUnity <: WeightNormalization end
-
 """
     weight(::Type{<:WeightNormalization}, cxr::CharXRay)
 
@@ -129,17 +105,9 @@ The difference between `fluorescenceyield(...)` and `weight(...)` is that
   * fluorescenceyield assumes that a sub-shell in the atom is already ionized
   * weight also considers the relative likelihood of ionization of each sub-shell assuming an overvoltage of 4.0.
 """
-function weight(::Type{NormalizeBySubShell}, cxr::CharXRay)
+function weight(ty::Type{<:WeightNormalization}, cxr::CharXRay)
     inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
-    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[2]
-end
-function weight(::Type{NormalizeByShell}, cxr::CharXRay)
-    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
-    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[3]
-end
-function weight(::Type{NormalizeToUnity}, cxr::CharXRay)
-    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
-    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[4]
+    return xrayweight(ty, z(cxr), inn, inn, out)
 end
 
 """
@@ -149,6 +117,43 @@ Return the brightest transition among the shell of transitions for the
 specified element.  (group="K"|"Ka"|"Kb"|"L" etc)
 """
 brightest(elm::Element, transitions) = brightest(characteristic(elm, transitions))
+
+
+
+"""
+Represents the fractional number of X-rays emitted following the ionization of the sub-shell `ionized` via
+the characteristic X-ray `z inner-outer`.  Due to cascades, `inner` does not necessarily equal `ionized`.
+The `ionized` subshell may transition to a valency in `inner` via a combination of Auger, fluorescence or
+Koster-Kronig transitions.  The various different forms make assumptions about the relationship between
+`ionized` and `inner`, and about `outer`.
+
+    fluorescenceyield(ass::AtomicSubShell)::Float64
+
+The fraction of relaxations from the specified shell that relax via any radiative transition. (`inner`==`ionized`)
+
+    fluorescenceyield(cxr::CharXRay)
+
+The fraction of ionizations of `inner(cxr)` that relax via the one path `cxr`. `ionized==inner` && outer(cxr)
+
+    fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay)::Float64
+
+The fractional number of `cxr` X-rays emitted (on average) for each ionization of `ash`.  This makes no 
+assumptions about `inner`, `outer` and `ionized`
+"""
+
+
+function fluorescenceyield(cxr::CharXRay)::Float64
+    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
+    xrayweight(NormalizeRaw, z(cxr), inn, inn, out)
+end
+function fluorescenceyield(ass::AtomicSubShell)
+    zz, inner = z(ass), ass.subshell.index
+    return sum(getxrayweights(zz)) do ((ionized, inn, _), wgt)
+        ionized==inn && inner==inn ? wgt : 0.0
+    end
+end
+fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay) =
+    ash.z == cxr.z ? xrayweight(NormalizeRaw, ash.z, ash.subshell.index, innerindex(cxr), outerindex(cxr)) : 0.0
 
 """
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)

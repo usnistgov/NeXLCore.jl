@@ -119,7 +119,6 @@ specified element.  (group="K"|"Ka"|"Kb"|"L" etc)
 brightest(elm::Element, transitions) = brightest(characteristic(elm, transitions))
 
 
-
 """
 Represents the fractional number of X-rays emitted following the ionization of the sub-shell `ionized` via
 the characteristic X-ray `z inner-outer`.  Due to cascades, `inner` does not necessarily equal `ionized`.
@@ -140,25 +139,20 @@ The fraction of ionizations of `inner(cxr)` that relax via the one path `cxr`. `
 The fractional number of `cxr` X-rays emitted (on average) for each ionization of `ash`.  This makes no 
 assumptions about `inner`, `outer` and `ionized`
 """
-
-
 function fluorescenceyield(cxr::CharXRay)::Float64
-    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
+    inn, out = innerindex(cxr), outerindex(cxr)
     xrayweight(NormalizeRaw, z(cxr), inn, inn, out)
 end
 function fluorescenceyield(ass::AtomicSubShell)
-    zz, inner = z(ass), ass.subshell.index
-    return sum(getxrayweights(zz)) do ((ionized, inn, _), wgt)
-        ionized==inn && inner==inn ? wgt : 0.0
-    end
+    cxrs = characteristic(ass)
+    return length(cxrs)>0 ? sum(cxrs) do cxr
+        inn, out = innerindex(cxr), outerindex(cxr)
+        xrayweight(NormalizeRaw, z(cxr), inn, inn, out)
+    end : 0.0
 end
 fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay) =
     ash.z == cxr.z ? xrayweight(NormalizeRaw, ash.z, ash.subshell.index, innerindex(cxr), outerindex(cxr)) : 0.0
 
-"""
-    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
-
-"""
 characteristic(
     elm::Element,
     iter::Tuple{Vararg{Transition}},
@@ -186,6 +180,7 @@ characteristic(
     characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6)
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6)
     characteristic(ass::AtomicSubShell)
+    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
 
 The collection of available CharXRay for the specified `Element` or `AtomicSubShell`.  `filterfunc(...)`
     * ` maxE` is compared to the edge energy.
@@ -219,8 +214,9 @@ characteristic(
     filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
 )
 
-characteristic(ass::AtomicSubShell) =
-    characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions))
+characteristic(ass::AtomicSubShell, minWeight=0.0) =
+    filter(cxr->weight(NormalizeToUnity, cxr)>minWeight,
+        characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions)))
 
 
 """

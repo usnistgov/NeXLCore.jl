@@ -1,4 +1,5 @@
 using Test
+using NeXLCore
 
 @testset "Bethe" begin
     @test isapprox(dEds(Bethe, 15.0e3, n"Fe", 8.0), -8.018e7, atol = 0.01e7)

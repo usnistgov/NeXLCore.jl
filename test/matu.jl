@@ -1,5 +1,6 @@
 using Test
 using NeXLCore
+using Random
 
 @testset "MatUncertain" begin
     mat = "Au60Ag40"

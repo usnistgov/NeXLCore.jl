@@ -3,8 +3,10 @@ using Unitful
 using Printf
 using DataFrames
 using LaTeXStrings
+using CSV
 import Base.rand
 import Statistics
+
 
 """
     Material
@@ -653,10 +655,10 @@ compare(unks::AbstractVector{<:Material}, known::Material) =
 
 Compute the material MAC using the standard mass fraction weighted formula.
 """
-mac(mat::Material, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
+mac(mat::Material, energy::Float64, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) =
     sum(zc->mac(zc[1], energy, alg) * value(zc[2]), mat.massfraction) 
-mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
-    mac(mat, energy(xray), alg)
+mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) =
+    sum(zc->mac(zc[1], xray, alg) * value(zc[2]), mat.massfraction) 
 
 function parsedtsa2comp(value::AbstractString)::Material
     try

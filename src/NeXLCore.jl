@@ -12,11 +12,50 @@ using DataDeps
 
 # Abstract model types
 abstract type NeXLAlgorithm end
-export NeXLAlgorithm
+struct DefaultAlgorithm <: NeXLAlgorithm end
+export NeXLAlgorithm, DefaultAlgorithm
+
+"""
+The abstract type `WeightNormalization` is the base type for structs identifying
+the various different useful ways in which line weight (relaxation) data can be represented.
+"""
+abstract type WeightNormalization end
+
+"""
+`NormalizeRaw` returns the raw transition probabilities - The probability of seeing the specified X-ray given one
+ionization of the specified shell.
+"""
+struct NormalizeRaw <: WeightNormalization end
+
+"""
+`NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
+Example: 
+
+    sum(cxr=>weight(NormalizeByShell, cxr), characteristic(n"Fe", ltransitions))==1.0 
+"""
+struct NormalizeByShell <: WeightNormalization end
+
+"""
+`NormalizeBySubShell` normalizes the sum of all the weights associated with a sub-shell to unity.
+
+Example: 
+
+    sum(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0+1.0+1.0
+"""
+struct NormalizeBySubShell <: WeightNormalization end
+
+"""
+`NormalizeToUnity` normalizes intensities such that the most intense line in each shell is 1.0.
+
+Example: 
+    weight(NormalizeToUnity, n"Fe L3-M5")==1.0
+    max(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0
+"""
+struct NormalizeToUnity <: WeightNormalization end
+
 
 include("atomicdb.jl") # Interface to the atomic DB
 include("dtsa_mac.jl") # Implement's Heinrich's IXCOM 11 MACs
-include("botesalvat.jl") # Algorithms implemented in BoteSalvat.jl
 include("element.jl") # Element data from PeriodicTable.jl
 include("shell.jl") # Atomic shell methods
 include("transition.jl") # Atomic transition methods
@@ -58,16 +97,15 @@ export energy # Returns CharXRay and AtomicSubShell eneries
 export density # Returns Element or Mateial data
 export λ, ν, ω, wavenumber # wavelength, frequency, angular frequency and wavenumber of X-ray
 export edgeenergy # Ionization edge energy for an X-ray
-export NormalizeBySubShell, NormalizeByShell, NormalizeToUnity, RawYield
+export NormalizeBySubShell, NormalizeByShell, NormalizeToUnity, NormalizeRaw
 export weight # Returns CharXRay weights as scaled by NormalizeBySubShell, NormalizeByShell, NormalizeToUnity
 export has # Element has a specific Transition
-export FFASTDB # Chantler's FFAST database
 export DTSA   # Heinrich's IXCOM 11 MACs
 export mac # Calculates the MAC using the default or a specified algorithm
 export macU # Calculates the MAC using the default or a specified algorithm
-export set_user_mac! # Specify a custom user mac
-export delete_user_mac! # Delete a specific user mac
-export clear_user_macs! # Clear all user macs
+export setmac! # Specify a custom mac
+export resetmac!, resetmacs! # Reset to the default MAC or MACs
+export loadcustommac!, loadcustommacs!
 export shell # The shell (Shell(K),Shell(L),Shell(M),...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition Shell to lists of Transition(s)
 export transitionsbysubshell # Dictionary mapping transition SubShell to lists of Transition(s)

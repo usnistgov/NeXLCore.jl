@@ -106,7 +106,7 @@ using NeXLCore
  
         # Check that these funtions are defined for all available AtomicSubShell
         @test all(energy.(atomicsubshells(el)) ≠ 0.0 for el in eachelement())
-        @test all(fluorescenceyield.(atomicsubshells(el), CullenEADL) ≠ 0.0 for el in eachelement())
+        @test all(fluorescenceyield.(atomicsubshells(el)) ≠ 0.0 for el in eachelement())
         @test all(map(sh->ionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in eachelement())
         @test all(map(sh->relativeionizationcrosssection(sh,2.0*energy(sh)),atomicsubshells(el)) ≠ 0.0 for el in eachelement())
         @test all(all(map(ass->parse(AtomicSubShell,repr(ass)) == ass, atomicsubshells(el))) for el in eachelement())
@@ -172,8 +172,8 @@ using NeXLCore
         @test all(tr -> shell(tr) == Shell(2), characteristic(n"Fe", ltransitions))
         @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
-        @test length(characteristic(n"Fe", ltransitions, 0.0)) == 14
-        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6
+        @test length(characteristic(n"Fe", ltransitions, 0.0)) == 16
+        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6 # Fails 4
         @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
@@ -185,7 +185,7 @@ using NeXLCore
         @test all(weight.(NormalizeToUnity, characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
         @test all(weight.(NormalizeByShell, characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
         @test all(weight.(NormalizeBySubShell, characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())
-        @test all(all(map(cxr->parse(CharXRay,repr(cxr)) == cxr, characteristic(el,alltransitions))) for el in eachelement())
+        @test all(all(map(cxr->parse(CharXRay,repr(cxr)) == cxr, characteristic(el, alltransitions))) for el in eachelement())
     end
     @testset "Other" begin
         @test firstsubshell(Shell(3)) == n"M1"
@@ -194,16 +194,16 @@ using NeXLCore
         @test lastsubshell(Shell(1)) == n"K1"
         @test firstsubshell(Shell(2)) == n"L1"
         @test lastsubshell(Shell(2)) == n"L3"
-        @test length(eachelement()) == 92
+        @test length(eachelement()) == 99
         @test isequal(eachelement()[1], n"H")
-        @test isequal(eachelement()[end], n"U")
+        @test isequal(eachelement()[end], n"Es")
         @test eachelement()[26]==n"Fe"
         @test eachelement()[41]==n"Nb"
 
         @test all(ze -> ze[1]==z(ze[2]), zip(1:92, eachelement()))
-        @test NeXLCore.fluorescenceyield(20, 1, 4, 9, CullenEADL) == 0.0
+        @test NeXLCore.xrayweight(NormalizeRaw, 20, 1, 4, 9) == 0.0
         @test isapprox(
-            NeXLCore.fluorescenceyield(25, 1, 4, 9, CullenEADL),
+            NeXLCore.xrayweight(NormalizeRaw, 25, 1, 4, 9),
             0.0007828,
             atol = 0.0000001,
         )
@@ -252,7 +252,7 @@ using NeXLCore
             0.9673838,
             transmission(f, n"O K-L3", deg2rad(40.0)),
             atol = 0.000001,
-        )
+        ) 
 
         @test material(f)[n"C"] == 1.0
         @test thickness(f) == 1.0e-6 # cm

@@ -1,44 +1,24 @@
 using Tables
 using SQLite
 
-# The SQLite database containing all the necessary data
-function getatomicdb()
-    return SQLite.DB(joinpath(@__DIR__,"..","data","atomic_database.db"))
+# The goal here is to reduce the load time for NeXLCore by
+# moving data tables into a database.  Currently, MAC, energy
+# and other data is loaded when NeXLCore is loaded taking a 
+# long time and using a lot of memory.  By moving the data
+# to a database, the data is loaded on demand, once. 
+
+# The database will also permit swapping data sets by replacing
+# one source with another.
+
+# Use this to work with the database to ensure that it get closed each time...
+function withatomicdb(f::Function)
+    db = SQLite.DB(joinpath(@__DIR__,"..","data","atomic_database.db"))
+    try
+        return f(db)
+    finally
+        close(db)
+    end
 end
-
-abstract type WeightNormalization end
-
-"""
-`NormalizeRaw` returns the raw transition probabilities - The probability of seeing the specified X-ray given one
-ionization of the specified shell.]
-"""
-struct NormalizeRaw <: WeightNormalization end
-
-"""
-`NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
-Example: 
-
-    sum(cxr=>weight(NormalizeByShell, cxr), characteristic(n"Fe", ltransitions))==1.0 
-"""
-struct NormalizeByShell <: WeightNormalization end
-
-"""
-`NormalizeBySubShell` normalizes the sum of all the weights associated with a sub-shell to unity.
-
-Example: 
-
-    sum(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0+1.0+1.0
-"""
-struct NormalizeBySubShell <: WeightNormalization end
-
-"""
-`NormalizeToUnity` normalizes intensities such that the most intense line in each shell to 1.0.
-
-Example: 
-
-    sum(cxr=>weight(NormalizeBySubShell, cxr), n"Fe K-L3")==1.0
-"""
-struct NormalizeToUnity <: WeightNormalization end
 
 """
    _first(f::Function, iter)
@@ -65,10 +45,10 @@ const subshells = ( "K",
     ( "Q$i" for i in 1:13)...,
 )
 # Maps shell names into indices
-const subShellMap = Dict( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
+const subshelllookup = Dict( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
 
 struct EdgeEnergyCache
-    discrete::Vector{Vector{Float64}} # By Z and shell
+    discrete::Vector{Vector{Float64}} # By [Z][subshell]
     EdgeEnergyCache() = new(map(_->Float64[], 1:99))
 end
 
@@ -79,9 +59,9 @@ let eeCache = EdgeEnergyCache() #
         stmt = SQLite.Stmt(db, "SELECT * FROM EDGE_ENERGIES WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, (z, ref))
         return if !SQLite.done(res)
-            ee = fill(-1.0, length(subShellMap))
+            ee = fill(-1.0, length(subshelllookup))
             for row in Tables.rows(res)
-                ee[subShellMap[row.Shell]] = row.Energy
+                ee[subshelllookup[row.Shell]] = row.Energy
             end
             ee
         else
@@ -89,34 +69,38 @@ let eeCache = EdgeEnergyCache() #
         end
     end
 
-    global function hasedge(z::Int, ss::Int)
+    function getedgediscrete(z::Int)
         if isempty(eeCache.discrete[z])
-            eeCache.discrete[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
-                readEdgeTable(z, getatomicdb(), ref)
+            withatomicdb() do db
+                @info "Reading edge data for Z=$z."
+                eeCache.discrete[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
+                    readEdgeTable(z, db, ref)
+                end
             end
         end
-        return eeCache.discrete[z][ss] > 0.0
+        return eeCache.discrete[z]
     end
-"""
-    edgeenergy(z::Int, ss::Int)::Float64
-    edgeenergy(cxr::CharXRay)
 
-Return the minimum energy (in eV) necessary to ionize the specified sub-shell in the specified atom
-or the ionized shell for the specified characteristic X-ray.
-"""
+    global hasedge(z::Int, ss::Int) = getedgediscrete(z)[ss] > 0.0
 
+    global function eachedge(z::Int)
+        ed = getedgediscrete(z) 
+        return filter!(i->ed[i]>0, collect(1:length(ed)))
+    end
+
+    """
+        edgeenergy(z::Int, ss::Int)::Float64
+        edgeenergy(cxr::CharXRay)
+    
+    Return the minimum energy (in eV) necessary to ionize the specified sub-shell in the specified atom
+    or the ionized shell for the specified characteristic X-ray.
+    """
     global function edgeenergy(z::Int, ss::Int)
-        if isempty(eeCache.discrete[z])
-            eeCache.discrete[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
-                readEdgeTable(z, getatomicdb(), ref)
-            end
-        end
-        ee = eeCache.discrete[z][ss]
-        (ee<=0.0) && @error "The sub-shell $(subshells[ss]) is not present for atomic number $z."
+        ee = getedgediscrete(z)[ss]
+        (ee<0.0) && @error "The sub-shell $(subshells[ss]) is not present for atomic number $z."
         return ee
     end
 end
-
 
 struct TransitionCache
     transitions::Set{Tuple{Int,Int}}
@@ -128,12 +112,15 @@ let transCache = TransitionCache() #
     function readTransitions(db::SQLite.DB, ref::AbstractString)
         stmt = SQLite.Stmt(db, "SELECT * FROM TRANSITIONS WHERE Reference=?;")
         res = DBInterface.execute(stmt, (ref, ))
-        return Set(tuple(subShellMap[r.Inner], subShellMap[r.Outer]) for r in Tables.rows(res))
+        return Set(tuple(subshelllookup[r.Inner], subshelllookup[r.Outer]) for r in Tables.rows(res))
     end
 
     global function transitions()
         if isempty(transCache.transitions)
-            union!(transCache.transitions, readTransitions(getatomicdb(), "NeXL-modified Cullen"))
+            @info "Reading transition data."
+            withatomicdb() do db
+                union!(transCache.transitions, readTransitions(db, "NeXL-modified Cullen"))
+            end
         end
         return transCache.transitions
     end
@@ -154,17 +141,26 @@ let jummpratioCache = JumpRatioCache() #
         return !SQLite.done(res) ? Dict( row.SubShell=>row.JumpRatio for row in Tables.rows(res) ) : nothing
     end
 
-    global function jumpratio(z::Int, ss::Int)
+    function getjumpratios(z::Int)
         if isnothing(jummpratioCache.values[z])
-            jummpratioCache.values[z] = _first([ "CITZAF" ]) do ref
-                readJumpRatios(z, getatomicdb(), ref)
+            withatomicdb() do db
+                @info "Reading jump ratio data for Z=$z."
+                jummpratioCache.values[z] = _first([ "CITZAF" ]) do ref
+                    readJumpRatios(z, db, ref)
+                end
             end
         end
-        jr = get(jummpratioCache.values[z], ss, -1.0)
+        return jummpratioCache.values[z]
+    end
+
+    global function jumpratio(z::Int, ss::Int)
+        jr = get(getjummpratios(z), ss, -1.0)
         (jr<=0.0) && @error "The jump-ratio is not available for sub-shell $z $(subshells[ss])."
         return jr
     end
 end
+
+
 
 # The cache for X-ray transitions and energies
 struct XRayCache
@@ -179,7 +175,6 @@ struct XRayCache
 end
 
 let xrayCache = XRayCache()
-
     default_overvoltage = 4.0
     nn = (
         1, # Shell index
@@ -210,55 +205,50 @@ let xrayCache = XRayCache()
         stmt = SQLite.Stmt(db, "SELECT * FROM RELAXATION2 WHERE ZZ=? AND Reference=?;")
         res = DBInterface.execute(stmt, ( z, ref, ))
         return if !SQLite.done(res)
-            return Dict( ( subShellMap[r.Ionized], subShellMap[r.Inner], subShellMap[r.Outer] ) => r.Probability for r in Tables.rows(res) )
+            return Dict( ( subshelllookup[r.Ionized], subshelllookup[r.Inner], subshelllookup[r.Outer] ) => r.Probability for r in Tables.rows(res) )
         else
             nothing
         end
     end
 
-    global function xrayenergy(z::Int, inner::Int, outer::Int)::Float64
-        e = get(getxrayenergies(z), (inner, outer), -1.0)
-        if (e < 0.0) && hasedge(z, inner) && hasedge(z, outer)
-            e = edgeenergy(z, inner) - edgeenergy(z, outer)
-        end
-        return e 
-    end
-
-    global function setxrayenergy(z::Int, inner::Int, outer::Int, energy::AbstractFloat)
-        return getxrayenergies(z)[(inner, outer)] = energy
-    end
-
-    global function hasxray(z::Int, inner::Int, outer::Int)
-        return haskey(getxrayenergies(z), (inner, outer))
-    end
-
-    global function getxrayenergies(z::Int)::Dict{Tuple{Int,Int}, Float64}
-        if isnothing(xrayCache.energies[z])
-            xrayCache.energies[z] = _first( [ "DTSA2" ] ) do ref
-                readXRayTable(getatomicdb(), z, ref)
+    function getxrayenergies(z::Int)::Dict{Tuple{Int,Int}, Float64}
+        if isnothing(xrayCache.energies[z]) 
+            try
+                withatomicdb() do db
+                    @info "Reading characteristic X-ray energy data for Z=$z."
+                    xrayCache.energies[z] = _first( [ "DTSA2", "Williams1992" ] ) do ref
+                        readXRayTable(db, z, ref)
+                    end
+                end
+            catch
+                xrayCache.energies[z] = Dict{Tuple{Int,Int}, Float64}()
             end
         end
         return xrayCache.energies[z]
     end
 
-    global function getxrayweights(z::Int)::Dict{Tuple{Int,Int,Int}, Float64}
+    function getxrayweights(z::Int)::Dict{Tuple{Int,Int,Int}, Float64}
         if isnothing(xrayCache.weights[z])
-            xrayCache.weights[z] = _first([ "Cullen1992", "Robinson1991" ]) do ref
-                readWeightsTable(getatomicdb(), z, ref)
+            try
+                withatomicdb() do db
+                    @info "Reading line weight data for Z=$z."
+                    xrayCache.weights[z] = _first([ "Cullen1992", "Robinson1991" ]) do ref
+                        readWeightsTable(db, z, ref)
+                    end
+                end
+            catch
+                xrayCache.weights[z] = Dict{Tuple{Int,Int,Int}, Float64}()
             end
         end
         return xrayCache.weights[z]
     end
 
-    global function xrayweight(::Type{NormalizeRaw}, z::Int, ionized::Int, dest::Int, src::Int)
-        return get(getxrayweights(z), (ionized, dest, src), 0.0)
-    end
-
     global function xrayweight(::Type{NormalizeBySubShell}, z::Int, ionized::Int, dest::Int, src::Int)
         if isnothing(xrayCache.normbysubshell[z])
+            @info "Computing NormalizeBySubShell data for Z=$z."
             wgts = getxrayweights(z)
             sum_ss = Dict{Int, Float64}()
-            for ((ion, inn, outer), wgt) in wgts
+            for ((ion, inn, _), wgt) in wgts
                 if ion==inn # Only those due to direct ionization of dest
                     sum_ss[ion] = get(sum_ss, ion, 0.0) + wgt
                 end
@@ -271,9 +261,10 @@ let xrayCache = XRayCache()
         end
         return get(xrayCache.normbysubshell[z], (ionized, dest, src), 0.0)
     end
-
+    
     global function xrayweight(::Type{NormalizeByShell}, z::Int, ionized::Int, dest::Int, src::Int)
         if isnothing(xrayCache.normbyshell[z])
+            @info "Computing NormalizeByShell data for Z=$z."
             wgts = getxrayweights(z)
             sum_s = Dict{Int, Float64}()
             for ((ion, inn, src), wgt) in wgts
@@ -291,28 +282,48 @@ let xrayCache = XRayCache()
         end
         return get(xrayCache.normbyshell[z], (ionized, dest, src), 0.0)
     end
-
-
+    
+    
     global function xrayweight(::Type{NormalizeToUnity}, z::Int, ionized::Int, dest::Int, src::Int)
         if isnothing(xrayCache.normunity[z])
+            @info "Computing NormalizeToUnity data for Z=$z."
             wgts = getxrayweights(z)
             max_s = Dict{Int, Float64}()
             for ((ion, inn, _), wgt) in wgts
                 if ion==inn # Only those due to direct ionization of dest
-                    icx = ionizationcrosssection(z, inn, default_overvoltage*edgeenergy(z, inn), Bote2009)
+                    icx = ionizationcrosssection(z, ion, default_overvoltage*edgeenergy(z, ion), Bote2009)
                     max_s[nn[ion]] = max(get(max_s, nn[ion], 0.0), icx*wgt)
                 end
             end
             res = Dict{Tuple{Int,Int,Int}, Float64}()
             for ((ion, inn, outer), wgt) in wgts
-                icx = ionizationcrosssection(z, inn, default_overvoltage*edgeenergy(z, inn), Bote2009)
+                icx = ionizationcrosssection(z, ion, default_overvoltage*edgeenergy(z, ion), Bote2009)
                 res[(ion, inn, outer)] = (icx*wgt)/max_s[nn[ion]]
             end
             xrayCache.normunity[z] = res
         end
         return get(xrayCache.normunity[z], (ionized, dest, src), 0.0)
-    end
+    end 
 
+    global function xrayenergy(z::Int, inner::Int, outer::Int)::Float64
+        e = get(getxrayenergies(z), (inner, outer), -1.0)
+        if (e < 0.0) && hasedge(z, inner) && hasedge(z, outer)
+            e = edgeenergy(z, inner) - edgeenergy(z, outer)
+        end
+        return e 
+    end
+    
+    global function setxrayenergy(z::Int, inner::Int, outer::Int, energy::AbstractFloat)
+        return getxrayenergies(z)[(inner, outer)] = energy
+    end
+    
+    global function hasxray(z::Int, inner::Int, outer::Int)
+        return xrayenergy(z, inner, outer)>0.0 && xrayweight(NormalizeRaw,z, inner, inner, outer) > 0.0
+    end
+    
+    global function xrayweight(::Type{NormalizeRaw}, z::Int, ionized::Int, dest::Int, src::Int)
+        return get(getxrayweights(z), (ionized, dest, src), 0.0)
+    end 
 end
 
 # The continuous and discrete MAC cache
@@ -347,152 +358,80 @@ let macCache = MACCache()
                 push!(en, row.Energy)
                 push!(vals, row.MACpi)
             end
-            intp = interpolate1d(log.(en), vals)
-            e -> intp(log(e))
+            intp = interpolate1d(log.(en), log.(vals))
+            e -> exp(intp(log(e)))
         else
             nothing
         end
     end
 
-    global function mac(z::Int, energy::AbstractFloat)::Float64
+    function getmaccontinuous(z::Int)
         if isnothing(macCache.continuous[z])
-            macCache.continuous[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
-                readMacTable(z, getatomicdb(), ref)
+            withatomicdb() do db
+                @info "Reading MAC data for Z=$z."
+                macCache.continuous[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
+                    readMacTable(z, db, ref)
+                end
             end
         end
-        return macCache.continuous[z](energy)
+        return macCache.continuous[z]
     end
+    
+    global function setmac!(matz::Int, xz::Int, inner::Int, outer::Int, mac::Float64)
+        macCache.discrete[(matz, xz, inner, outer)] = mac
+    end
+
+    global function resetmac!(matz::Int, xz::Int, inner::Int, outer::Int)
+        delete!(macCache.discrete, (matz, xz, inner, outer))
+    end
+
+    global function resetmacs!()
+        empty!(macCache.discrete)
+    end
+
+    global mac(z::Int, energy::Float64)::Float64 = getmaccontinuous(z)(energy)
 
     global function mac(matz::Int, xz::Int, inner::Int, outer::Int)::Float64
         v = get(macCache.discrete, (matz, xz, inner, outer), -1.0)
         if v == -1.0
-            e = xrayEnergy(xz, inner, outer)
+            e = xrayenergy(xz, inner, outer)
             @assert e>0.0 "No characteristic x-ray exists for $xz $(subshells[inner])-$(subshells[outer])"
-            v = setmac(matz, xz, inner, outer, mac(matz, e))
+            v = setmac!(matz, xz, inner, outer, mac(matz, e))
         end
         return v
     end
 
-    global function setmac(matz::Int, xz::Int, inner::Int, outer::Int, mac::AbstractFloat)
-        macCache.discrete[(matz, xz, inner, outer)] = mac
-    end
-
-    global function loadcustommacs(source::AbstractString, elements::AbstractArray{Element})
-        stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Reference=?;")
-        res = DBInterface.execute(stmt, (source))
-        atomicnumbers = z.(elements)
-        return count(filter(r->r.Z1 in atomicnumbers, Tables.rows(res))) do row
-            setmac(row.Z1, row.Z2, row.Inner, row.Outer, row.MACpi)==row.MACpi
+    global function loadcustommac!(z1::Int, z2::Int, inner::Int, outer::Int, source::AbstractString)
+        withatomicdb() do db
+            stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Z1 = ? AND Z2 = ? AND Inner = ? AND Outer = ? AND Reference=?;")
+            res = DBInterface.execute(stmt, (z1, z2, subshells[inner], subshells[outer], source))
+            if !SQLite.done(res)
+                row = first(Tables.rows(res))
+                setmac!(row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi))
+            else
+                error("$source does not provide a custom MAC for $z2 $(subshells[inner])-$(subshells[outer]) in Z=$z1.")
+            end
         end
     end
+
+    global function loadcustommacs!(source::AbstractString, atomicnumbers)
+        return withatomicdb() do db
+            stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Reference=?;")
+            res = DBInterface.execute(stmt, (source, ))
+            count(Tables.rows(res)) do row
+                (row.Z1 in atomicnumbers) && (setmac!(row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi))==row.MACpi)
+            end
+        end
+    end
+
+    global function listcustommacs(z::Int, inner::Int, outer::Int)
+        return withatomicdb() do db
+            stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Z2=? AND Inner=? AND Outer=?;")
+            map(Tables.rows(DBInterface.execute(stmt, (z, subshells[inner], subshells[outer])))) do row
+                ( row.Reference, row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi) )
+            end
+        end
+    end
+
 end
 
-
-abstract type MACUncertainty end
-struct MonatomicGas <: MACUncertainty end
-struct SolidLiquid <: MACUncertainty end
-
-"""
-    fractionaluncertainty(::Type{MonatomicGas}, z::Integer, energy)
-Determines from the element and energy, the approximate range of fractional uncertainties to
-associate with the total and photoelectric components of the mass attenuation coefficients
-for monatomic gas samples.
-Based on [this table](https://physics.nist.gov/PhysRefData/FFast/Text2000/sec06.html#tab2).
-"""
-function fractionaluncertainty(::Type{MonatomicGas}, z::Integer, energy)
-    low, high = 0.01, 0.01
-    if energy < 200.0
-        low, high = 0.5, 1.0
-    elseif energy < 500.0
-        low, high = 0.20, 0.30
-    elseif energy < 1.0
-        low, high = 0.03, 0.10
-    end
-    distance = ( (energy - edgeenergy(z, sh)) / energy for sh in eachedge(z) )
-    if minimum(abs.(distance)) < 0.001
-        low, high = max(low, 0.2), max(high, 0.3)
-    end
-    u = [ energy / edgeenergy(z, sh) for sh in eachedge(z) ]
-    if (u[1] > 1.0) && (u[1] < 1.1)
-        low, high = max(low, 0.1), max(high, 0.1)
-    elseif (u[1] >= 1.1) && (u[1] < 1.2)
-        low, high = max(low, 0.03), max(high, 0.03)
-    end
-    # L1, M1, M2, M3
-    for sh in filter(sh->get(u, sh, 0.0) >= 1.0, [ 2, 5, 6, 7 ])
-        if u[sh] < 1.15
-            low, high = max(low, 0.15), max(high, 0.15)
-        elseif u[sh] < 1.4
-            low, high = max(low, 0.04), max(high, 0.04)
-        end
-    end
-    # L2, L3, M4, M5
-    for sh in filter(sh->get(u, sh, 0.0) >= 1.0, [ 3, 4, 8, 9 ])
-        if u[sh] < 1.15
-            low, high = max(low, 0.20), max(high, 0.20)
-        elseif u[sh] < 1.4
-            low, high = max(low, 0.04), max(high, 0.04)
-        end
-    end
-    if energy > 200.0e3
-        low, high = max(low, 0.02), max(high, 0.03)
-    end
-    return (low, high)
-end
-
-"""
-    fractionaluncertainty(::Type{SolidLiquid}, z::Integer, energy)
-Determines from the element and energy, the approximate range of fractional uncertainties to
-associate with the total and photoelectric components of the mass attenuation coefficients
-for solids and liquids.
-Based on [this table](https://physics.nist.gov/PhysRefData/FFast/Text2000/sec06.html#tab2).
-"""
-function fractionaluncertainty(::Type{SolidLiquid}, z::Integer, energy)
-    low, high = 0.01, 0.01
-    if energy < 200.0
-        low, high = 1.0, 2.0
-    elseif energy < 500.0
-        low, high = 0.50, 1.0
-    elseif energy < 1.0
-        low, high = 0.05, 0.20
-    end
-    distance = ( (energy - edgeenergy(z, sh)) / energy for sh in eachedge(z) )
-    if minimum(abs.(distance)) < 0.001
-        low, high = max(low, 0.5), max(high, 0.5)
-    end
-    u = [ energy / edgeenergy(z, sh) for sh in eachedge(z) ]
-    if (u[1] > 1.0) && (u[1] < 1.1)
-        low, high = max(low, 0.1), max(high, 0.2)
-    elseif (u[1] >= 1.1) && (u[1] < 1.2)
-        low, high = max(low, 0.03), max(high, 0.03)
-    end
-    # L1, M1, M2, M3
-    for sh in filter(sh->get(u, sh, 0.0) >= 1.0, [ 2, 5, 6, 7 ])
-        if u[sh] < 1.15
-            low, high = max(low, 0.15), max(high, 0.30)
-        elseif u[sh] < 1.4
-            low, high = max(low, 0.04), max(high, 0.04)
-        end
-    end
-    # L2, L3, M4, M5
-    for sh in filter(sh->get(u, sh, 0.0) >= 1.0, [ 3, 4, 8, 9 ] )
-        if u[sh] < 1.15
-            low, high = max(low, 0.20), max(high, 0.40)
-        elseif u[sh] < 1.4
-            low, high = max(low, 0.04), max(high, 0.04)
-        end
-    end
-    if energy > 200.0e3
-        low, high = max(low, 0.02), max(high, 0.03)
-    end
-    return (low, high)
-end
-
-
-function macU(elm::Element, energy::Float64)::UncertainValue
-    macv = mac(z(elm), energy)
-    return uv(
-        macv,
-        min(FFAST.fractionaluncertainty(SolidLiquid, z(elm), energy)[1], 0.9) * macv
-    )
-end

@@ -1,23 +1,25 @@
 using Test
-using Random
 using NeXLCore
 
 @testset "NeXLCore Tests" begin
+    include("bethe.jl")
+    include("compton.jl")
+    include("custommacs.jl")
+    include("electron.jl")
     include("element.jl")
-    include("xray.jl")
+    include("eta.jl")
+    include("kratio.jl")
+    include("mac.jl")
     include("material.jl")
     include("matparser.jl")
     include("stoichiometry.jl")
     include("matu.jl")
-    include("kratio.jl")
-    include("eta.jl")
-    include("custommacs.jl")
-    include("bethe.jl")
     include("meanionizationpotential.jl")
-    include("electron.jl")
     include("scattering.jl")
     include("staging.jl")
     include("standardize.jl")
+    include("stoichiometry.jl")
+    include("xray.jl")
 end
 
 # To test coverage (from NWMR's Win10 box)

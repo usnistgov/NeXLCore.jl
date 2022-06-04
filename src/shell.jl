@@ -374,7 +374,7 @@ Example:
      Fe M4
      Fe M2
  """
-atomicsubshells(elm::Element) = map(ss->atomicsubshell(elm, ss), filter(ss->hasedge(z(elm), ss), 1:29))
+atomicsubshells(elm::Element) = map(ss->atomicsubshell(elm, SubShell(ss)), eachedge(z(elm)))
 atomicsubshells(elm::Element, maxE::Float64) = filter(ass->energy(ass)<maxE, atomicsubshells(elm))
 atomicsubshells(ss::SubShell) = AtomicSubShell[atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), eachelement())]
 

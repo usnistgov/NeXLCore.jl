@@ -2,7 +2,7 @@ using Test
 using NeXLCore
 
 @testset "Iron" begin
-    @test length(NeXLCore.eachedge(26)) == 9
+    @test length(NeXLCore.eachedge(26)) == 10
 
     @test NeXLCore.hasedge(26, 1)
     @test NeXLCore.hasedge(26, 2)
@@ -13,9 +13,10 @@ using NeXLCore
     @test NeXLCore.hasedge(26, 7)
     @test NeXLCore.hasedge(26, 8)
     @test NeXLCore.hasedge(26, 9)
-    @test !NeXLCore.hasedge(26, 10)
+    @test !NeXLCore.hasedge(26, 11)
 
-    @test !(10 in NeXLCore.eachedge(26))
+    @test all(i -> i in NeXLCore.eachedge(26), 1:10)
+    @test !(11 in NeXLCore.eachedge(26))
     @test 2 in NeXLCore.eachedge(26)
     @test 7 in NeXLCore.eachedge(26)
 

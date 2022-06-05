@@ -174,7 +174,7 @@ using NeXLCore
 
         @test length(characteristic(n"Fe", ltransitions, 0.0)) == 16
         @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6 # Fails 4
-        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
+        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 10
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
         @test !isless(n"Fe K-L3", n"Fe K-L3")

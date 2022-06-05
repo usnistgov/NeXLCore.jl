@@ -35,6 +35,22 @@ function _first(f::Function, iter)
     @assert false "None of the options evaluated as not nothing."
     return nothing
 end
+"""
+    _merge(f::Function, iter)
+
+Merge the values returned by `f` applied to the elements in `iter`.
+The first items in `iter` are prioritized over the later values.
+"""
+function _merge(f::Function, iter)
+    mergethem(_::Nothing, b) = b
+    mergethem(a::Dict, b) = isnothing(b) ? a : merge(b, a)
+    mergethem(a::Vector, b) = isnothing(b) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, b)) 
+    res = nothing
+    for i in reverse(iter)
+        res = mergethem(f(i), res)
+    end
+    return res
+end
 
 const subshells = ( "K",
     ( "L$i" for i in 1:3)...,
@@ -72,8 +88,8 @@ let eeCache = EdgeEnergyCache() #
     function getedgediscrete(z::Int)
         if isempty(eeCache.discrete[z])
             withatomicdb() do db
-                @info "Reading edge data for Z=$z."
-                eeCache.discrete[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
+                # @info "Reading edge data for Z=$z."
+                eeCache.discrete[z] = _merge([ "Chantler2005", "Sabbatucci2016" ]) do ref
                     readEdgeTable(z, db, ref)
                 end
             end
@@ -117,7 +133,7 @@ let transCache = TransitionCache() #
 
     global function transitions()
         if isempty(transCache.transitions)
-            @info "Reading transition data."
+            # @info "Reading transition data."
             withatomicdb() do db
                 union!(transCache.transitions, readTransitions(db, "NeXL-modified Cullen"))
             end
@@ -144,7 +160,7 @@ let jummpratioCache = JumpRatioCache() #
     function getjumpratios(z::Int)
         if isnothing(jummpratioCache.values[z])
             withatomicdb() do db
-                @info "Reading jump ratio data for Z=$z."
+                # @info "Reading jump ratio data for Z=$z."
                 jummpratioCache.values[z] = _first([ "CITZAF" ]) do ref
                     readJumpRatios(z, db, ref)
                 end
@@ -194,29 +210,27 @@ let xrayCache = XRayCache()
     function readXRayTable(db::SQLite.DB, z::Int, ref::AbstractString)
         stmt = SQLite.Stmt(db, "SELECT * FROM XRAY_ENERGIES WHERE Z=? AND Source=?;")
         res = DBInterface.execute(stmt, ( z, ref, ))
-        return if !SQLite.done(res)
-            return Dict( (r.Inner, r.Outer) => r.Energy for r in Tables.rows(res) )
-        else
+        return !SQLite.done(res) ? #
+            Dict( (r.Inner, r.Outer) => r.Energy for r in Tables.rows(res) ) : #
             nothing
-        end
     end
 
     function readWeightsTable(db::SQLite.DB, z::Int, ref::String)
         stmt = SQLite.Stmt(db, "SELECT * FROM RELAXATION2 WHERE ZZ=? AND Reference=?;")
         res = DBInterface.execute(stmt, ( z, ref, ))
-        return if !SQLite.done(res)
-            return Dict( ( subshelllookup[r.Ionized], subshelllookup[r.Inner], subshelllookup[r.Outer] ) => r.Probability for r in Tables.rows(res) )
-        else
-            nothing
-        end
+        return !SQLite.done(res) ? #
+            Dict( 
+                ( subshelllookup[r.Ionized], subshelllookup[r.Inner], subshelllookup[r.Outer] ) => r.Probability # 
+                    for r in Tables.rows(res) #
+            ) : nothing
     end
 
     function getxrayenergies(z::Int)::Dict{Tuple{Int,Int}, Float64}
         if isnothing(xrayCache.energies[z]) 
             try
                 withatomicdb() do db
-                    @info "Reading characteristic X-ray energy data for Z=$z."
-                    xrayCache.energies[z] = _first( [ "DTSA2", "Williams1992" ] ) do ref
+                    # @info "Reading characteristic X-ray energy data for Z=$z."
+                    xrayCache.energies[z] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
                         readXRayTable(db, z, ref)
                     end
                 end
@@ -231,8 +245,8 @@ let xrayCache = XRayCache()
         if isnothing(xrayCache.weights[z])
             try
                 withatomicdb() do db
-                    @info "Reading line weight data for Z=$z."
-                    xrayCache.weights[z] = _first([ "Cullen1992", "Robinson1991" ]) do ref
+                    # @info "Reading line weight data for Z=$z."
+                    xrayCache.weights[z] = _merge([ "NeXL-modified Cullen", "Robinson1991" ]) do ref
                         readWeightsTable(db, z, ref)
                     end
                 end
@@ -245,7 +259,7 @@ let xrayCache = XRayCache()
 
     global function xrayweight(::Type{NormalizeBySubShell}, z::Int, ionized::Int, dest::Int, src::Int)
         if isnothing(xrayCache.normbysubshell[z])
-            @info "Computing NormalizeBySubShell data for Z=$z."
+            # @info "Computing NormalizeBySubShell data for Z=$z."
             wgts = getxrayweights(z)
             sum_ss = Dict{Int, Float64}()
             for ((ion, inn, _), wgt) in wgts
@@ -264,7 +278,7 @@ let xrayCache = XRayCache()
     
     global function xrayweight(::Type{NormalizeByShell}, z::Int, ionized::Int, dest::Int, src::Int)
         if isnothing(xrayCache.normbyshell[z])
-            @info "Computing NormalizeByShell data for Z=$z."
+            # @info "Computing NormalizeByShell data for Z=$z."
             wgts = getxrayweights(z)
             sum_s = Dict{Int, Float64}()
             for ((ion, inn, src), wgt) in wgts
@@ -286,7 +300,7 @@ let xrayCache = XRayCache()
     
     global function xrayweight(::Type{NormalizeToUnity}, z::Int, ionized::Int, dest::Int, src::Int)
         if isnothing(xrayCache.normunity[z])
-            @info "Computing NormalizeToUnity data for Z=$z."
+            # @info "Computing NormalizeToUnity data for Z=$z."
             wgts = getxrayweights(z)
             max_s = Dict{Int, Float64}()
             for ((ion, inn, _), wgt) in wgts
@@ -318,7 +332,7 @@ let xrayCache = XRayCache()
     end
     
     global function hasxray(z::Int, inner::Int, outer::Int)
-        return xrayenergy(z, inner, outer)>0.0 && xrayweight(NormalizeRaw,z, inner, inner, outer) > 0.0
+        return hasedge(z, inner) && hasedge(z, outer) && xrayweight(NormalizeRaw,z, inner, inner, outer) > 0.0
     end
     
     global function xrayweight(::Type{NormalizeRaw}, z::Int, ionized::Int, dest::Int, src::Int)
@@ -368,7 +382,7 @@ let macCache = MACCache()
     function getmaccontinuous(z::Int)
         if isnothing(macCache.continuous[z])
             withatomicdb() do db
-                @info "Reading MAC data for Z=$z."
+                # @info "Reading MAC data for Z=$z."
                 macCache.continuous[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
                     readMacTable(z, db, ref)
                 end

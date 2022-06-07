@@ -36,6 +36,13 @@ energy(elm::Element, tr::Transition)::Float64 = energy(elm, tr, DefaultAlgorithm
 energy(cxr::CharXRay) = energy(cxr::CharXRay, DefaultAlgorithm)
 
 """
+    edgeenergy(cxr::CharXRay)
+
+Returns the energy associated with the inner shell of this characteristic X-ray (eV).
+"""
+edgeenergy(cxr::CharXRay) = edgeenergy(z(cxr), innerindex(cxr))
+
+"""
     eachelement()
 
 Return the range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data

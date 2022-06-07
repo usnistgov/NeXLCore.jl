@@ -170,7 +170,7 @@ let jummpratioCache = JumpRatioCache() #
     end
 
     global function jumpratio(z::Int, ss::Int)
-        jr = get(getjummpratios(z), ss, -1.0)
+        jr = get(getjumpratios(z), ss, -1.0)
         (jr<=0.0) && @error "The jump-ratio is not available for sub-shell $z $(subshells[ss])."
         return jr
     end
@@ -332,7 +332,9 @@ let xrayCache = XRayCache()
     end
     
     global function hasxray(z::Int, inner::Int, outer::Int)
-        return hasedge(z, inner) && hasedge(z, outer) && xrayweight(NormalizeRaw,z, inner, inner, outer) > 0.0
+        return hasedge(z, inner) && hasedge(z, outer) && #
+        subshells[inner][1]!=subshells[outer][1] && #
+        xrayweight(NormalizeRaw,z, inner, inner, outer) > 0.0
     end
     
     global function xrayweight(::Type{NormalizeRaw}, z::Int, ionized::Int, dest::Int, src::Int)

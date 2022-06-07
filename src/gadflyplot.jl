@@ -253,7 +253,7 @@ Plot a comparison of the FFAST and Heinrich MAC tabulations for the specified El
 """
 function compareMACs(elm::Element; palette = NeXLPalette)
     names = String[]
-    layers = map( enumerate([FFASTDB, DTSA, ])) do (i, alg)
+    layers = map( enumerate([DefaultAlgorithm, DTSA, ])) do (i, alg)
         push!(names, repr(alg))
         layer(
             ev -> log10(mac(elm, ev, alg)),

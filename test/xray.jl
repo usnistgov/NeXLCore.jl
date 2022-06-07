@@ -172,9 +172,9 @@ using NeXLCore
         @test all(tr -> shell(tr) == Shell(2), characteristic(n"Fe", ltransitions))
         @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
-        @test length(characteristic(n"Fe", ltransitions, 0.0)) == 16
-        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6 # Fails 4
-        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 10
+        @test length(characteristic(n"Fe", ltransitions, 0.0)) == 14
+        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 6
+        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
         @test !isless(n"Fe K-L3", n"Fe K-L3")
@@ -261,4 +261,13 @@ using NeXLCore
         @test enx"Fe K" == energy(n"Fe K")
         @test enx"Fe K-L3" == energy(n"Fe K-L3")
     end
+
+    @testset "JumpRatio" begin
+        @test jumpratio(n"Fr M5") ≈ 2.62036
+        @test jumpratio(n"Ce M3") ≈ 1.15146
+        @test jumpratio(n"In L3") ≈ 3.4062
+        @test jumpratio(n"Ge K") ≈ 7.49888
+    end
+   
 end
+

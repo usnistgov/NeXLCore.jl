@@ -35,7 +35,7 @@ Select an element using the slider.
 @bind zz Slider(1:92)
 
 # ╔═╡ 77ec16f4-c285-4136-9e7b-376b1f68c74a
-plot(NeXLCore.FFASTDB, elements[zz])
+plot(NeXLCore.DefaultAlgorithm, elements[zz])
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """

@@ -308,7 +308,7 @@ struct AtomicSubShell
     AtomicSubShell(elm::Element, ss::SubShell) = AtomicSubShell(z(elm), ss)
 end
 
-jumpratio(ass::AtomicSubShell) = jumpratio(ass.z, ass.subshell.index, FFASTDB)
+jumpratio(ass::AtomicSubShell) = jumpratio(ass.z, ass.subshell.index)
 
 """
      element(ass::AtomicSubShell)

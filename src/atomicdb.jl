@@ -72,12 +72,12 @@ end
 let eeCache = EdgeEnergyCache() #
 
     function readEdgeTable(z::Int, db::SQLite.DB, ref::AbstractString)
-        stmt = SQLite.Stmt(db, "SELECT * FROM EDGE_ENERGIES WHERE Z=? AND Reference=?;")
+        stmt = SQLite.Stmt(db, "SELECT Subshell, Energy FROM EDGE_ENERGIES WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, (z, ref))
         return if !SQLite.done(res)
             ee = fill(-1.0, length(subshelllookup))
             for row in Tables.rows(res)
-                ee[subshelllookup[row.Shell]] = row.Energy
+                ee[subshelllookup[row.Subshell]] = row.Energy
             end
             ee
         else
@@ -89,6 +89,7 @@ let eeCache = EdgeEnergyCache() #
         if isempty(eeCache.discrete[z])
             withatomicdb() do db
                 # @info "Reading edge data for Z=$z."
+                # Use the MAC edges since this data is more sensitive to edge position
                 eeCache.discrete[z] = _merge([ "Chantler2005", "Sabbatucci2016" ]) do ref
                     readEdgeTable(z, db, ref)
                 end
@@ -126,7 +127,7 @@ end
 let transCache = TransitionCache() #
 
     function readTransitions(db::SQLite.DB, ref::AbstractString)
-        stmt = SQLite.Stmt(db, "SELECT * FROM TRANSITIONS WHERE Reference=?;")
+        stmt = SQLite.Stmt(db, "SELECT Inner, Outer FROM TRANSITIONS WHERE Reference=?;")
         res = DBInterface.execute(stmt, (ref, ))
         return Set(tuple(subshelllookup[r.Inner], subshelllookup[r.Outer]) for r in Tables.rows(res))
     end
@@ -135,7 +136,7 @@ let transCache = TransitionCache() #
         if isempty(transCache.transitions)
             # @info "Reading transition data."
             withatomicdb() do db
-                union!(transCache.transitions, readTransitions(db, "NeXL-modified Cullen"))
+                union!(transCache.transitions, readTransitions(db, "RELAX2014"))
             end
         end
         return transCache.transitions
@@ -152,7 +153,7 @@ end
 let jummpratioCache = JumpRatioCache() #
 
     function readJumpRatios(z::Int, db::SQLite.DB, ref::AbstractString)
-        stmt = SQLite.Stmt(db, "SELECT * FROM JUMP_RATIOS WHERE Z=? AND Source=?;")
+        stmt = SQLite.Stmt(db, "SELECT SubShell, JumpRatio FROM JUMP_RATIOS WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, (z, ref))
         return !SQLite.done(res) ? Dict( row.SubShell=>row.JumpRatio for row in Tables.rows(res) ) : nothing
     end
@@ -208,7 +209,7 @@ let xrayCache = XRayCache()
     Read the table of x-ray energies for atomic number `z`.
     """
     function readXRayTable(db::SQLite.DB, z::Int, ref::AbstractString)
-        stmt = SQLite.Stmt(db, "SELECT * FROM XRAY_ENERGIES WHERE Z=? AND Source=?;")
+        stmt = SQLite.Stmt(db, "SELECT Inner, Outer, Energy FROM XRAY_ENERGIES WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, ( z, ref, ))
         return !SQLite.done(res) ? #
             Dict( (r.Inner, r.Outer) => r.Energy for r in Tables.rows(res) ) : #
@@ -216,7 +217,7 @@ let xrayCache = XRayCache()
     end
 
     function readWeightsTable(db::SQLite.DB, z::Int, ref::String)
-        stmt = SQLite.Stmt(db, "SELECT * FROM RELAXATION2 WHERE ZZ=? AND Reference=?;")
+        stmt = SQLite.Stmt(db, "SELECT Ionized, Inner, Outer, Probability FROM RELAXATION WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, ( z, ref, ))
         return !SQLite.done(res) ? #
             Dict( 
@@ -246,7 +247,7 @@ let xrayCache = XRayCache()
             try
                 withatomicdb() do db
                     # @info "Reading line weight data for Z=$z."
-                    xrayCache.weights[z] = _merge([ "NeXL-modified Cullen", "Robinson1991" ]) do ref
+                    xrayCache.weights[z] = _merge([ "NeXL-modified RELAX", "RELAX2014", "Robinson1991" ]) do ref
                         readWeightsTable(db, z, ref)
                     end
                 end
@@ -366,7 +367,7 @@ let macCache = MACCache()
     Read the table of energy vs mac data items for atomic number `z`.
     """
     function readMacTable(z::Int, db::SQLite.DB, ref::AbstractString)
-        stmt = SQLite.Stmt(db, "SELECT * FROM MACS WHERE Z=? AND Reference=? AND Shell=\"All\" ORDER BY Energy;")
+        stmt = SQLite.Stmt(db, "SELECT * FROM MACS WHERE Z=? AND Reference=? AND Subshell=\"All\" ORDER BY Energy;")
         res = DBInterface.execute(stmt, (z, ref))
         return if !SQLite.done(res)
             en, vals = Float64[], Float64[]

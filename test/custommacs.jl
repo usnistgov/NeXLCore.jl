@@ -13,12 +13,14 @@ using NeXLCore
     loadcustommacs!("Bastin1988", 1:99)
     @test mac(n"Si", n"N K-L3") == 17170.0
     @test mac(n"Zr", n"N K-L3") == 24000.0
+    # Not present in Bastin1988
     @test mac(n"Zr", n"O K-L3") == mac(n"Zr", energy(n"O K-L3"))
 
     loadcustommacs!("Bastin1989", 1:99)
     @test mac(n"Zr", n"O K-L3") == 16200.0
     @test mac(n"Pb", n"O K-L3") == 11000.0
     resetmac!(n"Ga", n"O K-L2")
+    # Cleared...
     @test mac(n"Ga", n"O K-L2") == mac(n"Ga", energy(n"O K-L2"))
 
     resetmacs!()

@@ -11,8 +11,7 @@ struct CharXRay
             z,
             transition.innershell.index,
             transition.outershell.index
-        ) "$z $transition unknown!"
-        "$(symbol(elements[z])) $(transition) does not occur."
+        ) "$(symbol(elements[z])) $(transition) is not a known characteristic X-ray."
         return new(z, transition)
     end
 end

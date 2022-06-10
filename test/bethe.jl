@@ -14,24 +14,20 @@ using NeXLCore
     @test dEds(Bethe, 1.0e2, n"U", 18.0) > 0.0
     @test isapprox(dEds(JoyLuo, 1.0e2, n"U", 18.0), -7.1987e8, atol = 0.01e7)
 
+    btsio = parse(Material, "BaTiSi3O9", density = 3.65)
+
     @test isapprox(
-        range(JoyLuo, parse(Material, "BaTiSi3O9", density = 3.65), 20.0e3) * 1.0e4,
+        range(JoyLuo, btsio, 20.0e3) * 1.0e4,
         3.550,
         atol = 0.01,
     )
     @test isapprox(
-        range(
-            Bethe,
-            parse(Material, "BaTiSi3O9", density = 3.65),
-            20.0e3,
-            true,
-            emin = 200.0,
-        ) * 1.0e4,
+        range(Bethe, btsio, 20.0e3, true, emin = 200.0) * 1.0e4,
         3.5760,
         atol = 0.01,
     )
     @test isapprox(
-        range(Kanaya1972, parse(Material, "BaTiSi3O9", density = 3.65), 20.0e3) * 1.0e4,
+        range(Kanaya1972, btsio, 20.0e3) * 1.0e4,
         3.32,
         atol = 0.01,
     )

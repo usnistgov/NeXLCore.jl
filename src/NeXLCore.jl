@@ -4,7 +4,7 @@ using Requires
 using Reexport
 using LinearAlgebra
 using DataFrames
-using DataDeps
+using DataDeps, Downloads
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
@@ -315,7 +315,22 @@ function __init__()
             """,
             "https://drive.google.com/uc?export=download&id=1Ackbz0YtaliQNCdZmPfj9uWTwhVNBzy8",
             "c87ce711c6fa9d8a012e29f949c075e176ea9a7c753e9e79270e4e9fd988e613",
+            fetch_method = (rem, lcl) -> Downloads.download(rem, joinpath(lcl,"tmp.tar.gz")),
             post_fetch_method = unpack
+        )
+    )
+
+    register(
+        DataDep("AtomicDatabase",
+            """
+            Dataset: A database containing X-ray energy, line weight, mass absorption, jump ratios, occupancy and other atomic data.
+            Author: Nicholas W. M. Ritchie (NIST)
+            License: Public Domain
+            """,
+            "https://drive.google.com/uc?export=download&id=1LDcEWcGVf9ManSeLT1ZDMD-e0eNpdpBT",
+            "716fd5fb47c4833912542af5334fdf0ac8ef490f95e257fd86ecf3a2bfc8d1bb",
+            fetch_method = (rem, lcl) -> Downloads.download(rem, joinpath(lcl,"tmp.tar.gz")),
+            post_fetch_method = DataDeps.unpack
         )
     )
 end

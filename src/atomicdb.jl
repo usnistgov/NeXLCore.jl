@@ -1,5 +1,7 @@
 using Tables
 using SQLite
+using DataDeps
+import Downloads
 
 # The goal here is to reduce the load time for NeXLCore by
 # moving data tables into a database.  Currently, MAC, energy
@@ -10,9 +12,33 @@ using SQLite
 # The database will also permit swapping data sets by replacing
 # one source with another.
 
+# This is only called during the pre-compile process, the equivalent is called
+# in NeXLCore.__init__() when NeXLCore is loaded.
+ENV["DATADEPS_ALWAYS_ACCEPT"]="true"
+register(
+    DataDep("AtomicDatabase",
+        """
+        Dataset: A database containing X-ray energy, line weight, mass absorption, jump ratios, occupancy 
+        and other atomic data. The data has been extracted from various sources and written into a SQLite 
+        database.  The source of each data item is labeled with a reference the details are in the 
+        References table.
+
+        Compiled by: Nicholas W. M. Ritchie (NIST)
+        License: Public Domain
+        """,
+        "https://drive.google.com/uc?export=download&id=1LDcEWcGVf9ManSeLT1ZDMD-e0eNpdpBT",
+        "716fd5fb47c4833912542af5334fdf0ac8ef490f95e257fd86ecf3a2bfc8d1bb",
+        fetch_method = (rem, lcl) -> Downloads.download(rem, joinpath(lcl, "tmp.tar.gz")),
+        post_fetch_method = DataDeps.unpack
+    )
+)
+
+
 # Use this to work with the database to ensure that it get closed each time...
 function withatomicdb(f::Function)
-    db = SQLite.DB(joinpath(@__DIR__,"..","data","atomic_database.db"))
+    fn = joinpath(datadep"AtomicDatabase/atomic_database.db")
+    !isfile(fn) && error("Unable to find the atomic database file at $fn.")
+    db = SQLite.DB(fn)
     try
         return f(db)
     finally
@@ -42,14 +68,10 @@ Merge the values returned by `f` applied to the elements in `iter`.
 The first items in `iter` are prioritized over the later values.
 """
 function _merge(f::Function, iter)
-    mergethem(_::Nothing, b) = b
-    mergethem(a::Dict, b) = isnothing(b) ? a : merge(b, a)
-    mergethem(a::Vector, b) = isnothing(b) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, b)) 
-    res = nothing
-    for i in reverse(iter)
-        res = mergethem(f(i), res)
-    end
-    return res
+    mergethem(_::Nothing, res) = res
+    mergethem(a::Dict, res) = isnothing(res) ? a : merge(a, res) # replace res[x] with a[x]
+    mergethem(a::Vector, res) = isnothing(res) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, res)) 
+    return mapreduce(f, mergethem, reverse(iter))
 end
 
 const subshells = ( "K",
@@ -90,7 +112,7 @@ let eeCache = EdgeEnergyCache() #
             withatomicdb() do db
                 # @info "Reading edge data for Z=$z."
                 # Use the MAC edges since this data is more sensitive to edge position
-                eeCache.discrete[z] = _merge([ "Chantler2005", "Sabbatucci2016" ]) do ref
+                eeCache.discrete[z] = _merge([ "Chantler2005", "Sabbatucci2016", "RELAX2014" ]) do ref
                     readEdgeTable(z, db, ref)
                 end
             end
@@ -162,7 +184,7 @@ let jummpratioCache = JumpRatioCache() #
         if isnothing(jummpratioCache.values[z])
             withatomicdb() do db
                 # @info "Reading jump ratio data for Z=$z."
-                jummpratioCache.values[z] = _first([ "CITZAF" ]) do ref
+                jummpratioCache.values[z] = _merge([ "CITZAF", "ElamDB12" ]) do ref
                     readJumpRatios(z, db, ref)
                 end
             end
@@ -176,8 +198,6 @@ let jummpratioCache = JumpRatioCache() #
         return jr
     end
 end
-
-
 
 # The cache for X-ray transitions and energies
 struct XRayCache
@@ -227,16 +247,25 @@ let xrayCache = XRayCache()
     end
 
     function getxrayenergies(z::Int)::Dict{Tuple{Int,Int}, Float64}
-        if isnothing(xrayCache.energies[z]) 
-            try
-                withatomicdb() do db
-                    # @info "Reading characteristic X-ray energy data for Z=$z."
-                    xrayCache.energies[z] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
-                        readXRayTable(db, z, ref)
-                    end
+        if isnothing(xrayCache.energies[z])
+            if true
+                # Compute X-ray energies from default edge energies.  This is what Cullen suggests.
+                ec = Dict{Tuple{Int, Int}, Float64}()
+                for (_, inner, outer) in filter(k->k[1]==k[2], keys(getxrayweights(z)))
+                    ec[(inner,outer)] = edgeenergy(z, inner) - edgeenergy(z, outer)
                 end
-            catch
-                xrayCache.energies[z] = Dict{Tuple{Int,Int}, Float64}()
+                xrayCache.energies[z] = ec
+            else 
+                try
+                    withatomicdb() do db
+                        # @info "Reading characteristic X-ray energy data for Z=$z."
+                        xrayCache.energies[z] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
+                            readXRayTable(db, z, ref)
+                        end
+                    end
+                catch
+                    xrayCache.energies[z] = Dict{Tuple{Int,Int}, Float64}()
+                end
             end
         end
         return xrayCache.energies[z]
@@ -247,7 +276,7 @@ let xrayCache = XRayCache()
             try
                 withatomicdb() do db
                     # @info "Reading line weight data for Z=$z."
-                    xrayCache.weights[z] = _merge([ "NeXL-modified RELAX", "RELAX2014", "Robinson1991" ]) do ref
+                    xrayCache.weights[z] = _merge([ "ElamDB12*", "RELAX2014", "Robinson1991" ]) do ref
                         readWeightsTable(db, z, ref)
                     end
                 end

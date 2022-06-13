@@ -20,9 +20,9 @@ using NeXLCore
     @test 2 in NeXLCore.eachedge(26)
     @test 7 in NeXLCore.eachedge(26)
 
-    @test NeXLCore.edgeenergy(26, 1) == 7112.0
-    @test NeXLCore.edgeenergy(26, 9) == 3.6
-    @test NeXLCore.edgeenergy(26, 4) ≈ 708.1
+    @test NeXLCore.edgeenergy(26, 1) == 7117.0
+    @test NeXLCore.edgeenergy(26, 9) == 9.0
+    @test NeXLCore.edgeenergy(26, 4) ≈ 713.0
 
     #@test isapprox(atomicweight(26), 55.845, atol = 0.003)
 
@@ -64,9 +64,9 @@ end
     @test !NeXLCore.hasedge(8, 9)
     @test !NeXLCore.hasedge(8, 10)
 
-    @test NeXLCore.edgeenergy(8, 1) == 5.32000E-01 * 1000.0
-    @test NeXLCore.edgeenergy(8, 2) == 2.37000E-02 * 1000.0
-    @test NeXLCore.edgeenergy(8, 4) ≈ 7.10000E-03 * 1000.0
+    @test NeXLCore.edgeenergy(8, 1) == 5.38000E-01 * 1000.0
+    @test NeXLCore.edgeenergy(8, 2) ≈ 2.848000E-02 * 1000.0
+    @test NeXLCore.edgeenergy(8, 4) ≈ 13.620000E-03 * 1000.0
 
     #@test isapprox(atomicweight(8), 15.99940, atol = 0.003)
 
@@ -96,7 +96,7 @@ end
 end
 
 @testset "Lead" begin
-    @test length(NeXLCore.eachedge(82)) == 23
+    @test length(NeXLCore.eachedge(82)) == 24
 
     @test NeXLCore.hasedge(82, 1)
     @test NeXLCore.hasedge(82, 2)

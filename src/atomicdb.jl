@@ -175,9 +175,9 @@ end
 let jummpratioCache = JumpRatioCache() #
 
     function readJumpRatios(z::Int, db::SQLite.DB, ref::AbstractString)
-        stmt = SQLite.Stmt(db, "SELECT SubShell, JumpRatio FROM JUMP_RATIOS WHERE Z=? AND Reference=?;")
+        stmt = SQLite.Stmt(db, "SELECT Subshell, JumpRatio FROM JUMP_RATIOS WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, (z, ref))
-        return !SQLite.done(res) ? Dict( row.SubShell=>row.JumpRatio for row in Tables.rows(res) ) : nothing
+        return !SQLite.done(res) ? Dict( subshelllookup[row.Subshell]=>row.JumpRatio for row in Tables.rows(res) ) : nothing
     end
 
     function getjumpratios(z::Int)

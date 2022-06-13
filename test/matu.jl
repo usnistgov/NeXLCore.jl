@@ -147,7 +147,7 @@ using Random
         mc_res = mcpropagate(
             model,
             inputs,
-            1000,
+            10000,
             parallel = false,
             rng = MersenneTwister(0xBADF00D),
         )

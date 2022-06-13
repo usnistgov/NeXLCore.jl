@@ -148,7 +148,7 @@ using NeXLCore
 
         # from https://www.physics.nist.gov/cgi-bin/XrayTrans/search.pl?element=Fe&trans=KL3&lower=&upper=&units=A
         @test isapprox(λ(n"Fe K-L3"), 1.936e-8, atol = 1e-10) #
-        @test isapprox(λ(n"Cu L3-M5"), 13.336e-8, atol = 1e-10)
+        @test isapprox(λ(n"Cu L3-M5"), 13.366e-8, atol = 1e-10)
 
         x = n"Ba L3-M5"
         @test isapprox(NeXLCore.speedOfLight, λ(x) * ν(x), atol = 1.0e7) # C = λν
@@ -160,7 +160,7 @@ using NeXLCore
         @test isapprox(energy(x), NeXLCore.plancksConstant * ν(x), atol = 1.0) # E = hν
         @test isapprox(energy(x), NeXLCore.plancksConstant / (2π) * ω(x), atol = 1.0) # E = ħω
 
-        @test isapprox(energy(n"Fe L3"), 708.0, atol = 1.0)
+        @test isapprox(energy(n"Fe L3"), 713.0, atol = 1.0)
         @test energy(n"Fe L3") == energy(n"Fe", n"L3")
 
         @test has(n"C", n"K-L2")
@@ -173,8 +173,8 @@ using NeXLCore
         @test all(tr -> shell(tr) == Shell(1), characteristic(n"Fe", ktransitions))
 
         @test length(characteristic(n"Fe", ltransitions, 0.0)) == 14
-        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 4
-        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 9
+        @test length(characteristic(n"Fe", ltransitions, 0.1)) == 3
+        @test length(characteristic(n"Fe", ltransitions, 0.01)) == 8
 
         @test isless(n"Fe K-L3", n"Fe K-L2")
         @test !isless(n"Fe K-L3", n"Fe K-L3")
@@ -249,7 +249,7 @@ using NeXLCore
         f = Film(pure(n"C"), 1.0e-6)
         @test repr(f) == "10.0 nm of Pure C"
         @test isapprox(
-            0.9673838,
+            0.9673017,
             transmission(f, n"O K-L3", deg2rad(40.0)),
             atol = 0.000001,
         ) 

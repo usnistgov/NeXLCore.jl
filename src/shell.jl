@@ -394,6 +394,7 @@ function NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSub
 end
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
+occupancy(ass::AtomicSubShell) = occupancy(z(ass), ass.subshell.index)
 
 struct Pouchou1991 <: NeXLAlgorithm end
 

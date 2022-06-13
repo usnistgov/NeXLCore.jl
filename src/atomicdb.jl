@@ -141,6 +141,49 @@ let eeCache = EdgeEnergyCache() #
     end
 end
 
+struct OccupancyCache
+    discrete::Vector{Vector{Float64}} # By [Z][subshell]
+    OccupancyCache() = new(map(_->Float64[], 1:99))
+end
+
+# The edge energy cache
+let occCache = OccupancyCache() #
+
+    function readOccupancyTable(z::Int, db::SQLite.DB, ref::AbstractString)
+        stmt = SQLite.Stmt(db, "SELECT SubShell, Occupancy FROM OCCUPANCY WHERE Z=? AND Reference=?;")
+        res = DBInterface.execute(stmt, (z, ref))
+        return if !SQLite.done(res)
+            occ = fill(0.0, length(subshells))
+            for row in Tables.rows(res)
+                occ[subshelllookup[row.SubShell]] = row.Occupancy
+            end
+            occ
+        else
+            nothing
+        end
+    end
+
+    function getoccupancy(z::Int)
+        if isempty(occCache.discrete[z])
+            withatomicdb() do db
+                # @info "Reading occupancy data for Z=$z."
+                # Use the MAC edges since this data is more sensitive to edge position
+                occCache.discrete[z] = readOccupancyTable(z, db, "RELAX2014")
+            end
+        end
+        return occCache.discrete[z]
+    end
+    """
+        occupancy(z::Int, ss::Int)::Float64
+        occupancy(ass::AtomicSubShell)
+    
+    Return the nominal occupancy (number of electrons in the ground state) for the specified shell.
+    This number is bounded on the high side by the capacity(...) of the SubShell.  Typically, these
+    numbers are integer except for valence shells which may "share" electrons.
+    """
+    global occupancy(z::Int, ss::Int) = get(getoccupancy(z), ss, 0.0)
+end
+
 struct TransitionCache
     transitions::Set{Tuple{Int,Int}}
     TransitionCache() = new(Set())

@@ -146,7 +146,7 @@ struct OccupancyCache
     OccupancyCache() = new(map(_->Float64[], 1:99))
 end
 
-# The edge energy cache
+# The sub-shell occupancy cache
 let occCache = OccupancyCache() #
 
     function readOccupancyTable(z::Int, db::SQLite.DB, ref::AbstractString)

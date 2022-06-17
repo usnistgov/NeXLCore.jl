@@ -257,8 +257,8 @@ struct Bote2009 <: NeXLAlgorithm end
     ionizationcrosssection(z::Int, shell::Int, energy::AbstractFloat, ::Type{Bote2009})
     ionizationcrosssection(ass::AtomicSubShell, energy::AbstractFloat, ty::Type{<:NeXLAlgorithm}=Bote2009)
 
-Computes the absolute ionization crosssection (in cm²) for the specified AtomicSubShell and
-electon energy (in eV) using the default algorithm.
+Computes the absolute ionization crosssection (in cm²/e⁻) for the specified AtomicSubShell and
+electon energy (in eV).
 
 Example:
 

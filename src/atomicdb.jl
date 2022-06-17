@@ -83,7 +83,7 @@ const subshells = ( "K",
     ( "Q$i" for i in 1:13)...,
 )
 # Maps shell names into indices
-const subshelllookup = Dict( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
+const subshelllookup = Dict{String,Int}( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
 
 struct EdgeEnergyCache
     discrete::Vector{Vector{Float64}} # By [Z][subshell]
@@ -428,8 +428,12 @@ let macCache = MACCache()
     function interpolate1d(nodes::AbstractVector{<:AbstractFloat}, values::AbstractVector{<:AbstractFloat})
         @assert all(nodes[2:end] .>= nodes[1:end-1])
         return e -> begin
-            i=min(length(values), max(2, searchsortedfirst(nodes, e))) # nodes[i-1] < e <= nodes[i]
-            return values[i-1] + (e-nodes[i-1])*(values[i]-values[i-1])/(nodes[i]-nodes[i-1])
+            if e >= nodes[1]
+                i=min(length(values), max(2, searchsortedfirst(nodes, e))) # nodes[i-1] < e <= nodes[i]
+                return values[i-1] + (e-nodes[i-1])*(values[i]-values[i-1])/(nodes[i]-nodes[i-1])
+            else
+                return values[1]
+            end
         end
     end
 
@@ -447,7 +451,9 @@ let macCache = MACCache()
                 push!(en, row.Energy)
                 push!(vals, row.MACpi)
             end
-            intp = interpolate1d(log.(en), log.(vals))
+            # Replace zero values up front with the first non-zero value
+            fnz=findfirst(x->x>0.0, vals)
+            intp = interpolate1d(log.(en[fnz:end]), log.(vals[fnz:end]))
             e -> exp(intp(log(e)))
         else
             nothing

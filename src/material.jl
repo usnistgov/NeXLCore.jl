@@ -359,6 +359,8 @@ Base.get(mat::Material, sym::Symbol, def) = get(mat.properties, sym, def)
 Base.setindex!(mat::Material, val, sym::Symbol) = mat.properties[sym] = val
 
 nonneg(mat::Material, elm::Element) = max(0.0, value(mat[elm]))
+nonneg(mat::Material) = #
+   Material(mat.name, Dict(el=>nonneg(mat,el) for el in keys(mat.massfraction)), mat.a, mat.properties)
 
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
@@ -656,9 +658,13 @@ compare(unks::AbstractVector{<:Material}, known::Material) =
 Compute the material MAC using the standard mass fraction weighted formula.
 """
 mac(mat::Material, energy::Float64, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) =
-    sum(zc->mac(zc[1], energy, alg) * value(zc[2]), mat.massfraction) 
+    sum(mat.massfraction) do (elm, mf)
+        mac(elm, energy, alg) * max(0.0, value(mf))
+    end
 mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) =
-    sum(zc->mac(zc[1], xray, alg) * value(zc[2]), mat.massfraction) 
+    sum(mat.massfraction) do (elm, mf)
+        mac(elm, xray, alg) * max(0.0, value(mf))
+    end
 
 function parsedtsa2comp(value::AbstractString)::Material
     try

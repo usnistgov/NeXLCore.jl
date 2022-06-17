@@ -86,6 +86,7 @@ export transition # Constructs Transition from SubShell objects or a string
 export alltransitions, ktransitions, ltransitions, mtransitions, ntransitions, otransitions
 export kalpha, kbeta, kother # K-L?, K->M? and K->!L
 export lalpha, lbeta, malpha, mbeta
+export XRay # Abstract type for CharXRay and Continuum
 export CharXRay # A characteristic X-ray
 export characteristic # Constructs CharXRay
 export inner, outer  # Returns AtomiShell for inner and outer CharXRay
@@ -119,6 +120,7 @@ export exists # Does a transition occur (according to our list...)
 export @n_str # Parses a string into an Element, SubShell, AtomicSubShell, Transition or CharXRay
 export @enx_str # Energy of a atomic sub-shell or characteristic X-ray in string form
 export Bote2009
+export Continuum # A simple continuum X-ray type
 
 include("compton.jl")
 export comptonAngular # Computes the angular distribution of Compton 

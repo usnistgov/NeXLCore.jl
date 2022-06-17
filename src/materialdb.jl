@@ -1,7 +1,5 @@
 using DBInterface
 
-@info "Loading SQLite support for Material items into NeXLCore."
-
 """
    buildMaterialTables(db::SQLite.DB)
 

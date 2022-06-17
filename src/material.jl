@@ -3,8 +3,10 @@ using Unitful
 using Printf
 using DataFrames
 using LaTeXStrings
+using CSV
 import Base.rand
 import Statistics
+
 
 """
     Material
@@ -357,6 +359,8 @@ Base.get(mat::Material, sym::Symbol, def) = get(mat.properties, sym, def)
 Base.setindex!(mat::Material, val, sym::Symbol) = mat.properties[sym] = val
 
 nonneg(mat::Material, elm::Element) = max(0.0, value(mat[elm]))
+nonneg(mat::Material) = #
+   Material(mat.name, Dict(el=>nonneg(mat,el) for el in keys(mat.massfraction)), mat.a, mat.properties)
 
 """
     normalizedmassfraction(mat::Material)::Dict{Element, AbstractFloat}
@@ -649,14 +653,18 @@ compare(unks::AbstractVector{<:Material}, known::Material) =
 
 
 """
-    mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm}=FFASTDB)::Float64
+    mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm}=DefaultAlgorithm)::Float64
 
 Compute the material MAC using the standard mass fraction weighted formula.
 """
-mac(mat::Material, energy::Float64, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
-    sum(zc->mac(zc[1], energy, alg) * value(zc[2]), mat.massfraction) 
-mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = FFASTDB) =
-    mac(mat, energy(xray), alg)
+mac(mat::Material, energy::Float64, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) =
+    sum(mat.massfraction) do (elm, mf)
+        mac(elm, energy, alg) * max(0.0, value(mf))
+    end
+mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) =
+    sum(mat.massfraction) do (elm, mf)
+        mac(elm, xray, alg) * max(0.0, value(mf))
+    end
 
 function parsedtsa2comp(value::AbstractString)::Material
     try

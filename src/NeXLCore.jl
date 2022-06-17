@@ -4,7 +4,7 @@ using Requires
 using Reexport
 using LinearAlgebra
 using DataFrames
-using DataDeps
+using DataDeps, Downloads
 
 @reexport using PeriodicTable
 @reexport using NeXLUncertainties
@@ -12,12 +12,50 @@ using DataDeps
 
 # Abstract model types
 abstract type NeXLAlgorithm end
-export NeXLAlgorithm
+struct DefaultAlgorithm <: NeXLAlgorithm end
+export NeXLAlgorithm, DefaultAlgorithm
 
-include("ffast.jl") # Algorithms implemented in FFAST.jl
+"""
+The abstract type `WeightNormalization` is the base type for structs identifying
+the various different useful ways in which line weight (relaxation) data can be represented.
+"""
+abstract type WeightNormalization end
+
+"""
+`NormalizeRaw` returns the raw transition probabilities - The probability of seeing the specified X-ray given one
+ionization of the specified shell.
+"""
+struct NormalizeRaw <: WeightNormalization end
+
+"""
+`NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
+Example: 
+
+    sum(cxr=>weight(NormalizeByShell, cxr), characteristic(n"Fe", ltransitions))==1.0 
+"""
+struct NormalizeByShell <: WeightNormalization end
+
+"""
+`NormalizeBySubShell` normalizes the sum of all the weights associated with a sub-shell to unity.
+
+Example: 
+
+    sum(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0+1.0+1.0
+"""
+struct NormalizeBySubShell <: WeightNormalization end
+
+"""
+`NormalizeToUnity` normalizes intensities such that the most intense line in each shell is 1.0.
+
+Example: 
+    weight(NormalizeToUnity, n"Fe L3-M5")==1.0
+    max(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0
+"""
+struct NormalizeToUnity <: WeightNormalization end
+
+
+include("atomicdb.jl") # Interface to the atomic DB
 include("dtsa_mac.jl") # Implement's Heinrich's IXCOM 11 MACs
-include("botesalvat.jl") # Algorithms implemented in BoteSalvat.jl
-include("cullen_eadl.jl") # Data from Cullen's Evaluated Atomic Data Library
 include("element.jl") # Element data from PeriodicTable.jl
 include("shell.jl") # Atomic shell methods
 include("transition.jl") # Atomic transition methods
@@ -37,8 +75,10 @@ export subshell # Construct SubShell structs from a string
 export firstsubshell, lastsubshell # Given a shell find the lowest/highest subshell in that shell i.e. Shell[M]=>M1/M5
 export AtomicSubShell # A SubShell plus an Element
 export atomicsubshell # Construct AtomicSubShell structs from a string
-export capacity # The total shell capacity
+export capacity # The total shell capacity (potential capacity not actual occupancy)
+export occupancy # The nominal occupancy of the specified atomic sub-shell for an element
 export jumpratio # The jump ratio for the specified shell
+export fluorescenceyield # fluorescence yield models
 export meanfluorescenceyield # The mean shell-based fluorescence yield
 export configuration # A string containing the electronic configuration for an Element
 export Transition # An X-ray transition
@@ -46,6 +86,7 @@ export transition # Constructs Transition from SubShell objects or a string
 export alltransitions, ktransitions, ltransitions, mtransitions, ntransitions, otransitions
 export kalpha, kbeta, kother # K-L?, K->M? and K->!L
 export lalpha, lbeta, malpha, mbeta
+export XRay # Abstract type for CharXRay and Continuum
 export CharXRay # A characteristic X-ray
 export characteristic # Constructs CharXRay
 export inner, outer  # Returns AtomiShell for inner and outer CharXRay
@@ -58,16 +99,15 @@ export energy # Returns CharXRay and AtomicSubShell eneries
 export density # Returns Element or Mateial data
 export λ, ν, ω, wavenumber # wavelength, frequency, angular frequency and wavenumber of X-ray
 export edgeenergy # Ionization edge energy for an X-ray
-export NormalizeBySubShell, NormalizeByShell, NormalizeToUnity, RawYield
+export NormalizeBySubShell, NormalizeByShell, NormalizeToUnity, NormalizeRaw
 export weight # Returns CharXRay weights as scaled by NormalizeBySubShell, NormalizeByShell, NormalizeToUnity
 export has # Element has a specific Transition
-export FFASTDB # Chantler's FFAST database
 export DTSA   # Heinrich's IXCOM 11 MACs
 export mac # Calculates the MAC using the default or a specified algorithm
 export macU # Calculates the MAC using the default or a specified algorithm
-export set_user_mac! # Specify a custom user mac
-export delete_user_mac! # Delete a specific user mac
-export clear_user_macs! # Clear all user macs
+export setmac! # Specify a custom mac
+export resetmac!, resetmacs! # Reset to the default MAC or MACs
+export loadcustommac!, loadcustommacs!
 export shell # The shell (Shell(K),Shell(L),Shell(M),...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition Shell to lists of Transition(s)
 export transitionsbysubshell # Dictionary mapping transition SubShell to lists of Transition(s)
@@ -80,6 +120,7 @@ export exists # Does a transition occur (according to our list...)
 export @n_str # Parses a string into an Element, SubShell, AtomicSubShell, Transition or CharXRay
 export @enx_str # Energy of a atomic sub-shell or characteristic X-ray in string form
 export Bote2009
+export Continuum # A simple continuum X-ray type
 
 include("compton.jl")
 export comptonAngular # Computes the angular distribution of Compton 
@@ -180,9 +221,6 @@ export jumpratio # jump ratio algorithm
 export klinewidths # K shell linewidths from Bambynek'1974 errata to Bambynek 1972
 export Burhop1965, Sogut2002, Krause1979, Kahoul2012, Reed1975ω # Fluorescence yield models
 
-export CullenEADL
-export fluorescenceyield # fluorescence yield models
-
 include("matu.jl")
 export MaterialLabel
 export MassFractionLabel
@@ -231,10 +269,6 @@ export minproperties # A list of the minimum required properties
 export hasminrequired # Checks whether a spectrum has necessary properties
 export requiredbutmissing # Lists missing properties
 
-include("custommac.jl")
-export CustomMAC  # Tied to "data\specialmacs.csv"
-export getcustommacs # Retrieve a set of custom MAC values (:Henke1974, :Henke1982, :Bastin19XX, etc. (see specialmacs.csv))
-
 include("materials.jl")
 export loadsmithsoniandata, parsedsmithsoniandata
 export loadmineraldata
@@ -266,12 +300,13 @@ include("standardize.jl")
 export isstandard # Does a k-ratio have the necessary properties to be a standard
 export standardize # Apply similar standards to a KRatio or KRatios
 
+include("materialdb.jl")
+
 export disp
 
 function __init__()
     @require Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004" include("gadflyplot.jl")
     @require MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11" include("meshcat.jl")
-    @require SQLite = "0aa819cd-b072-5ff4-a722-6bc24af294d9" include("materialdb.jl")
 
     register(
         DataDep(
@@ -283,7 +318,22 @@ function __init__()
             """,
             "https://drive.google.com/uc?export=download&id=1Ackbz0YtaliQNCdZmPfj9uWTwhVNBzy8",
             "c87ce711c6fa9d8a012e29f949c075e176ea9a7c753e9e79270e4e9fd988e613",
+            fetch_method = (rem, lcl) -> Downloads.download(rem, joinpath(lcl,"tmp.tar.gz")),
             post_fetch_method = unpack
+        )
+    )
+
+    register(
+        DataDep("AtomicDatabase",
+            """
+            Dataset: A database containing X-ray energy, line weight, mass absorption, jump ratios, occupancy and other atomic data.
+            Author: Nicholas W. M. Ritchie (NIST)
+            License: Public Domain
+            """,
+            "https://drive.google.com/uc?export=download&id=1LDcEWcGVf9ManSeLT1ZDMD-e0eNpdpBT",
+            "716fd5fb47c4833912542af5334fdf0ac8ef490f95e257fd86ecf3a2bfc8d1bb",
+            fetch_method = (rem, lcl) -> Downloads.download(rem, joinpath(lcl,"tmp.tar.gz")),
+            post_fetch_method = DataDeps.unpack
         )
     )
 end

@@ -151,6 +151,7 @@ function parsex(
                 try
                     return parse(Transition, str)
                 catch
+                    @error "$str does not appear to be a known Transition."
                     return nothing
                 end
             else # An Element or a SubShell like "Fe" or "L3"
@@ -164,19 +165,26 @@ function parsex(
                 try 
                     return str == "K1" ? subshell("K") : parse(SubShell, str)
                 catch
+                    @error "$str does not appear to be a valid Element or SubShell."
                     return nothing
                 end
             end
         else # Could be a AtomicSubShell or a CharXRay
             sp2 = split(sp1[2], "-")
-            try
-                if length(sp2) == 1  # Like "Fe L3"
+            if length(sp2) == 1  # Like "Fe L3"
+                try
                     return parse(AtomicSubShell, str)
-                else  # Like "Fe L3-M5"
-                    return parse(CharXRay, str)
+                catch
+                    @error "$str does not appear to be an known ground-state AtomicSubShell."
+                    return nothing
                 end
-            catch
-                return nothing
+            else  # Like "Fe L3-M5"
+                try
+                    return parse(CharXRay, str)
+                catch
+                    @error "$str does not appear to be a known CharXRay."
+                    return nothing
+                end
             end
         end
     end

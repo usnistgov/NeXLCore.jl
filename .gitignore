@@ -10,3 +10,4 @@ Manifest.toml
 /weave/jl*
 /jupyter/*.html
 /jupyter/*.log
+/data/atomic_database.db

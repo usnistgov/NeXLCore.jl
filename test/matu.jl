@@ -1,5 +1,6 @@
 using Test
 using NeXLCore
+using Random
 
 @testset "MatUncertain" begin
     mat = "Au60Ag40"
@@ -146,7 +147,7 @@ using NeXLCore
         mc_res = mcpropagate(
             model,
             inputs,
-            1000,
+            10000,
             parallel = false,
             rng = MersenneTwister(0xBADF00D),
         )

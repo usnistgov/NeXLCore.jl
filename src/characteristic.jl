@@ -1,9 +1,12 @@
+"An abstract type for X-rays."
+abstract type XRay end
+
 """
     CharXRay
 
 Represents a specific known characteristic X-ray in a specific element.
 """
-struct CharXRay
+struct CharXRay <: XRay
     z::Int
     transition::Transition
     function CharXRay(z::Int, transition::Transition)
@@ -11,8 +14,7 @@ struct CharXRay
             z,
             transition.innershell.index,
             transition.outershell.index
-        ) "$z $transition unknown!"
-        "$(symbol(elements[z])) $(transition) does not occur."
+        ) "$(symbol(elements[z])) $(transition) is not a known characteristic X-ray."
         return new(z, transition)
     end
 end
@@ -67,6 +69,7 @@ shell(cxr::CharXRay) = shell(cxr.transition)
 Return the element for this CharXRay.
 """
 element(cxr::CharXRay) = PeriodicTable.elements[cxr.z]
+z(cxr::CharXRay) = cxr.z
 
 ν(cxr::CharXRay) = energy(cxr) / plancksConstant
 ω(cxr::CharXRay) = 2π * ν(cxr)
@@ -86,31 +89,6 @@ X-ray wavenumber in cm¯¹.
 wavenumber(cxr::CharXRay) = 1.0 / λ(cxr)
 wavenumber(energy::Real) = 1.0 / λ(energy)
 
-abstract type WeightNormalization end
-"""
-`NormalizeByShell` normalizes the sum of all the weights associated with a shell to unity.
-Example: 
-
-    sum(cxr=>weight(NormalizeByShell, cxr), characteristic(n"Fe", ltransitions))==1.0 
-"""
-struct NormalizeByShell <: WeightNormalization end
-"""
-`NormalizeBySubShell` normalizes the sum of all the weights associated with a sub-shell to unity.
-
-Example: 
-
-    sum(cxr=>weight(NormalizeBySubShell, cxr), characteristic(n"Fe", ltransitions))==1.0+1.0+1.0
-"""
-struct NormalizeBySubShell <: WeightNormalization end
-"""
-`NormalizeToUnity` normalizes intensities such that the most intense line in each shell to 1.0.
-
-Example: 
-
-    sum(cxr=>weight(NormalizeBySubShell, cxr), n"Fe K-L3")==1.0
-"""
-struct NormalizeToUnity <: WeightNormalization end
-
 """
     weight(::Type{<:WeightNormalization}, cxr::CharXRay)
 
@@ -129,17 +107,9 @@ The difference between `fluorescenceyield(...)` and `weight(...)` is that
   * fluorescenceyield assumes that a sub-shell in the atom is already ionized
   * weight also considers the relative likelihood of ionization of each sub-shell assuming an overvoltage of 4.0.
 """
-function weight(::Type{NormalizeBySubShell}, cxr::CharXRay)
+function weight(ty::Type{<:WeightNormalization}, cxr::CharXRay)
     inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
-    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[2]
-end
-function weight(::Type{NormalizeByShell}, cxr::CharXRay)
-    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
-    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[3]
-end
-function weight(::Type{NormalizeToUnity}, cxr::CharXRay)
-    inn, out = cxr.transition.innershell.index, cxr.transition.outershell.index
-    return get(xrayweights()[cxr.z], (inn, inn, out), 0.0)[4]
+    return xrayweight(ty, z(cxr), inn, inn, out)
 end
 
 """
@@ -150,10 +120,41 @@ specified element.  (group="K"|"Ka"|"Kb"|"L" etc)
 """
 brightest(elm::Element, transitions) = brightest(characteristic(elm, transitions))
 
-"""
-    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
 
 """
+Represents the fractional number of X-rays emitted following the ionization of the sub-shell `ionized` via
+the characteristic X-ray `z inner-outer`.  Due to cascades, `inner` does not necessarily equal `ionized`.
+The `ionized` subshell may transition to a valency in `inner` via a combination of Auger, fluorescence or
+Koster-Kronig transitions.  The various different forms make assumptions about the relationship between
+`ionized` and `inner`, and about `outer`.
+
+    fluorescenceyield(ass::AtomicSubShell)::Float64
+
+The fraction of relaxations from the specified shell that relax via any radiative transition. (`inner`==`ionized`)
+
+    fluorescenceyield(cxr::CharXRay)
+
+The fraction of ionizations of `inner(cxr)` that relax via the one path `cxr`. `ionized==inner` && outer(cxr)
+
+    fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay)::Float64
+
+The fractional number of `cxr` X-rays emitted (on average) for each ionization of `ash`.  This makes no 
+assumptions about `inner`, `outer` and `ionized`
+"""
+function fluorescenceyield(cxr::CharXRay)::Float64
+    inn, out = innerindex(cxr), outerindex(cxr)
+    xrayweight(NormalizeRaw, z(cxr), inn, inn, out)
+end
+function fluorescenceyield(ass::AtomicSubShell)
+    cxrs = characteristic(ass)
+    return length(cxrs)>0 ? sum(cxrs) do cxr
+        inn, out = innerindex(cxr), outerindex(cxr)
+        xrayweight(NormalizeRaw, z(cxr), inn, inn, out)
+    end : 0.0
+end
+fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay) =
+    ash.z == cxr.z ? xrayweight(NormalizeRaw, ash.z, ash.subshell.index, innerindex(cxr), outerindex(cxr)) : 0.0
+
 characteristic(
     elm::Element,
     iter::Tuple{Vararg{Transition}},
@@ -181,6 +182,7 @@ characteristic(
     characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6)
     characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6)
     characteristic(ass::AtomicSubShell)
+    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
 
 The collection of available CharXRay for the specified `Element` or `AtomicSubShell`.  `filterfunc(...)`
     * ` maxE` is compared to the edge energy.
@@ -214,8 +216,9 @@ characteristic(
     filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
 )
 
-characteristic(ass::AtomicSubShell) =
-    characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions))
+characteristic(ass::AtomicSubShell, minWeight=0.0) =
+    filter(cxr->weight(NormalizeToUnity, cxr)>minWeight,
+        characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions)))
 
 
 """
@@ -295,8 +298,22 @@ function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay}
         Inner = inner.(cc),
         Outer = outer.(cc),
         Energy = energy.(cc),
-        WgtByShell = map(cxr->weight(NormalizeByShell, cxr), cc),
-        WgtBySubShell = map(cxr->weight(NormalizeBySubShell, cxr), cc),
-        Weight = map(cxr->weight(NormalizeToUnity, cxr), cc),
+        Relax = weight.(NormalizeRaw, cc),
+        WgtByShell = weight.(NormalizeByShell, cc),
+        WgtBySubShell = weight.(NormalizeBySubShell, cc),
+        Weight = weight.(NormalizeToUnity, cc),
     )
 end
+
+"""
+A very simple type for X-rays that are not characteristic (ie CharXRay).
+"""
+struct Continuum <: XRay
+    energy::Float64
+end
+
+Base.hash(cxr::Continuum, h::UInt)::UInt = hash(cxr.energy, h)
+Base.isequal(cxr1::Continuum, cxr2::Continuum) = isequal(cxr1.energy, cxr2.energy)
+Base.isless(cxr1::Continuum, cxr2::Continuum) = isless(cxr1.energy, cxr2.energy)
+energy(cxr::Continuum) = cxr.energy
+Base.show(io::IO, cxr::Continuum) = print(io, "Continuum[$(cxr.energy)]")

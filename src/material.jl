@@ -358,7 +358,10 @@ Base.getindex(mat::Material, sym::Symbol) = getindex(mat.properties, sym)
 Base.get(mat::Material, sym::Symbol, def) = get(mat.properties, sym, def)
 Base.setindex!(mat::Material, val, sym::Symbol) = mat.properties[sym] = val
 
-nonneg(mat::Material, elm::Element) = max(0.0, value(mat[elm]))
+function nonneg(mat::Material{U,V}, elm::Element) where { U<:AbstractFloat, V<:AbstractFloat } 
+    max(zero(U), value(mat[elm]))
+end
+
 nonneg(mat::Material) = #
    Material(mat.name, Dict(el=>nonneg(mat,el) for el in keys(mat.massfraction)), mat.a, mat.properties)
 
@@ -373,7 +376,9 @@ function normalizedmassfraction(mat::Material)::Dict{Element,AbstractFloat}
     return Dict( elm => nonneg(mat, elm) / n for elm in keys(mat))
 end
 
-normalized(mat::Material, elm::Element) = nonneg(mat, elm) / analyticaltotal(mat)
+function normalized(mat::Material{U,V}, elm::Element) where { U <: AbstractFloat, V <: AbstractFloat }  
+    nonneg(mat, elm) / analyticaltotal(mat)
+end
 
 """
     asnormalized(mat::Material, n=1.0)::Material
@@ -449,7 +454,9 @@ end
 
 Return the sum of the positive mass fractions.
 """
-analyticaltotal(mat::Material) = sum(elm->nonneg(mat, elm), keys(mat))
+function analyticaltotal(mat::Material{U,V}) where {U<:AbstractFloat,V<:AbstractFloat}
+    sum(elm->nonneg(mat, elm), keys(mat))
+end
 
 """
     haskey(mat::Material, elm::Element)

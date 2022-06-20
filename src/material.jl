@@ -361,6 +361,9 @@ Base.setindex!(mat::Material, val, sym::Symbol) = mat.properties[sym] = val
 function nonneg(mat::Material{U,V}, elm::Element) where { U<:AbstractFloat, V<:AbstractFloat } 
     max(zero(U), value(mat[elm]))
 end
+function nonneg(mat::Material{UncertainValue,V}, elm::Element) where { V<:AbstractFloat } 
+    max(0.0, value(mat[elm]))
+end
 
 nonneg(mat::Material) = #
    Material(mat.name, Dict(el=>nonneg(mat,el) for el in keys(mat.massfraction)), mat.a, mat.properties)

@@ -30,6 +30,16 @@ struct Transition
     end
 end
 
+
+Base.hash(tr::Transition, h::UInt)::UInt = hash(tr.innershell, hash(tr.outershell, h))
+
+Base.isequal(tr1::Transition, tr2::Transition) =
+    isequal(tr1.innershell, tr2.innershell) && isequal(tr1.outershell, tr2.outershell)
+
+Base.isless(tr1::Transition, tr2::Transition) =
+    isequal(tr1.innershell, tr2.innershell) ? #
+        isless(tr2.outershell, tr1.outershell) : isless(tr1.innershell, tr2.innershell)
+
 """
     has(elm::Element, tr::Transition)::Bool
 
@@ -93,7 +103,6 @@ end
 
 transition(str::AbstractString) = parse(Transition, str)
 
-
 """
     ktransitions
 
@@ -101,29 +110,9 @@ A complete list of all the K-shell transitions.
 """
 const ktransitions = tuple(filter(tr -> shell(tr) == Shell(1), collect(alltransitions))...)
 
-"""
-    kalpha
-
-A list of K-L? transitions.
-"""
-const kalpha =
-    tuple(filter(tr -> shell(tr.outershell) == Shell(2), collect(ktransitions))...)
-
-"""
-    kbeta
-
-A list of K-M? transitions.
-"""
-const kbeta =
-    tuple(filter(tr -> shell(tr.outershell) == Shell(3), collect(ktransitions))...)
-
-"""
-    kother
-
-A list of K-!L? transitions.
-"""
-const kother =
-    tuple(filter(tr -> shell(tr.outershell) ≠ Shell(2), collect(ktransitions))...)
+const kalpha = transition.( ( "K-L2", "K-L3" ) )
+const kbeta = transition.( ( "K-M3", "K-N3", "K-N2", "K-M2", "K-N5", "K-N4", "K-M5", "K-M4" ) )
+const kdelta = transition.( ( "K-O2", "K-O3" ) )
 
 """
     ltransitions
@@ -132,8 +121,10 @@ A complete list of all the L-shell transitions.
 """
 const ltransitions = tuple(filter(tr -> shell(tr) == Shell(2), collect(alltransitions))...)
 
-const lalpha = transition.(("L3-M4", "L3-M5"))
-const lbeta = transition.(("L2-M4", "L1-M2", "L1-M3", "L3-N4", "L3-N5", "L3-N1", "L3-O1"))
+const lalpha = transition.( ( "L3-M4", "L3-M5" ) )
+const lbeta = transition.( ( "L2-M4", "L3-N5", "L1-M3", "L1-M2", "L3-O4", "L3-O5", "L3-N1", "L3-O1", "L3-N6", "L3-N7",  "L1-M5", "L1-M4", "L3-N4", "L2-M3" ) )
+const lgamma = transition.( ( "L2-N4", "L1-N2", "L1-N3", "L1-O3", "L1-O2", "L2-O1", "L2-N6", ) ) # "L2-N7"
+const lother = transition.( ( "L2-M1",  "L3-M1", "L3-M3", "L3-M2", "L3-N6", "L3-N7", "L2-N6", ) ) # "L2-N7"
 
 """
     mtransitions
@@ -141,9 +132,11 @@ const lbeta = transition.(("L2-M4", "L1-M2", "L1-M3", "L3-N4", "L3-N5", "L3-N1",
 A complete list of all the M-shell transitions.
 """
 const mtransitions = tuple(filter(tr -> shell(tr) == Shell(3), collect(alltransitions))...)
+const malpha = transition.( ( "M5-N6", "M5-N7" ) )
+const mbeta = transition.( ( "M4-N6", ) )
+const mgamma = transition.( ( "M3-N5", ) )
+const mzeta = transition.( ( "M4-N2", "M4-N3", "M5-N3" ) ) # "M5-N2",
 
-const malpha = transition.(("M5-N6", "M5-N7"))
-const mbeta = transition.(("M4-N6",))
 """
     ntransitions
 
@@ -170,15 +163,19 @@ const transitionsbygroup = Dict(
     "Ka" => kalpha,
     "Kβ" => kbeta,
     "Kb" => kbeta,
-    "Kother" => kother,
+    "Kδ" => kdelta,
     "L" => ltransitions,
     "Lα" => lalpha,
     "La" => lalpha,
     "Lβ" => lbeta,
+    "Lb" => lbeta,
+    "Lγ" => lgamma,
+    "Lother" => lother,
     "M" => mtransitions,
     "Mα" => malpha,
     "Ma" => malpha,
     "Mβ" => mbeta,
+    "Mγ" => mgamma,
     "N" => ntransitions,
     "O" => otransitions,
 )
@@ -200,17 +197,6 @@ const transitionsbyshell = Dict(
 
 const transitionsbysubshell =
     Dict(ss => filter(tr -> tr.innershell == ss, alltransitions) for ss in allsubshells)
-
-Base.hash(tr::Transition, h::UInt)::UInt =
-    hash(hash(tr.innershell), hash(hash(tr.outershell), h))
-
-Base.isequal(tr1::Transition, tr2::Transition) =
-    isequal(tr1.innershell, tr2.innershell) && isequal(tr1.outershell, tr2.outershell)
-
-function Base.isless(tr1::Transition, tr2::Transition)
-    return isequal(tr1.innershell, tr2.innershell) ?
-           isless(tr1.outershell, tr2.outershell) : isless(tr1.innershell, tr2.innershell)
-end
 
 """
     transition(inner::SubShell, outer::SubShell)::Transition

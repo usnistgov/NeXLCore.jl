@@ -85,8 +85,9 @@ export configuration # A string containing the electronic configuration for an E
 export Transition # An X-ray transition
 export transition # Constructs Transition from SubShell objects or a string
 export alltransitions, ktransitions, ltransitions, mtransitions, ntransitions, otransitions
-export kalpha, kbeta, kother # K-L?, K->M? and K->!L
-export lalpha, lbeta, malpha, mbeta
+export kalpha, kbeta, kdelta 
+export lalpha, lbeta, lgamma, lother
+export malpha, mbeta, mgamma, mzeta
 export XRay # Abstract type for CharXRay and Continuum
 export CharXRay # A characteristic X-ray
 export characteristic # Constructs CharXRay
@@ -123,6 +124,9 @@ export @n_str # Parses a string into an Element, SubShell, AtomicSubShell, Trans
 export @enx_str # Energy of a atomic sub-shell or characteristic X-ray in string form
 export Bote2009
 export Continuum # A simple continuum X-ray type
+
+include("siegbahn.jl")
+export siegbahn # Siegbahn names for transitions and CharXRay
 
 include("compton.jl")
 export comptonAngular # Computes the angular distribution of Compton 

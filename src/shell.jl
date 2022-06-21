@@ -41,8 +41,7 @@ Construct using SubShell(name::AbstractString) where name = "K", "L1"...,"P11"
 struct SubShell
     index::Int
     SubShell(idx::Int) =
-        ((idx >= 1) && (idx <= length(subshellnames))) ? new(idx) :
-        error("Unknown sub-shell: Index = $(idx)")
+        (idx in eachindex(subshellnames)) ? new(idx) : error("Unknown sub-shell: Index = $(idx)")
 end
 
 Base.show(io::IO, ss::SubShell) = print(io, subshellnames[ss.index])
@@ -321,7 +320,7 @@ Base.isequal(ass1::AtomicSubShell, ass2::AtomicSubShell) =
     (ass1.z == ass2.z) && isequal(ass1.subshell, ass2.subshell)
 
 Base.isless(ass1::AtomicSubShell, ass2::AtomicSubShell) =
-    return ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : isless(ass1.z, ass2.z)
+    ass1.z == ass2.z ? isless(ass1.subshell, ass2.subshell) : isless(ass1.z, ass2.z)
 
 Base.show(io::IO, ass::AtomicSubShell) =
     print(io, "$(elements[ass.z].symbol) $(ass.subshell)")

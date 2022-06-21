@@ -270,18 +270,26 @@ function name(cxrs::AbstractVector{CharXRay}, byfamily::Bool=false)::String
                             "$(prefix)Kα"
                         elseif all(tr in kbeta for tr in trs)
                             "$(prefix)Kβ"
+                        elseif all(tr in kdelta for tr in trs)
+                            "$(prefix)Kβ"
                         elseif all(tr in ktransitions for tr in trs)
                             "$(prefix)K family"
                         elseif all(tr in lalpha for tr in trs)
                             "$(prefix)Lα"
                         elseif all(tr in lbeta for tr in trs)
                             "$(prefix)Lβ"
+                        elseif all(tr in lgamma for tr in trs)
+                            "$(prefix)Lγ"
                         elseif all(tr in ltransitions for tr in trs)
                             "$(prefix)L family"
                         elseif all(tr in malpha for tr in trs)
                             "$(prefix)Mα"
                         elseif all(tr in mbeta for tr in trs)
                             "$(prefix)Mβ"
+                        elseif all(tr in mgamma for tr in trs)
+                            "$(prefix)Mγ"
+                        elseif all(tr in mzeta for tr in trs)
+                            "$(prefix)Mζ"
                         elseif all(tr in mtransitions for tr in trs)
                             "$(prefix)M family"
                         elseif all(tr in ntransitions for tr in trs)

@@ -176,9 +176,12 @@ using NeXLCore
         @test length(characteristic(n"Fe", ltransitions, 0.1)) == 3
         @test length(characteristic(n"Fe", ltransitions, 0.01)) == 8
 
-        @test isless(n"Fe K-L3", n"Fe K-L2")
-        @test !isless(n"Fe K-L3", n"Fe K-L3")
-        @test !isless(n"Fe K-L2", n"Fe K-L3")
+        @test isless(n"Fe K-L3", n"Fe K-L2") == isless(energy.((n"Fe K-L3", n"Fe K-L2"))...)
+        @test isless(n"Fe K-L2", n"Fe K-L3") == isless(energy.((n"Fe K-L2", n"Fe K-L3"))...)
+        @test isless(n"Ge L3-M5", n"Ge L3-M4") == isless(energy.((n"Ge L3-M5", n"Ge L3-M4"))...)
+        @test isless(n"Ge L3-M4", n"Ge L3-M5") == isless(energy.((n"Ge L3-M4", n"Ge L3-M5"))...)
+        @test !isless(n"Fe K-L2", n"Fe K-L2")
+        @test !isless(n"Ge L3-M5", n"Ge L3-M5")
 
         # Check that these funtions are defined for all available transitions
         @test all(energy.(characteristic(el,alltransitions)) ≠ 0.0 for el in eachelement())

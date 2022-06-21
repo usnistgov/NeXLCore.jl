@@ -107,8 +107,11 @@ end
 
 """
     listcustommacs(cxr::CharXRay)
-
 Generated a list of available custom MACs for `cxr` in various elements.
+
+    listcustommacs(elms::Set{Element}|AbstractVector{Element}|Element...|Material)
+
+Generate a list of available custom MACS for elements and X-rays both produced and absorbed by these elements.
 """
 function listcustommacs(cxr::CharXRay)
     res = listcustommacs(z(cxr), innerindex(cxr), outerindex(cxr))
@@ -118,6 +121,19 @@ function listcustommacs(cxr::CharXRay)
         "MAC[$cxr2 in $(symbol(elements[z1])), $ref] = $MACpi"
     end
 end
+
+function listcustommacs(elms::AbstractSet{Element})
+    inmat(r) = elements[r[3]] in elms
+    mapreduce(append!, elms) do elm
+        map(filter(inmat, listcustommacs(z(elm)))) do (ref, z1, z2, inner, outer, MACpi)
+            cxr2 = CharXRay(z2, Transition(SubShell(inner), SubShell(outer)))
+            "MAC[$cxr2 in $(symbol(elements[z1])), $ref] = $MACpi"
+        end
+    end
+end
+listcustommacs(mat::Material) = listcustommacs(keys(mat))
+listcustommacs(elms::AbstractVector{Element}) = listcustommacs(Set(elms))
+listcustommacs(elms::Element...) = listcustommacs(Set(elms))
 
 abstract type MACUncertainty end
 struct MonatomicGas <: MACUncertainty end
@@ -228,7 +244,7 @@ The mass absorption coefficient (with uncertainty estimate) for an X-ray of the 
 or characteristix X-ray line in the specified element.
 """
 function macU(elm::Element, energy::Float64, alg::Type{<:NeXLAlgorithm}=DefaultAlgorithm, unc::Type{<:MACUncertainty}=SolidLiquid)::UncertainValue
-    macv = mac(z(elm), energy, alg)
+    macv = mac(elm, energy, alg)
     return uv(
         macv,
         min(fractionaluncertainty(unc, z(elm), energy)[1], 0.9) * macv

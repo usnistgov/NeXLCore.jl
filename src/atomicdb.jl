@@ -89,6 +89,7 @@ let database_lock = Ref(ReentrantLock())
         @assert false "None of the options evaluated as not nothing."
         return nothing
     end
+
     """
         _merge(f::Function, iter)
 
@@ -101,6 +102,7 @@ let database_lock = Ref(ReentrantLock())
         mergethem(a::Vector, res) = isnothing(res) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, res)) 
         return mapreduce(f, mergethem, reverse(iter))
     end
+
     # Maps indices into names
     subshells = ( "K",
         ( "L$i" for i in 1:3)...,
@@ -110,6 +112,7 @@ let database_lock = Ref(ReentrantLock())
         ( "P$i" for i in 1:11)...,
         ( "Q$i" for i in 1:13)...,
     )
+
     # Maps indices into the primary quantum number
     nn = (
         1, # Shell index
@@ -120,8 +123,10 @@ let database_lock = Ref(ReentrantLock())
         (6 for _ in 1:11)...,
         (7 for _ in 1:13)...
     ) 
+
     # Maps subshell names into indices
     subshelllookup = Dict{String,Int}( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
+    
     # Nominal overvoltage for effective line weights
     default_overvoltage = 4.0
 
@@ -145,8 +150,10 @@ let database_lock = Ref(ReentrantLock())
             withatomicdb() do db
                 # @info "Reading edge data for Z=$z."
                 # Use the MAC edges since this data is more sensitive to edge position
-                edgeenergy_data[z] = _merge([ "Chantler2005", "Sabbatucci2016", "RELAX2014" ]) do ref
-                    readEdgeTable(z, db, ref)
+                if isempty(edgeenergy_data[z])
+                    edgeenergy_data[z] = _merge([ "Chantler2005", "Sabbatucci2016", "RELAX2014" ]) do ref
+                        readEdgeTable(z, db, ref)
+                    end
                 end
             end
         end
@@ -192,9 +199,11 @@ let database_lock = Ref(ReentrantLock())
     function getoccupancy(z::Int)
         if isempty(occupancy_data[z])
             withatomicdb() do db
-                # @info "Reading occupancy_data data for Z=$z."
-                # Use the MAC edges since this data is more sensitive to edge position
-                occupancy_data[z] = readOccupancyTable(z, db, "RELAX2014")
+                if isempty(occupancy_data[z])
+                    # @info "Reading occupancy_data data for Z=$z."
+                    # Use the MAC edges since this data is more sensitive to edge position
+                    occupancy_data[z] = readOccupancyTable(z, db, "RELAX2014")
+                end
             end
         end
         return occupancy_data[z]
@@ -220,7 +229,9 @@ let database_lock = Ref(ReentrantLock())
         if isempty(transition_data)
             # @info "Reading transition data."
             withatomicdb() do db
-                union!(transition_data, readTransitions(db, "RELAX2014"))
+                if isempty(transition_data)
+                    union!(transition_data, readTransitions(db, "RELAX2014"))
+                end
             end
         end
         return transition_data
@@ -236,9 +247,11 @@ let database_lock = Ref(ReentrantLock())
     function getjumpratios(z::Int)
         if !isassigned(jumpratio_data[z])
             withatomicdb() do db
-                # @info "Reading jump ratio data for Z=$z."
-                jumpratio_data[z][] = _merge([ "CITZAF", "ElamDB12" ]) do ref
-                    readJumpRatios(z, db, ref)
+                if !isassigned(jumpratio_data[z])
+                    # @info "Reading jump ratio data for Z=$z."
+                    jumpratio_data[z][] = _merge([ "CITZAF", "ElamDB12" ]) do ref
+                        readJumpRatios(z, db, ref)
+                    end
                 end
             end
         end
@@ -286,9 +299,11 @@ let database_lock = Ref(ReentrantLock())
             else 
                 try
                     withatomicdb() do db
-                        # @info "Reading characteristic X-ray energy data for Z=$z."
-                        xray_energy_data[z][] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
-                            readXRayTable(db, z, ref)
+                        if !isassigned(xray_energy_data[z])
+                            # @info "Reading characteristic X-ray energy data for Z=$z."
+                            xray_energy_data[z][] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
+                                readXRayTable(db, z, ref)
+                            end
                         end
                     end
                 catch
@@ -303,9 +318,11 @@ let database_lock = Ref(ReentrantLock())
         if !isassigned(xray_weight_data[z])
             try
                 withatomicdb() do db
-                    # @info "Reading line weight data for Z=$z."
-                    xray_weight_data[z][] = _merge([ "ElamDB12*", "RELAX2014", "Robinson1991" ]) do ref
-                        readWeightsTable(db, z, ref)
+                    if !isassigned(xray_weight_data[z])
+                        # @info "Reading line weight data for Z=$z."
+                        xray_weight_data[z][] = _merge([ "ElamDB12*", "RELAX2014", "Robinson1991" ]) do ref
+                            readWeightsTable(db, z, ref)
+                        end
                     end
                 end
             catch
@@ -437,9 +454,11 @@ let database_lock = Ref(ReentrantLock())
     function getmaccontinuous(z::Int)
         if !isassigned(continuous_mac[z])
             withatomicdb() do db
-                # @info "Reading MAC data for Z=$z."
-                continuous_mac[z][] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
-                    readMacTable(z, db, ref)
+                if !isassigned(continuous_mac[z])
+                    # @info "Reading MAC data for Z=$z."
+                    continuous_mac[z][] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
+                        readMacTable(z, db, ref)
+                    end
                 end
             end
         end
@@ -485,10 +504,12 @@ let database_lock = Ref(ReentrantLock())
 
     global function loadcustommacs!(source::AbstractString, atomicnumbers)
         return withatomicdb() do db
-            stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Reference=?;")
-            res = DBInterface.execute(stmt, (source, ))
-            count(Tables.rows(res)) do row
-                (row.Z1 in atomicnumbers) && (setmac!(row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi))==row.MACpi)
+            sum(atomicnumbers) do z1
+                stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Reference=? AND Z1 =?;")
+                res = DBInterface.execute(stmt, (source, z1))
+                count(Tables.rows(res)) do row
+                    setmac!(row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi))==row.MACpi
+                end
             end
         end
     end
@@ -497,6 +518,15 @@ let database_lock = Ref(ReentrantLock())
         return withatomicdb() do db
             stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Z2=? AND Inner=? AND Outer=?;")
             map(Tables.rows(DBInterface.execute(stmt, (z, subshells[inner], subshells[outer])))) do row
+                ( row.Reference, row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi) )
+            end
+        end
+    end
+
+    global function listcustommacs(mat_z::Int)
+        return withatomicdb() do db
+            stmt = SQLite.Stmt(db, "SELECT * FROM CUSTOM_MACS WHERE Z1=?;")
+            map(Tables.rows(DBInterface.execute(stmt, (mat_z, )))) do row
                 ( row.Reference, row.Z1, row.Z2, subshelllookup[row.Inner], subshelllookup[row.Outer], Float64(row.MACpi) )
             end
         end

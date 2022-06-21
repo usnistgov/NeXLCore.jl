@@ -108,6 +108,7 @@ export macU # Calculates the MAC using the default or a specified algorithm
 export setmac! # Specify a custom mac
 export resetmac!, resetmacs! # Reset to the default MAC or MACs
 export loadcustommac!, loadcustommacs!
+export listcustommacs # List available MACS by characteristic X-ray
 export shell # The shell (Shell(K),Shell(L),Shell(M),...) for an AtomicSubShell, Transition, CharXRay etc.
 export transitionsbyshell # Dictionary mapping transition Shell to lists of Transition(s)
 export transitionsbysubshell # Dictionary mapping transition SubShell to lists of Transition(s)

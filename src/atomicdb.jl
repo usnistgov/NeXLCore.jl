@@ -33,66 +33,99 @@ register(
     )
 )
 
+const allz = Base.OneTo(99)
 
-# Use this to work with the database to ensure that it get closed each time...
-function withatomicdb(f::Function)
-    fn = joinpath(datadep"AtomicDatabase/atomic_database.db")
-    !isfile(fn) && error("Unable to find the atomic database file at $fn.")
-    db = SQLite.DB(fn)
-    try
-        return f(db)
-    finally
-        close(db)
-    end
-end
+let database_lock = Ref(ReentrantLock())
+    # Sub-shell binding energy data
+    edgeenergy_data = map(_->Float64[], allz)
+    # Nominal shell occupancy data
+    occupancy_data = map(_->Float64[], allz)
+    # Available X-ray transition data
+    transition_data = Set{Tuple{Int,Int}}()
+    # MAC jump ratio data
+    jumpratio_data = map(_->Ref{Dict{Int,Float64}}(), allz)
+    # X-ray energy data
+    xray_energy_data = map(_->Ref{Dict{Tuple{Int,Int}, Float64}}(), allz)
+    # X-ray weight data
+    xray_weight_data = map(_->Ref{Dict{Tuple{Int,Int,Int}, Float64}}(), allz)
+    normbysubshell_data = map(_->Ref{Dict{Tuple{Int,Int,Int}, Float64}}(), allz)
+    normbyshell_data = map(_->Ref{Dict{Tuple{Int,Int,Int}, Float64}}(), allz)
+    normunity_data = map(_->Ref{Dict{Tuple{Int,Int,Int}, Float64}}(), allz)
+    # Mass absorption coefficient data
+    continuous_mac = map(_->Ref{Function}(), allz)
+    discrete_mac = Dict{Tuple{Int, Int, Int, Int}, Float64}()  # Index is (materialZ, xrayZ, inner, outer)
 
-"""
-   _first(f::Function, iter)
-
-Return the first of f.(iter) that is not nothing.
-"""
-function _first(f::Function, iter)
-    for i in iter
-        v = f(i)
-        if !isnothing(v)
-            return v
+    # Use this to work with the database to ensure that:
+    # 1. it get closed each time it is used
+    # 2. it is only used by one thread at a time
+    function withatomicdb(f::Function)
+        fn = joinpath(datadep"AtomicDatabase/atomic_database.db")
+        !isfile(fn) && error("Unable to find the atomic database file at $fn.")
+        lock(database_lock[])
+        try
+            db = SQLite.DB(fn)
+            try
+                return f(db)
+            finally
+                close(db)
+            end
+        finally
+            unlock(database_lock[])
         end
     end
-    @assert false "None of the options evaluated as not nothing."
-    return nothing
-end
-"""
-    _merge(f::Function, iter)
 
-Merge the values returned by `f` applied to the elements in `iter`.
-The first items in `iter` are prioritized over the later values.
-"""
-function _merge(f::Function, iter)
-    mergethem(_::Nothing, res) = res
-    mergethem(a::Dict, res) = isnothing(res) ? a : merge(a, res) # replace res[x] with a[x]
-    mergethem(a::Vector, res) = isnothing(res) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, res)) 
-    return mapreduce(f, mergethem, reverse(iter))
-end
+    """
+    _first(f::Function, iter)
 
-const subshells = ( "K",
-    ( "L$i" for i in 1:3)...,
-    ( "M$i" for i in 1:5)...,
-    ( "N$i" for i in 1:7)...,
-    ( "O$i" for i in 1:9)...,
-    ( "P$i" for i in 1:11)...,
-    ( "Q$i" for i in 1:13)...,
-)
-# Maps shell names into indices
-const subshelllookup = Dict{String,Int}( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
+    Return the first of f.(iter) that is not nothing.
+    """
+    function _first(f::Function, iter)
+        for i in iter
+            v = f(i)
+            if !isnothing(v)
+                return v
+            end
+        end
+        @assert false "None of the options evaluated as not nothing."
+        return nothing
+    end
+    """
+        _merge(f::Function, iter)
 
-struct EdgeEnergyCache
-    discrete::Vector{Vector{Float64}} # By [Z][subshell]
-    EdgeEnergyCache() = new(map(_->Float64[], 1:99))
-end
+    Merge the values returned by `f` applied to the elements in `iter`.
+    The first items in `iter` are prioritized over the later values.
+    """
+    function _merge(f::Function, iter)
+        mergethem(_::Nothing, res) = res
+        mergethem(a::Dict, res) = isnothing(res) ? a : merge(a, res) # replace res[x] with a[x]
+        mergethem(a::Vector, res) = isnothing(res) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, res)) 
+        return mapreduce(f, mergethem, reverse(iter))
+    end
+    # Maps indices into names
+    subshells = ( "K",
+        ( "L$i" for i in 1:3)...,
+        ( "M$i" for i in 1:5)...,
+        ( "N$i" for i in 1:7)...,
+        ( "O$i" for i in 1:9)...,
+        ( "P$i" for i in 1:11)...,
+        ( "Q$i" for i in 1:13)...,
+    )
+    # Maps indices into the primary quantum number
+    nn = (
+        1, # Shell index
+        (2 for _ in 1:3)...,
+        (3 for _ in 1:5)...,
+        (4 for _ in 1:7)...,
+        (5 for _ in 1:9)...,
+        (6 for _ in 1:11)...,
+        (7 for _ in 1:13)...
+    ) 
+    # Maps subshell names into indices
+    subshelllookup = Dict{String,Int}( (ss => i for (i, ss) in enumerate(subshells))..., "K1"=>1 )
+    # Nominal overvoltage for effective line weights
+    default_overvoltage = 4.0
 
-# The edge energy cache
-let eeCache = EdgeEnergyCache() #
-
+    # The edge energy cache
     function readEdgeTable(z::Int, db::SQLite.DB, ref::AbstractString)
         stmt = SQLite.Stmt(db, "SELECT Subshell, Energy FROM EDGE_ENERGIES WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, (z, ref))
@@ -108,16 +141,16 @@ let eeCache = EdgeEnergyCache() #
     end
 
     function getedgediscrete(z::Int)
-        if isempty(eeCache.discrete[z])
+        if isempty(edgeenergy_data[z])
             withatomicdb() do db
                 # @info "Reading edge data for Z=$z."
                 # Use the MAC edges since this data is more sensitive to edge position
-                eeCache.discrete[z] = _merge([ "Chantler2005", "Sabbatucci2016", "RELAX2014" ]) do ref
+                edgeenergy_data[z] = _merge([ "Chantler2005", "Sabbatucci2016", "RELAX2014" ]) do ref
                     readEdgeTable(z, db, ref)
                 end
             end
         end
-        return eeCache.discrete[z]
+        return edgeenergy_data[z]
     end
 
     global hasedge(z::Int, ss::Int) = getedgediscrete(z)[ss] > 0.0
@@ -139,16 +172,9 @@ let eeCache = EdgeEnergyCache() #
         (ee<0.0) && @error "The sub-shell $(subshells[ss]) is not present for atomic number $z."
         return ee
     end
-end
 
-struct OccupancyCache
-    discrete::Vector{Vector{Float64}} # By [Z][subshell]
-    OccupancyCache() = new(map(_->Float64[], 1:99))
-end
 
-# The sub-shell occupancy cache
-let occCache = OccupancyCache() #
-
+    # The sub-shell occupancy cache
     function readOccupancyTable(z::Int, db::SQLite.DB, ref::AbstractString)
         stmt = SQLite.Stmt(db, "SELECT SubShell, Occupancy FROM OCCUPANCY WHERE Z=? AND Reference=?;")
         res = DBInterface.execute(stmt, (z, ref))
@@ -164,14 +190,14 @@ let occCache = OccupancyCache() #
     end
 
     function getoccupancy(z::Int)
-        if isempty(occCache.discrete[z])
+        if isempty(occupancy_data[z])
             withatomicdb() do db
-                # @info "Reading occupancy data for Z=$z."
+                # @info "Reading occupancy_data data for Z=$z."
                 # Use the MAC edges since this data is more sensitive to edge position
-                occCache.discrete[z] = readOccupancyTable(z, db, "RELAX2014")
+                occupancy_data[z] = readOccupancyTable(z, db, "RELAX2014")
             end
         end
-        return occCache.discrete[z]
+        return occupancy_data[z]
     end
     """
         occupancy(z::Int, ss::Int)::Float64
@@ -182,15 +208,8 @@ let occCache = OccupancyCache() #
     numbers are integer except for valence shells which may "share" electrons.
     """
     global occupancy(z::Int, ss::Int) = get(getoccupancy(z), ss, 0.0)
-end
 
-struct TransitionCache
-    transitions::Set{Tuple{Int,Int}}
-    TransitionCache() = new(Set())
-end
-
-let transCache = TransitionCache() #
-
+    # The available transition data cache
     function readTransitions(db::SQLite.DB, ref::AbstractString)
         stmt = SQLite.Stmt(db, "SELECT Inner, Outer FROM TRANSITIONS WHERE Reference=?;")
         res = DBInterface.execute(stmt, (ref, ))
@@ -198,24 +217,15 @@ let transCache = TransitionCache() #
     end
 
     global function transitions()
-        if isempty(transCache.transitions)
+        if isempty(transition_data)
             # @info "Reading transition data."
             withatomicdb() do db
-                union!(transCache.transitions, readTransitions(db, "RELAX2014"))
+                union!(transition_data, readTransitions(db, "RELAX2014"))
             end
         end
-        return transCache.transitions
+        return transition_data
     end
-end
 
-# The jump ratio cache
-struct JumpRatioCache
-    values::Vector{Union{Nothing, Dict{Int,Float64}}}
-
-    JumpRatioCache() = new(fill(nothing, 99))
-end
-
-let jummpratioCache = JumpRatioCache() #
 
     function readJumpRatios(z::Int, db::SQLite.DB, ref::AbstractString)
         stmt = SQLite.Stmt(db, "SELECT Subshell, JumpRatio FROM JUMP_RATIOS WHERE Z=? AND Reference=?;")
@@ -224,15 +234,15 @@ let jummpratioCache = JumpRatioCache() #
     end
 
     function getjumpratios(z::Int)
-        if isnothing(jummpratioCache.values[z])
+        if !isassigned(jumpratio_data[z])
             withatomicdb() do db
                 # @info "Reading jump ratio data for Z=$z."
-                jummpratioCache.values[z] = _merge([ "CITZAF", "ElamDB12" ]) do ref
+                jumpratio_data[z][] = _merge([ "CITZAF", "ElamDB12" ]) do ref
                     readJumpRatios(z, db, ref)
                 end
             end
         end
-        return jummpratioCache.values[z]
+        return jumpratio_data[z][]
     end
 
     global function jumpratio(z::Int, ss::Int)
@@ -240,31 +250,6 @@ let jummpratioCache = JumpRatioCache() #
         (jr<=0.0) && @error "The jump-ratio is not available for sub-shell $z $(subshells[ss])."
         return jr
     end
-end
-
-# The cache for X-ray transitions and energies
-struct XRayCache
-    # These are populated as required
-    energies::Vector{Union{Nothing, Dict{Tuple{Int,Int}, Float64}}}
-    weights::Vector{Union{Nothing, Dict{Tuple{Int,Int,Int}, Float64}}}
-    normbysubshell::Vector{Union{Nothing, Dict{Tuple{Int,Int,Int}, Float64}}}
-    normbyshell::Vector{Union{Nothing, Dict{Tuple{Int,Int,Int}, Float64}}}
-    normunity::Vector{Union{Nothing, Dict{Tuple{Int,Int,Int}, Float64}}}
-
-    XRayCache() = new(fill(nothing,99), fill(nothing,99), fill(nothing,99), fill(nothing,99), fill(nothing,99))
-end
-
-let xrayCache = XRayCache()
-    default_overvoltage = 4.0
-    nn = (
-        1, # Shell index
-        (2 for _ in 1:3)...,
-        (3 for _ in 1:5)...,
-        (4 for _ in 1:7)...,
-        (5 for _ in 1:9)...,
-        (6 for _ in 1:11)...,
-        (7 for _ in 1:13)...
-    ) 
 
     """
         readXRayTable(z::Int, db::SQLite.DB, ref::AbstractString)::Function
@@ -290,48 +275,48 @@ let xrayCache = XRayCache()
     end
 
     function getxrayenergies(z::Int)::Dict{Tuple{Int,Int}, Float64}
-        if isnothing(xrayCache.energies[z])
+        if !isassigned(xray_energy_data[z])
             if true
                 # Compute X-ray energies from default edge energies.  This is what Cullen suggests.
                 ec = Dict{Tuple{Int, Int}, Float64}()
                 for (_, inner, outer) in filter(k->k[1]==k[2], keys(getxrayweights(z)))
                     ec[(inner,outer)] = edgeenergy(z, inner) - edgeenergy(z, outer)
                 end
-                xrayCache.energies[z] = ec
+                xray_energy_data[z][] = ec
             else 
                 try
                     withatomicdb() do db
                         # @info "Reading characteristic X-ray energy data for Z=$z."
-                        xrayCache.energies[z] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
+                        xray_energy_data[z][] = _merge( [ "DTSA2", "Williams1992" ] ) do ref
                             readXRayTable(db, z, ref)
                         end
                     end
                 catch
-                    xrayCache.energies[z] = Dict{Tuple{Int,Int}, Float64}()
+                    xray_energy_data[z][] = Dict{Tuple{Int,Int}, Float64}()
                 end
             end
         end
-        return xrayCache.energies[z]
+        return xray_energy_data[z][]
     end
 
     function getxrayweights(z::Int)::Dict{Tuple{Int,Int,Int}, Float64}
-        if isnothing(xrayCache.weights[z])
+        if !isassigned(xray_weight_data[z])
             try
                 withatomicdb() do db
                     # @info "Reading line weight data for Z=$z."
-                    xrayCache.weights[z] = _merge([ "ElamDB12*", "RELAX2014", "Robinson1991" ]) do ref
+                    xray_weight_data[z][] = _merge([ "ElamDB12*", "RELAX2014", "Robinson1991" ]) do ref
                         readWeightsTable(db, z, ref)
                     end
                 end
             catch
-                xrayCache.weights[z] = Dict{Tuple{Int,Int,Int}, Float64}()
+                xray_weight_data[z][] = Dict{Tuple{Int,Int,Int}, Float64}()
             end
         end
-        return xrayCache.weights[z]
+        return xray_weight_data[z][]
     end
 
     global function xrayweight(::Type{NormalizeBySubShell}, z::Int, ionized::Int, dest::Int, src::Int)
-        if isnothing(xrayCache.normbysubshell[z])
+        if !isassigned(normbysubshell_data[z])
             # @info "Computing NormalizeBySubShell data for Z=$z."
             wgts = getxrayweights(z)
             sum_ss = Dict{Int, Float64}()
@@ -344,13 +329,13 @@ let xrayCache = XRayCache()
             for ((ion, inn, outer), wgt) in wgts
                 res[(ion, inn, outer)] = wgt/sum_ss[ion]
             end
-            xrayCache.normbysubshell[z] = res
+            normbysubshell_data[z][] = res
         end
-        return get(xrayCache.normbysubshell[z], (ionized, dest, src), 0.0)
+        return get(normbysubshell_data[z][], (ionized, dest, src), 0.0)
     end
     
     global function xrayweight(::Type{NormalizeByShell}, z::Int, ionized::Int, dest::Int, src::Int)
-        if isnothing(xrayCache.normbyshell[z])
+        if !isassigned(normbyshell_data[z])
             # @info "Computing NormalizeByShell data for Z=$z."
             wgts = getxrayweights(z)
             sum_s = Dict{Int, Float64}()
@@ -365,14 +350,14 @@ let xrayCache = XRayCache()
                 icx = ionizationcrosssection(z, inn, default_overvoltage*edgeenergy(z, inn), Bote2009)
                 res[(ion, inn, outer)] = (icx*wgt)/sum_s[nn[ion]]
             end
-            xrayCache.normbyshell[z] = res
+            normbyshell_data[z][] = res
         end
-        return get(xrayCache.normbyshell[z], (ionized, dest, src), 0.0)
+        return get(normbyshell_data[z][], (ionized, dest, src), 0.0)
     end
     
     
     global function xrayweight(::Type{NormalizeToUnity}, z::Int, ionized::Int, dest::Int, src::Int)
-        if isnothing(xrayCache.normunity[z])
+        if !isassigned(normunity_data[z])
             # @info "Computing NormalizeToUnity data for Z=$z."
             wgts = getxrayweights(z)
             max_s = Dict{Int, Float64}()
@@ -387,9 +372,9 @@ let xrayCache = XRayCache()
                 icx = ionizationcrosssection(z, ion, default_overvoltage*edgeenergy(z, ion), Bote2009)
                 res[(ion, inn, outer)] = (icx*wgt)/max_s[nn[ion]]
             end
-            xrayCache.normunity[z] = res
+            normunity_data[z][] = res
         end
-        return get(xrayCache.normunity[z], (ionized, dest, src), 0.0)
+        return get(normunity_data[z][], (ionized, dest, src), 0.0)
     end 
 
     global function xrayenergy(z::Int, inner::Int, outer::Int)::Float64
@@ -413,18 +398,7 @@ let xrayCache = XRayCache()
     global function xrayweight(::Type{NormalizeRaw}, z::Int, ionized::Int, dest::Int, src::Int)
         return get(getxrayweights(z), (ionized, dest, src), 0.0)
     end 
-end
 
-# The continuous and discrete MAC cache
-struct MACCache
-    continuous::Vector{Union{Nothing, Function}}
-    discrete::Dict{Tuple{Int, Int, Int, Int}, Float64}  # Index is (materialZ, xrayZ, inner, outer)
-
-    MACCache() = new(fill(nothing, 99), Dict())
-end
-
-let macCache = MACCache()
-   
     function interpolate1d(nodes::AbstractVector{<:AbstractFloat}, values::AbstractVector{<:AbstractFloat})
         @assert all(nodes[2:end] .>= nodes[1:end-1])
         return e -> begin
@@ -461,33 +435,33 @@ let macCache = MACCache()
     end
 
     function getmaccontinuous(z::Int)
-        if isnothing(macCache.continuous[z])
+        if !isassigned(continuous_mac[z])
             withatomicdb() do db
                 # @info "Reading MAC data for Z=$z."
-                macCache.continuous[z] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
+                continuous_mac[z][] = _first([ "Chantler2005", "Sabbatucci2016" ]) do ref
                     readMacTable(z, db, ref)
                 end
             end
         end
-        return macCache.continuous[z]
+        return continuous_mac[z][]
     end
     
     global function setmac!(matz::Int, xz::Int, inner::Int, outer::Int, mac::Float64)
-        macCache.discrete[(matz, xz, inner, outer)] = mac
+        discrete_mac[(matz, xz, inner, outer)] = mac
     end
 
     global function resetmac!(matz::Int, xz::Int, inner::Int, outer::Int)
-        delete!(macCache.discrete, (matz, xz, inner, outer))
+        delete!(discrete_mac, (matz, xz, inner, outer))
     end
 
     global function resetmacs!()
-        empty!(macCache.discrete)
+        empty!(discrete_mac)
     end
 
     global mac(z::Int, energy::Float64)::Float64 = getmaccontinuous(z)(energy)
 
     global function mac(matz::Int, xz::Int, inner::Int, outer::Int)::Float64
-        v = get(macCache.discrete, (matz, xz, inner, outer), -1.0)
+        v = get(discrete_mac, (matz, xz, inner, outer), -1.0)
         if v == -1.0
             e = xrayenergy(xz, inner, outer)
             @assert e>0.0 "No characteristic x-ray exists for $xz $(subshells[inner])-$(subshells[outer])"
@@ -527,6 +501,4 @@ let macCache = MACCache()
             end
         end
     end
-
 end
-

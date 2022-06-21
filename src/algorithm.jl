@@ -47,7 +47,7 @@ edgeenergy(cxr::CharXRay) = edgeenergy(z(cxr), innerindex(cxr))
 
 Return the range of atomic numbers for which there is a complete set of energy, weight, MAC, ... data
 """
-global eachelement() = elements[1:99]
+global eachelement() = elements[allz]
 
 """
     mac(elm::Element, energy::Float64)::Float64

@@ -378,6 +378,14 @@ atomicsubshells(elm::Element) = map(ss->atomicsubshell(elm, SubShell(ss)), eache
 atomicsubshells(elm::Element, maxE::Float64) = filter(ass->energy(ass)<maxE, atomicsubshells(elm))
 atomicsubshells(ss::SubShell) = AtomicSubShell[atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), eachelement())]
 
+
+"""
+    eachsubshell(elm::Element)
+
+Iterates over each sub-shell that is present in an element.
+"""
+eachsubshell(elm::Element) = ( atomicsubshell(elm, SubShell(ss)) for ss in eachedge(z(elm)) )
+
 z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)
 

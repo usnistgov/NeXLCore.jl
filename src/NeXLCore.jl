@@ -75,6 +75,7 @@ export subshell # Construct SubShell structs from a string
 export firstsubshell, lastsubshell # Given a shell find the lowest/highest subshell in that shell i.e. Shell[M]=>M1/M5
 export AtomicSubShell # A SubShell plus an Element
 export atomicsubshell # Construct AtomicSubShell structs from a string
+export eachsubshell # Iterate over sub-shells in an element
 export capacity # The total shell capacity (potential capacity not actual occupancy)
 export occupancy # The nominal occupancy of the specified atomic sub-shell for an element
 export jumpratio # The jump ratio for the specified shell

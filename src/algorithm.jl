@@ -131,7 +131,6 @@ function listcustommacs(elms::AbstractSet{Element})
         end
     end
 end
-listcustommacs(mat::Material) = listcustommacs(keys(mat))
 listcustommacs(elms::AbstractVector{Element}) = listcustommacs(Set(elms))
 listcustommacs(elms::Element...) = listcustommacs(Set(elms))
 

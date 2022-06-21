@@ -676,6 +676,8 @@ mac(mat::Material, xray::CharXRay, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm
         mac(elm, xray, alg) * max(0.0, value(mf))
     end
 
+listcustommacs(mat::Material) = listcustommacs(keys(mat))
+
 function parsedtsa2comp(value::AbstractString)::Material
     try
         sp = split(value, ",")

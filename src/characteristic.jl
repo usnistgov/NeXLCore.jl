@@ -155,6 +155,14 @@ end
 fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay) =
     ash.z == cxr.z ? xrayweight(NormalizeRaw, ash.z, ash.subshell.index, innerindex(cxr), outerindex(cxr)) : 0.0
 
+"""
+    eachcharacteristic(elm::Element [, trans=alltransitions])
+
+Iterates over the CharXRay(s) associated with the element.
+"""
+eachcharacteristic(elm::Element, trans=alltransitions) = ( characteristic(elm, tr) for tr in filter(tr -> has(elm, tr), trans ) )
+
+
 characteristic(
     elm::Element,
     iter::Tuple{Vararg{Transition}},
@@ -248,43 +256,56 @@ brightest(cxrs::Vector{CharXRay})::CharXRay = cxrs[findmax(weight.(NormalizeToUn
 An abbeviated name for a collection of CharXRay.
 """
 function name(cxrs::AbstractVector{CharXRay}, byfamily::Bool=false)::String
+    res = []
+    elms = sort!(collect(unique(element.(cxrs))))
     if byfamily
-        if all(transition(cxr) in kalpha for cxr in cxrs)
-            "Kα"
-        elseif all(transition(cxr) in kbeta for cxr in cxrs)
-            "Kβ"
-        elseif all(transition(cxr) in ktransitions for cxr in cxrs)
-            "K"
-        elseif all(transition(cxr) in lalpha for cxr in cxrs)
-            "Lα"
-        elseif all(transition(cxr) in lbeta for cxr in cxrs)
-            "Lβ"
-        elseif all(transition(cxr) in ltransitions for cxr in cxrs)
-            "L"
-        elseif all(transition(cxr) in malpha for cxr in cxrs)
-            "Mα"
-        elseif all(transition(cxr) in mbeta for cxr in cxrs)
-            "Mβ"
-        elseif all(transition(cxr) in mtransitions for cxr in cxrs)
-            "M"
-        elseif all(transition(cxr) in ntransitions for cxr in cxrs)
-            "N"
-        else
-            "Unknown"
+        for elm in elms
+            tmp = String[]
+            prefix = symbol(elm)*" "
+            for sh in ( KShell, LShell, MShell, NShell )
+                trs = transition.(filter(c->element(c)==elm && shell(c) == sh, cxrs))
+                if length(trs)>0
+                    push!(tmp,
+                        if all(tr in kalpha for tr in trs)
+                            "$(prefix)Kα"
+                        elseif all(tr in kbeta for tr in trs)
+                            "$(prefix)Kβ"
+                        elseif all(tr in ktransitions for tr in trs)
+                            "$(prefix)K family"
+                        elseif all(tr in lalpha for tr in trs)
+                            "$(prefix)Lα"
+                        elseif all(tr in lbeta for tr in trs)
+                            "$(prefix)Lβ"
+                        elseif all(tr in ltransitions for tr in trs)
+                            "$(prefix)L family"
+                        elseif all(tr in malpha for tr in trs)
+                            "$(prefix)Mα"
+                        elseif all(tr in mbeta for tr in trs)
+                            "$(prefix)Mβ"
+                        elseif all(tr in mtransitions for tr in trs)
+                            "$(prefix)M family"
+                        elseif all(tr in ntransitions for tr in trs)
+                            "$(prefix)N family"
+                        else
+                            "$(prefix)$(symbol(elm)) "*join(collect(repr.(trs)),", ", " & ")
+                        end
+                    )
+                    prefix=""
+                end
+            end
+            push!(res, join(tmp,", ", " & "))
         end
     else
-        res = []
-        elms = Set{Element}(element.(cxrs))
         for elm in elms
-            for sh in Set(shell.(filter(cxr -> element(cxr) == elm, cxrs)))
+            for sh in unique(shell.(filter(cxr -> element(cxr) == elm, cxrs)))
                 fc = filter(cxr -> (element(cxr) == elm) && (shell(cxr) == sh), cxrs)
                 br, cx = brightest(fc), length(fc)
                 other = cx > 2 ? "others" : "other"
                 push!(res, cx > 1 ? "$(br) + $(cx-1) $(other)" : "$(br)")
             end
         end
-        return join(res, ", ")
     end
+    return join(res, ", ", " & ")
 end
 
 function Base.show(io::IO, cxrs::AbstractVector{CharXRay})

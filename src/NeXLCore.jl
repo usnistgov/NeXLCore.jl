@@ -93,7 +93,7 @@ export CharXRay # A characteristic X-ray
 export characteristic # Constructs CharXRay
 export inner, outer  # Returns AtomiShell for inner and outer CharXRay
 export a  # Atomic weight
-export z, Naive, Donovan2002 # Atomic number, Donovan's mean Z algorithm
+export z, NaiveZ, Donovan2002, ElectronFraction, ElasticFraction, AtomicFraction # Atomic number, Donovan's mean Z algorithm
 export atomic_weight # Atomic weights with uncertainties / intervals according to https://ciaaw.org/atomic-weights.htm
 export symbol # Atomic symbol ("H", "He" etc)
 export name # Full English name

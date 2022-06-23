@@ -735,26 +735,61 @@ end
 
 
 """
-    z(mat::Material) = z(Naive, mat)
-    z(::Type{Naive}, mat::Material)
-    z(::Type{Donovan2002}, mat::Material)
+    z(mat::Material) = z(Donovan2002, mat)
+    z(::Type{NaiveZ|ElectronFraction|AtomicFraction}, mat::Material)
+    z(::Type{ElasticFraction}, mat::Material, e::AbstractFloat)
+    z(::Type{Donovan2002}, mat::Material; exponent=0.667)
 
 Compute the mean atomic number for a material.
-"""
-struct Naive <: NeXLAlgorithm end
-z(::Type{Naive}, mat::Material) = sum(c * z(elm) for (elm, c) in mat.massfraction)
-z(mat::Material) = z(Naive, mat)
 
-"""
-Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
+    Algorithms:
+      * NaiveZ - Mass fraction averaging
+      * ElectronFraction - Simple electron fraction averaging
+      * ElasticFraction - Scattering cross-section averaged
+      * Donovan2002 - Yukawa/Donovan modified exponent electron fraction averaging
+
+For more details see Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
 (also see Microsc. Microanal. 27 (Suppl 1), 2021))
 """
+z(mat::Material) = z(Donovan2002, mat)
+
+struct NaiveZ <: NeXLAlgorithm end
+z(::Type{NaiveZ}, mat::Material) = sum(c * z(elm) for (elm, c) in mat.massfraction)
+
+"""
+"""
 struct Donovan2002 <: NeXLAlgorithm end
-function z(::Type{Donovan2002}, mat::Material)
+function z(::Type{Donovan2002}, mat::Material; exponent=0.667)
     af = atomicfraction(mat)
-    return sum(NeXLUncertainties.value(a)*z(elm)^1.7 for (elm, a) in af) / #
-        sum(NeXLUncertainties.value(a)*z(elm)^0.7 for (elm, a) in af)
+    return sum(NeXLUncertainties.value(a)*z(elm)^(1.0+exponent) for (elm, a) in af) / #
+        sum(NeXLUncertainties.value(a)*z(elm)^exponent for (elm, a) in af)
 end
+
+
+struct ElectronFraction <: NeXLAlgorithm end
+function z(::Type{ElectronFraction}, mat::Material)
+    af = atomicfraction(mat)
+    ef(elm) = af[elm]*z(elm)/sum(el2->af[el2]*z(el2), keys(mat)) # Donovan2002 Eq 3
+    return sum(elm->z(elm)*ef(elm), keys(mat))
+end
+
+struct ElasticFraction <: NeXLAlgorithm end
+function z(::Type{ElasticFraction}, mat::Material, e::AbstractFloat)
+    function σE(Z,E) # E in keV
+        α = 3.4e-3*Z^0.67/E
+        return 5.21e-21 * (Z/E)^2 * (4π)/(α*(1.0+α)) * ((E + 0.511e3)/(E + 2.0*0.511e3))^2
+    end
+    af = atomicfraction(mat)
+    σf(elm) = af[elm]*σE(z(elm), 0.001*e) / sum(el->af[el]*σE(z(el), 0.001*e), keys(mat))
+    return sum(elm->z(elm)*σf(elm), keys(mat))
+end
+
+struct AtomicFraction <: NeXLAlgorithm end
+function z(::Type{AtomicFraction}, mat::Material)
+    af = atomicfraction(mat)
+    sum(elm->af[elm]*z(elm), keys(mat))
+end
+
 
 """
     a(mat::Material)

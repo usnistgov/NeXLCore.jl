@@ -6,7 +6,7 @@ using LaTeXStrings
 using CSV
 import Base.rand
 import Statistics
-
+import JSON
 
 """
     Material
@@ -878,3 +878,56 @@ function delete(mat::Material, els::AbstractVector{Element})
     end
     return res
 end
+
+
+"""
+    NeXLUncertainties.asa(Dict, mat::Material)
+
+Convert a `Material` into a `Dict{String, Any}` as is suitable
+for conversion to JSON.
+"""
+function NeXLUncertainties.asa(::Type{Dict}, mat::Material)
+    res = Dict{String, Any}()
+    res["Name"] = name(mat)
+    res["MassFraction"] = Dict( symbol(elm) => value(mat[elm]) for elm in keys(mat))
+    if !isempty(mat.a)
+        res["AtomicWeight"] = Dict( symbol(elm) => mat[elm] for elm in keys(mat.a) )
+    end
+    if haskey(mat.properties, :Density)
+        res["Density"] = mat.properties[:Density]
+    end
+    if haskey(mat.properties, :Description)
+        res["Description"] = mat.properties[:Description]
+    end
+    # AtomicFraction and NormalizedMassFraction are for seach purposes only...
+    nmf = normalizedmassfraction(mat)
+    res["NormalizedMassFraction"] = Dict( symbol(elm) => nmf[elm] for elm in keys(mat))
+    af = atomicfraction(mat)
+    res["AtomFraction"] = Dict( symbol(elm) => value(get(af, elm, zero(valtype(af)))) for elm in keys(mat) )
+    return res
+end
+
+"""
+    Material(d::Dict)
+
+Construct a `Material` from a `Dict` created by `NeXLUncertainties.asa(Dict, mat::Material)`
+"""
+function Material(d::Dict{String, Any})
+    massfrac = Dict(
+        parse(Element, elm)=>q for (elm, q ) in d["MassFraction"]
+    )
+    aw = haskey(d, "AtomicWeight") ? Dict(
+        parse(Element, elm)=>q for (elm, q ) in d["AtomicWeight"]
+    ) : Dict{Element,Float64}()
+    props = Dict{Symbol, Any}()
+    if haskey(d, "Density") 
+        props[:Density] = d["Density"]
+    end
+    if haskey(d, "Description")
+        props[:Description] = d["Description"]
+    end
+    Material(d["Name"], massfrac, aw, props)
+end
+
+JSON.parse(::Type{Material}, json::AbstractString) = #
+    Material(JSON.parse(json))

@@ -6,7 +6,6 @@ using LaTeXStrings
 using CSV
 import Base.rand
 import Statistics
-import JSON
 
 """
     Material
@@ -928,6 +927,3 @@ function Material(d::Dict{String, Any})
     end
     Material(d["Name"], massfrac, aw, props)
 end
-
-JSON.parse(::Type{Material}, json::AbstractString) = #
-    Material(JSON.parse(json))

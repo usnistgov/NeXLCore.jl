@@ -344,7 +344,7 @@ let database_lock = Ref(ReentrantLock())
             end
             res = Dict{Tuple{Int,Int,Int}, Float64}()
             for ((ion, inn, outer), wgt) in wgts
-                res[(ion, inn, outer)] = wgt/sum_ss[ion]
+                res[(ion, inn, outer)] = sum_ss[ion] > 0 ? wgt/sum_ss[ion] : 0.0
             end
             normbysubshell_data[z][] = res
         end
@@ -365,7 +365,7 @@ let database_lock = Ref(ReentrantLock())
             res = Dict{Tuple{Int,Int,Int}, Float64}()
             for ((ion, inn, outer), wgt) in wgts
                 icx = ionizationcrosssection(z, inn, default_overvoltage*edgeenergy(z, inn), Bote2009)
-                res[(ion, inn, outer)] = (icx*wgt)/sum_s[nn[ion]]
+                res[(ion, inn, outer)] = sum_s[nn[ion]] > 0 ? (icx*wgt)/sum_s[nn[ion]] : 0.0
             end
             normbyshell_data[z][] = res
         end
@@ -387,7 +387,7 @@ let database_lock = Ref(ReentrantLock())
             res = Dict{Tuple{Int,Int,Int}, Float64}()
             for ((ion, inn, outer), wgt) in wgts
                 icx = ionizationcrosssection(z, ion, default_overvoltage*edgeenergy(z, ion), Bote2009)
-                res[(ion, inn, outer)] = (icx*wgt)/max_s[nn[ion]]
+                res[(ion, inn, outer)] = max_s[nn[ion]] > 0  ? (icx*wgt)/max_s[nn[ion]] : 0.0
             end
             normunity_data[z][] = res
         end

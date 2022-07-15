@@ -15,7 +15,7 @@ Data items:
 
 Example:
 
-    tr1 = Transition(n"K",n"L3")
+    tr1 = Transition(n"K1",n"L3")
     tr2   = Transition(SubShell(1),SubShell(4))
     @assert tr1==tr2
 """

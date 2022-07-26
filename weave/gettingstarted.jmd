@@ -182,7 +182,7 @@ rate in some element.
 trs = n"K-L3", n"L3-M5", n"M5-N7"
 alltransitions
 ktransitions
-kalpha, kbeta, kother
+kalpha, kbeta
 ltransitions
 mtransitions
 shell.( trs )
@@ -242,7 +242,7 @@ mac( n"Ni", n"Fe K-L3") # In cm²/g
 Dict(map(cxr->(cxr=>( mac(n"Ni",cxr), weight(NormalizeToUnity, cxr))), characteristic(n"Ni", ltransitions)))
 mac( mat"0.8*Fe+0.15*Ni+0.05*Cr", n"C K-L2") # Carbon K-L3 in stainless steel (interpreted as mass fractions of elements)
 mac( mat"AlNaSi3O8", n"O K-L3") # O K-L3 in Albite (interpreted as a chemical formular)
-mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.FFASTDB), mac( mat"AlNaSi3O8", n"O K-L3", NeXLCore.DTSA) # Compare and contrast...
+mac( mat"AlNaSi3O8", n"O K-L3", DefaultAlgorithm), mac( mat"AlNaSi3O8", n"O K-L3", DTSA) # Compare and contrast...
 ```
 
 #### KRatio
@@ -287,8 +287,8 @@ Currently, basic blocks and spheres have been implemented.
 
 ```julia; term=true
 # Build a alumina coated silica particle on a carbon substrate
-mat = material("SiO2",2.648)
-sample = coated_particle(mat, 1.0e-4, material("Al2O3", 3.99), 0.1e-4, material("C",2.0))
+mat = parse(Material, "SiO2", density=2.648)
+sample = coated_particle(mat, 1.0e-4, parse(Material, "Al2O3", density=3.99), 0.1e-4, parse(Material, "C", density=2.0))
 ```
 
 Now let's run a MC simulation to compute the path length of an electron in a material.
@@ -367,15 +367,15 @@ display(NeXLCore.compareMACs(n"U"))
 ```
 Or MAC algorithms one at a time...
 ```julia; fig_width=8; fig_height=4; fig_ext=".svg";
-display(plot(NeXLCore.FFASTDB, n"Ag"))
-display(plot(NeXLCore.DTSA, n"Au"))
+display(plot(DefaultAlgorithm, n"Ag"))
+display(plot(DTSA, n"Au"))
 ```
 Or many elements at once...
 ```julia; fig_width=8; fig_height=4; fig_ext=".svg";
-plot(NeXLCore.FFASTDB, collect(keys(albite)),xmax=5.0e3)
+plot(DefaultAlgorithm, collect(keys(albite)),xmax=5.0e3)
 ```
 
 Or a Material MAC...
 ```julia; fig_width=8; fig_height=4; fig_ext=".svg";
-plot(NeXLCore.FFASTDB, [keys(albite)..., albite], xmax=5.0e3)
+plot(DefaultAlgorithm, [keys(albite)..., albite], xmax=5.0e3)
 ```

@@ -58,6 +58,7 @@ characteristic X-ray line in the specified element.  In cm²/g.
 """
 mac(elm::Element, energy::Float64, ::Type{DefaultAlgorithm})::Float64 = mac(z(elm), energy)
 mac(elm::Element, cxr::CharXRay, ::Type{DefaultAlgorithm})::Float64 = mac(z(elm), z(cxr), innerindex(cxr), outerindex(cxr))
+mac(elm::Element, cxr::CharXRay, ::Type{DTSA}) = mac(elm, energy(cxr), DTSA)
 
 mac(elm::Element, energy::Float64) = mac(elm, energy, DefaultAlgorithm)
 mac(elm::Element, cxr::CharXRay) = mac(elm, cxr, DefaultAlgorithm)

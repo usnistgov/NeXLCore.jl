@@ -178,7 +178,7 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
                 layers,
                 Gadfly.layer(
                     x = [ z(elm) for elm in elems],
-                    y = [ fluorescenceyield(atomicsubshell(elm, sh), CullenEADL) for elm in elems ],
+                    y = [ fluorescenceyield(atomicsubshell(elm, sh)) for elm in elems ],
                     Geom.point,
                     Gadfly.Theme(default_color = colors[i+2]),
                 )

@@ -9,16 +9,16 @@ using Gadfly
 function plotyields(sss::SubShell...)
   x, y, c = Float64[], Float64[], String[]
   for ss in sss
-    for ass in atomicsubshells(ss)
+    for ass in filter(ass->z(ass)<97, atomicsubshells(ss))
       push!(x, z(element(ass)))
-      push!(y,fluorescenceyield(ass, CullenEADL))
-      push!(c,repr(ss))
+      push!(y,fluorescenceyield(ass))
+      push!(c,"Default")
     end
-  end
-  for ass in atomicsubshells(sss[1])
-    push!(x, z(element(ass)))
-    push!(y, meanfluorescenceyield(element(ass), shell(ass), NeXLCore.Bambynek1972))
-    push!(c, "Bambynek")
+    for ass in filter(ass->z(ass)<97, atomicsubshells(sss[1]))
+      push!(x, z(element(ass)))
+      push!(y, meanfluorescenceyield(element(ass), shell(ass), NeXLCore.Bambynek1972))
+      push!(c, "Bambynek")
+    end
   end
   plot(x=x,y=y,color=c, Scale.y_log10(maxvalue=1.0))
 end

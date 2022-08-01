@@ -78,6 +78,6 @@ LinearScale(f::AbstractFloat)::Colorant =
 
 """
 Loads a legend image from the package source directory. Some legends include "LinearScale.png", "LogScale.png",
-"Log3BandBright.png", "Log3BancColorblind.png".
+"Log3BandBright.png", "Log3BandColorblind.png".
 """
-loadlegend(fn::String) = FileIO.load(joinpath(dirname(pathof(@__MODULE__)), fn))
+loadlegend(fn::String) = FileIO.load(joinpath(@__DIR__, "..", "resources", fn))

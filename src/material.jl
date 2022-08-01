@@ -653,7 +653,7 @@ function compare(unk::Material, known::Material)::DataFrame
         Symbol("ΔA/A") => map(els)  do el
             (value(get(afk, el, 0.0)) - value(get(afr, el, 0.0))) / #
              max(value(get(afk, el, 0.0)),value(get(afr, el, 0.0))) 
-        end
+        end, copycols = false
     )
 end
 
@@ -715,21 +715,13 @@ end
 Load the internal compositon library.
 """
 function compositionlibrary()::Dict{String,Material}
-    result = Dict{String,Material}()
-    path = dirname(pathof(@__MODULE__))
-    df = CSV.File(joinpath(path, "..", "data", "composition.csv")) |> DataFrame
-    for row in eachrow(df)
-        name, density = row[1], row[2]
-        elmc = collect(zip(element.(1:94), row[3:96])) # (i->getindex(row,i)).(3:96)))
-        data = Dict{Element,Float64}(filter(a -> (!ismissing(a[2])) && (a[2] > 0.0), elmc))
-        properties = Dict{Symbol,Any}()
-        if !ismissing(density)
-            properties[:Density] = density
-        end
-        m = material(name, data; properties = properties)
-        result[name] = m
-    end
-    return result
+    csvf = CSV.File(joinpath(@__DIR__, "..", "data", "composition.csv"))
+    elms = map(cs->parse(Element,repr(cs)[2:end]), Tables.columnnames(csvf)[3:96])
+    return Dict(map(Tables.rows(csvf)) do row
+        name, density, elmc = row[1], row[2], zip(elms, map(i->row[i], 3:96))
+        data = Dict{Element,Float64}(filter(a -> (!ismissing(a[2])) && (a[2] > 0.0), collect(elmc)))
+        name => material(name, data; density = density)
+    end)
 end
 
 

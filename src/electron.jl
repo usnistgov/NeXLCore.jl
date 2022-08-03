@@ -46,11 +46,11 @@ end
 Electron wavenumber (inverse wavelength) in rad⋅cm⁻¹.
 """
 kₑ(E::Quantity) = 2π / λₑ(E)
-kₑ(E::Float64) = ustrip(kₑ(E*u"eV") |> "cm^-1")
+kₑ(E::Float64) = ustrip(kₑ(E*u"eV") |> u"cm^-1")
 
 
 """
 Electrons per second per nA of current.
 """
 electrons_per_second(ic::Quantity) = ic/ElementaryCharge |> u"s^-1"
-electrons_per_second(ic::AbstractFloat) = electrons_per_second(ic*u"nA")
+electrons_per_second(ic::AbstractFloat) = ustrip(electrons_per_second(ic*u"nA"))

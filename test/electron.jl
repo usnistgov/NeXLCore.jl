@@ -1,6 +1,6 @@
 using Test
 using NeXLCore
-
+using Unitful
 
 @testset "Electron" begin
 

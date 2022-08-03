@@ -172,32 +172,30 @@ This doesn't work so well at the REPL when represented as text but works
 nicely in HTML.
 """
 function NeXLUncertainties.asa(::Type{DataFrame}, links::Dict{Element,String})
+    blank = Markdown.parse("")
     df=DataFrame(
-        IA=Markdown.MD[],
-        IIA=Markdown.MD[],
-        IIIB=Markdown.MD[],
-        IVB=Markdown.MD[],
-        VB=Markdown.MD[],
-        VIB=Markdown.MD[],
-        VIIB=Markdown.MD[],
-        VIII_1=Markdown.MD[],
-        VIII_2=Markdown.MD[],
-        VIII_3=Markdown.MD[],
-        IB=Markdown.MD[],
-        IIB=Markdown.MD[],
-        IIIA=Markdown.MD[],
-        IVA=Markdown.MD[],
-        VA=Markdown.MD[],
-        VIA=Markdown.MD[],
-        VIIA=Markdown.MD[],
-        VIIIA=Markdown.MD[]
+        IA=fill(blank, 10),
+        IIA=fill(blank, 10),
+        IIIB=fill(blank, 10),
+        IVB=fill(blank, 10),
+        VB=fill(blank, 10),
+        VIB=fill(blank, 10),
+        VIIB=fill(blank, 10),
+        VIII₁=fill(blank, 10),
+        VIII₂=fill(blank, 10),
+        VIII₃=fill(blank, 10),
+        IB=fill(blank, 10),
+        IIB=fill(blank, 10),
+        IIIA=fill(blank, 10),
+        IVA=fill(blank, 10),
+        VA=fill(blank, 10),
+        VIA=fill(blank, 10),
+        VIIA=fill(blank, 10),
+        VIIIA=fill(blank, 10),
+        copycols = false
     )
-    for row in 1:10
-        r = fill(Markdown.parse(""), 18)
-        for el in filter(e->e.ypos==row, collect(elements))
-            r[el.xpos]= Markdown.parse(haskey(links,el) ? "[$(el.symbol)]($(links[el]))" : el.symbol)
-        end
-        push!(df, r)
+    for el in elements
+        df[el.ypos, el.xpos] = Markdown.parse(haskey(links,el) ? "[$(el.symbol)]($(links[el]))" : el.symbol)
     end
     return df
 end

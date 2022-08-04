@@ -48,7 +48,7 @@ transmission(
     flm::Film,
     xrayE::AbstractFloat,
     θ::AbstractFloat,
-    alg::Type{<:NeXLAlgorithm} ,
+    alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm,
 ) =
     flm.thickness > 0.0 ? #
         exp(-mac(flm.material, xrayE, alg) * csc(θ) * massthickness(flm)) : #
@@ -59,7 +59,7 @@ transmission(flm::Film, xrayE::AbstractFloat, alg::Type{<:NeXLAlgorithm} = Defau
 
 transmission(flm::Film, cxr::CharXRay, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) = #
     transmission(flm, energy(cxr), alg)
-transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat=π/2.0, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) = #
+transmission(flm::Film, cxr::CharXRay, θ::AbstractFloat, alg::Type{<:NeXLAlgorithm} = DefaultAlgorithm) = #
     transmission(flm, energy(cxr), θ, alg)
 
 material(film::Film) = film.material

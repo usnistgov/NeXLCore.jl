@@ -1,0 +1,152 @@
+## Using `Material`
+
+`Material` is the data type for working with elemental compositions in `NeXL`.
+
+```julia; term=true
+using NeXLCore 
+```
+
+There are various mechanisms to construct a `Material`.
+
+If you know the chemical formula, these mechanisms parse the formula.  
+```julia; term=true
+m = mat"Ca5(PO4)3F" # Fluorapatite
+m = mat"Ca₅(PO₄)₃F" # Equivalent
+m = parse(Material, "Ca5(PO4)3F", name = "Fluorapatite", density = 3.2)  # Equivalent with density of 3.2 g/cm³  
+m = atomicfraction("Fluorapatite", n"Ca"=>5, n"P"=>3, n"O"=>12, n"F"=>1, density=3.2)
+```
+You can construct pure elements with nominal densities.
+```julia; term=true
+pure(n"Fe")
+pure(n"Ca")
+```
+
+These mechanisms necessarily produce an analytical total of unity (all the mass fractions sum to one.)
+
+Other methods are not so constrained.
+```julia; term=true
+m = material("Fluorapatite", n"Ca"=>0.1843, n"P"=>0.3974, n"O"=>0.3807, n"F"=>0.0377, density=3.2)
+analyticaltotal(m)
+```
+
+It is possible with many of these methods to specify custom atomic weights.
+```julia; term=true
+u1=parse(Material, "U3O8", atomicweights = Dict(n"U"=>235.0))
+u2=parse(Material, "U3O8", atomicweights = Dict(n"U"=>238.0))
+```
+
+It is possible to inspect a `Material`'s atomic weight (either custom like U or default like O).
+```julia; term=true
+a(n"U", u1)
+a(n"U", u2)
+a(n"O", u1) == a(n"O", u2) 
+a(n"O", u1) == a(n"O")
+```
+
+The parse function can also do elemental mass-fraction math using the `+` and `*` operators.
+```julia; term=true
+mat"0.6*Al+0.4*O"
+```
+
+We can sum materials within the parse function...
+```julia; term=true
+mat"0.6*Fe2O3+0.4*FeO2"
+```
+
+We can even use a lookup function to map names of materials to compositions.  Using this mechanism,
+it is possible to look up materials in a database by name or using some other custom mechanism.
+```julia; term=true
+function mylibrary(name)
+    m = get(Dict("K411"=>NeXLCore.srm470_k411, "K412"=>NeXLCore.srm470_k412), name, missing)
+    ismissing(m) ? missing : massfraction(m)
+end
+m=parse(Material,"0.59*K411+0.39*K412", lookup=mylibrary)
+```
+
+Accessing the composition as mass-fraction is easy.
+```julia; term=true
+m[n"Fe"]
+m[26]
+m[92] # Elements that are not present return zero
+nonneg(m, n"Fe")  # Sets negative mass fractions to zero
+nonneg(material("Cruft", n"Fe"=>-0.001, n"Al"=>0.999),n"Fe")
+[ el=>m[el] for el in keys(m) ]
+massfraction(m)
+```
+
+There are various ways to produce the compositional data in a normalized form.
+```julia; term=true
+normalizedmassfraction(m) # as a Dict(Element, T)
+normalized(m,n"Fe") # as a number
+asnormalized(m) # as a Material
+```
+
+The equivalent in atomic-fraction is
+```julia; term=true
+atomicfraction(m)
+```
+
+Defining and extracting default or custom material properties is easy
+```julia; term=true
+m = parse(Material, "NaAlSi3O8", density=2.6, name="Albite")
+m[:MyProperty]=12.23
+m[:MyOtherProperty]="This or that"
+m[:Density]
+m[:MyProperty]
+m[:MyOtherProperty]
+```
+
+How many atoms of an element or all elements per gram of material?
+```julia; term=true
+atoms_per_g(m, n"Al")
+atoms_per_g(n"Al")
+```
+
+Combining the density with the composition we get
+```julia; term=true
+m[:Density]=3.0 # g/cm³
+atoms_per_cm³(m, n"Al")
+atoms_per_cm³(m)
+```
+
+You will notice that when appropriate the mass-fractions and atomic-fractions can has associated uncertainties.
+Typically, the mass-fractions in a `Material` are represented by a `Float64`.  However, it is possible to 
+use `UncertainValue` from `NeXLUncertainties`.
+
+```julia;term=true
+material("Stuff",n"Al" => uv(0.0163,0.0004), n"Ca" => uv(0.0618,0.0006), n"Fe"=>uv(0.0397,0.0005), n"Mg"=>uv(0.0924,0.0008),n"O"=>uv(0.5993,0.0016))
+parse(Material, "(0.0163±0.0004)*Al+(0.0618±0.0006)*Ca+(0.0397±0.0005)*Fe+(0.0924±0.0008)*Mg+(0.5993±0.0016)*O")
+```
+To summarize the `Material` we can convert it to a `DataFrame`.
+```julia; term=true
+using DataFrames
+asa(DataFrame, m)
+```
+Or we can summarize a `Material[]` in a `DataFrame`
+```julia; term=true
+asa(DataFrame, [ NeXLCore.srm470_k411, NeXLCore.srm470_k412])
+```
+
+We can also compare materials in a `DataFrame`
+```julia; term=true
+compare(NeXLCore.srm470_k411,NeXLCore.srm470_k412)
+```
+
+It is possible to do math using the `+` and `*` operators ith `Material` data items.
+```julia; term=true
+m1, m2 = mat"FeO2", mat"Al2O3" 
+m3 = 0.9*m1 + 0.1*m2
+isapprox(m3, mat"0.9*FeO2+0.1*Al2O3") 
+```
+
+There are various different ways to compute the mean atomic number.
+```julia; term=true
+z(m3)
+z(NeXLCore.NaiveZ, m3), z(NeXLCore.AtomicFraction, m3), z(NeXLCore.ElectronFraction, m3)
+z(NeXLCore.ElasticFraction, m3, 10.0e3), z(NeXLCore.Donovan2002, m3)
+```
+
+`Material` data items are used throughout the `NeXL` libraries.  For example:
+```julia; term=true
+mac(m3, n"O K-L3")
+```

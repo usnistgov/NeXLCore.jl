@@ -8,18 +8,28 @@ import Base.rand
 import Statistics
 
 """
-    Material
-
 Holds basic data about a material including name, composition in mass fraction and optional propreties.
+
+By default, Material assumes nominal terrestrial atomic weights.  However, it is possible to assign custom
+atomic weights on a per element-basis for non-terrestrial materials.
 
 The mass fraction and atomic weight are immutable but the `Properties` can be modified.
 
+    Material(
+        name::AbstractString,
+        massfrac::AbstractDict{Element,U},
+        atomicweights::AbstractDict{Element,V} = Dict{Element,Float64}(),
+        properties::AbstractDict{Symbol,Any} = Dict{Symbol,Any}(),
+    ) where { U <: AbstractFloat, V <: AbstractFloat }
+
+
 **Properties**
 
-  - `:Density` Density in g/cm³
-  - `:Description` Human friendly
-  - `:Pedigree` Quality indicator for compositional data ("SRM-XXX", "CRM-XXX", "NIST K-Glass", "Stoichiometry", "Wet-chemistry by ???", "WDS by ???", "???")
-  - `:Conductivity` => :Insulator, :Semiconductor, :Conductor
+    :Density # Density in g/cm³
+    :Description # Human friendly
+    :Pedigree #  Quality indicator for compositional data ("SRM-XXX", "CRM-XXX", "NIST K-Glass", "Stoichiometry", "Wet-chemistry by ???", "WDS by ???", "???")
+    :Conductivity = :Insulator | :Semiconductor | :Conductor
+    :OtherUserProperties # Other properties can be defined as needed
 """
 struct Material{U<:AbstractFloat,V<:AbstractFloat}
     name::String
@@ -217,12 +227,14 @@ atoms_per_cm³(mat::Material) = sum(atoms_per_cm³(mat, elm) for elm in keys(mat
 
 """
     atoms_per_g(elm::Element)
+    atoms_per_g(mat::Material)
     atoms_per_g(mat::Material, elm::Element)
 
 Compute the number of atoms of `elm` in 1 gram of `mat`.
 """
 atoms_per_g(elm::Element) =  ustrip(NoUnits, AvogadroConstant / (a(elm)*u"1/mol"))
 atoms_per_g(mat::Material, elm::Element) = ustrip(NoUnits, mat[elm] * AvogadroConstant / (a(elm, mat)*u"1/mol"))
+atoms_per_g(mat::Material) = sum(elm->atoms_per_g(mat, elm), keys(mat))
 
 """
     material(
@@ -535,16 +547,6 @@ function atomicfraction(
     )
 end
 
-isdigitex(c::Char) = isdigit(c) || ((c >= '₀') && (c <= '₉'))
-
-function remapdigits(str::AbstractString)
-    res = str
-    for repl in ('₀' + i => '0' + i for i = 0:9)
-        res = replace(res, repl)
-    end
-    return res
-end
-
 """
     NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
 
@@ -709,21 +711,6 @@ function todtsa2comp(mat::Material)::String
     return res
 end
 
-"""
-    compositionlibrary()::Dict{String, Material}
-
-Load the internal compositon library.
-"""
-function compositionlibrary()::Dict{String,Material}
-    csvf = CSV.File(joinpath(@__DIR__, "..", "data", "composition.csv"))
-    elms = map(cs->parse(Element,repr(cs)[2:end]), Tables.columnnames(csvf)[3:96])
-    return Dict(map(Tables.rows(csvf)) do row
-        name, density, elmc = row[1], row[2], zip(elms, map(i->row[i], 3:96))
-        data = Dict{Element,Float64}(filter(a -> (!ismissing(a[2])) && (a[2] > 0.0), collect(elmc)))
-        name => material(name, data; density = density)
-    end)
-end
-
 
 """
     z(mat::Material) = z(Donovan2002, mat)
@@ -735,6 +722,7 @@ Compute the mean atomic number for a material.
 
     Algorithms:
       * NaiveZ - Mass fraction averaging
+      * AtomFraction - Atom fraction averaging
       * ElectronFraction - Simple electron fraction averaging
       * ElasticFraction - Scattering cross-section averaged
       * Donovan2002 - Yukawa/Donovan modified exponent electron fraction averaging
@@ -748,6 +736,10 @@ struct NaiveZ <: NeXLAlgorithm end
 z(::Type{NaiveZ}, mat::Material) = sum(c * z(elm) for (elm, c) in mat.massfraction)
 
 """
+Donovan's recommended material Z model
+
+For more details see Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
+(also see Microsc. Microanal. 27 (Suppl 1), 2021))
 """
 struct Donovan2002 <: NeXLAlgorithm end
 function z(::Type{Donovan2002}, mat::Material; exponent=0.667)
@@ -757,14 +749,28 @@ function z(::Type{Donovan2002}, mat::Material; exponent=0.667)
 end
 
 
+"""
+Electronic fraction material Z model
+
+For more details see Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
+(also see Microsc. Microanal. 27 (Suppl 1), 2021))
+"""
 struct ElectronFraction <: NeXLAlgorithm end
+
 function z(::Type{ElectronFraction}, mat::Material)
     af = atomicfraction(mat)
     ef(elm) = af[elm]*z(elm)/sum(el2->af[el2]*z(el2), keys(mat)) # Donovan2002 Eq 3
     return sum(elm->z(elm)*ef(elm), keys(mat))
 end
 
+"""
+Elastic fraction material Z model
+
+For more details see Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
+(also see Microsc. Microanal. 27 (Suppl 1), 2021))
+"""
 struct ElasticFraction <: NeXLAlgorithm end
+
 function z(::Type{ElasticFraction}, mat::Material, e::AbstractFloat)
     function σE(Z,E) # E in keV
         α = 3.4e-3*Z^0.67/E
@@ -775,7 +781,14 @@ function z(::Type{ElasticFraction}, mat::Material, e::AbstractFloat)
     return sum(elm->z(elm)*σf(elm), keys(mat))
 end
 
+"""
+Naive atomic fraction material Z model
+
+For more details see Mean Z algorithm in J.J. Donovan, N.E. Pingitore, Microsc. Microanal. 2002 ; 8 , 429
+(also see Microsc. Microanal. 27 (Suppl 1), 2021))
+"""
 struct AtomicFraction <: NeXLAlgorithm end
+
 function z(::Type{AtomicFraction}, mat::Material)
     af = atomicfraction(mat)
     sum(elm->af[elm]*z(elm), keys(mat))
@@ -785,7 +798,7 @@ end
 """
     a(mat::Material)
 
-Computes the mean atomic weight for a material. (Naive algorithm.)
+Computes the mean atomic weight for a material.
 """
 a(mat::Material) = sum(c * a(elm, mat) for (elm, c) in mat.massfraction)
     

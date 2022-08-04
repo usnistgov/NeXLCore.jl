@@ -263,6 +263,21 @@ const mengason_mineral_mount2 = (
     mmm_copper,
 )
 
+"""
+    compositionlibrary()::Dict{String, Material}
+
+Load the internal compositon library.
+"""
+function compositionlibrary()::Dict{String,Material}
+    csvf = CSV.File(joinpath(@__DIR__, "..", "data", "composition.csv"))
+    elms = map(cs->parse(Element,repr(cs)[2:end]), Tables.columnnames(csvf)[3:96])
+    return Dict(map(Tables.rows(csvf)) do row
+        name, density, elmc = row[1], row[2], zip(elms, map(i->row[i], 3:96))
+        data = Dict{Element,Float64}(filter(a -> (!ismissing(a[2])) && (a[2] > 0.0), collect(elmc)))
+        name => material(name, data; density = density)
+    end)
+end
+
 function loadmineraldata(parseit::Bool = false)::DataFrame
     minpath = datadep"RUFFDatabase"
     res = CSV.File(joinpath(minpath, "RRUFF_Export_20191025_022204.csv")) |> DataFrame

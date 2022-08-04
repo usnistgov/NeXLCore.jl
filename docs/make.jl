@@ -27,6 +27,7 @@ include(joinpath("..","weave","buildweave.jl"))
 pages = [
             # "Start Page" => "index.md",
             "Getting Started" => "gettingstarted.md",
+            "Materials" => "material.md",
             "Bremsstrahlung" => "bremsstrahlung.md",
             "Mass Fraction Uncertainty" => "Au60Ag40unc.md",
             "Backscatter" => "eta.md",

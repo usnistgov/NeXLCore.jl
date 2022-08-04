@@ -22,6 +22,7 @@ let start_dir = pwd()
         "Au60Ag40unc",
         "eta",
         "bremsstrahlung",
+        "material"
     ))
 
     cd(start_dir)

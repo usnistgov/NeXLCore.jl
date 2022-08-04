@@ -6,6 +6,12 @@ using Statistics
 
 """
 The members in common between KRatio and KRatios
+
+
+    > element(kr)
+    > xrays(kr)
+    > standard(kr)
+    > elms(KRatioBase[...])
 """
 abstract type KRatioBase 
     # element::Element
@@ -22,9 +28,11 @@ Find the first KRatio or KRatios in which the .xrays field contains the cxr::Cha
 """
 Base.findfirst(krs::AbstractVector{<:KRatioBase}, cxr::CharXRay) =
     krs[findfirst(kr -> cxr in kr.xrays, krs)]
+
 element(kr::KRatioBase) = kr.element
 xrays(krs::KRatioBase) = krs.xrays
 standard(krs::KRatioBase) = krs.standard
+
 """
     elms(krs::Vector{KRatio})::Set{Element}
 
@@ -37,7 +45,6 @@ function elms(krs::Vector{<:KRatioBase})::Set{Element}
     end
     return res
 end
-
 
 """
     KRatio
@@ -62,6 +69,20 @@ measurements may be associated with many `CharXRay` that are similar in energy.
 k-ratios are always relative to another material.  Usually the composition of this
 `Material` is well-known.  However, when a k-ratio is restandardized, it is possible
 for the intermediate material to be less well-known.
+
+Methods:
+
+    > element(kr)
+    > xrays(kr)
+    > standard(kr)
+    > elms(KRatioBase[...])
+    > NeXLUncertainties.value(kr::KRatio)
+    > NeXLUncertainties.σ(kr::KRatio)
+    > nonnegk(kr::KRatio)
+    > Statistics.mean(krs::AbstractVector{KRatio})::UncertainValue
+    > Base.getindex(krs::AbstractVector{KRatio}, cxr::CharXRay)
+    > strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}
+    > asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
 """
 struct KRatio <: KRatioBase
     element::Element
@@ -153,6 +174,22 @@ end
 `KRatios` represents the hyper-spectral equivalent of the KRatio type.  Each pixel in the `KRatios` object
 must be characterized by the same unknown and standard properties, the same X-ray lines and the other
 properties.
+
+
+Methods:
+
+    > Base.getindex(krs::KRatios, idx::Int...)
+    > Base.getindex(krs::KRatios, ci::CartesianIndex)
+    > Base.size(krs::KRatios, [idx::Int])
+    > Base.CartesianIndices(krs::KRatios)
+    > normalizek(krs::AbstractVector{<:KRatios}; norm::Float32=1.0f)::Vector{KRatios}
+    > normalizek(krs::AbstractVector{KRatio}; norm::Float32=1.0f)::Vector{KRatio}
+    > brightest(krs::Union{KRatios, KRatio})
+    > colorize(krs::AbstractVector{<:KRatios}, red::Element, green::Element, blue::Element, normalize=:All[|:Each])
+    > colorize(krs::AbstractVector{<:KRatios}, elms::AbstractVector{Element}, normalize=:All)
+    > Base.getindex(krs::AbstractVector{<:KRatios}, elm::Element) # Gray scale image
+    > Base.getindex(krs::AbstractVector{<:KRatios}, red::Element, green::Element)  # Red-green image
+    > Base.getindex(krs::AbstractVector{<:KRatios}, red::Element, green::Element, blue::Element) # RGB image
 """
 struct KRatios{T} <: KRatioBase where {T <: AbstractFloat}
     element::Element

@@ -20,7 +20,7 @@ Electron velocity in cm/s for the specified kinetic energy in eV.
 """
 function vₑ(Ek::Quantity)
     γ = 1.0 + Ek/(ElectronMass*SpeedOfLightInVacuum^2)
-    sqrt(1.0 - (1.0 / γ)^2) * SpeedOfLightInVacuum |> u"m/s"
+    sqrt(1.0 - (1.0 / γ)^2) * SpeedOfLightInVacuum |> u"cm/s"
 end
 function vₑ(Ek::AbstractFloat)
     γ = 1.0 + Ek/mₑ

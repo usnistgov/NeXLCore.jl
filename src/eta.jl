@@ -60,8 +60,9 @@ function η(::Type{LoveScott1978η}, elm::Element, e0::Float64)
     return η20(zz) * (1.0 + Goη20(zz) * log(e0 / 20.0e3))
 end
 
-
-
+"""
+The model for Pouchou's 1991 model ("Green Book") of the BackscatterCoefficient.
+"""
 struct Pouchou1991η <: BackscatterCoefficient end
 
 η(::Type{Pouchou1991η}, elm::Element, e0::Float64) =
@@ -77,15 +78,21 @@ function η(::Type{August1989η}, elm::Element, e0::Float64)
            (0.001 * e0)^(0.1382 - 0.9211 / sqrt(z(elm)))
 end
 
+"""
+The model for Reimer's model of the BackscatterCoefficient.
+"""
 struct Reimer1998 <: BackscatterCoefficient end
 
 η(::Type{Reimer1998}, mat::Material, e0::Float64) = #
     evalpoly(sum(elm->value(mat[elm])*z(elm),keys(mat)), (-0.0254, 0.016, -1.86e-4, 8.3e-7))
 
 """
+    η(::Type{<:BackscatterCoefficient}, mat::Material, e0::Float64) = #
     η(elm::Element, e0::Real)
 
-The default backscatter coefficient algorith which is August1989η.
+Models are: Tomlin1963, LoveScott1978η, Pouchou1991η, August1989η, Reimer1998
+
+The default backscatter coefficient algorith is August1989η.
 """
 η(elm::Element, e0::Real) = η(August1989η, elm, e0)
 

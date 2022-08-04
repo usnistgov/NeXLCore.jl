@@ -60,6 +60,7 @@ include("element.jl") # Element data from PeriodicTable.jl
 include("shell.jl") # Atomic shell methods
 include("transition.jl") # Atomic transition methods
 include("characteristic.jl") # Characteristic X-ray methods
+include("continuum.jl") # Continuum X-ray methods
 include("parse.jl") # Parse elements, shells, transitions from strings
 include("algorithm.jl") # Default implementation of algorithms
 
@@ -220,6 +221,9 @@ include("electron.jl")
 export λₑ # Wavelength of an electron
 export kₑ # Wave number of an electron
 export mₑ # mass of an electron in MeV
+export vₑ # electron velocity in cm/s as a function of energy
+export electrons_per_second # Current as electrons/second
+export γₑ # Relativistic γ for electrons as function of electron velocity 
 
 include("misc.jl")
 export Poehn1985 # A jump ratio model

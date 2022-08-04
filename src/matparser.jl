@@ -12,7 +12,7 @@ function Base.parse(
     conductivity::Union{Missing,Symbol} = missing, # :Conductor, :Semiconductor, :Insulator
     lookup::Function = s->nothing
 )::Material where {V<:AbstractFloat}
-    mf, pex = _mp_level1(expr, lookup=lookup)
+    mf, pex = _mp_level1(expr, atomicweights, lookup)
     pex = replace(pex, "*"=>"⋅")
     result = material(
         ismissing(name) ? pex : name,
@@ -36,7 +36,7 @@ end
 """
 Parses "XXX+YYY+ZZZ" into add("XXX", "YYY", "ZZZ")
 """
-function _mp_level1(expr::AbstractString; lookup::Function=s->nothing)
+function _mp_level1(expr::AbstractString, atomicweights::Dict{Element, Float64}, lookup::Function=s->nothing)
     plusuv(a::AbstractFloat, b::AbstractFloat) = a + b
     plusuv(a::UncertainValue, b::AbstractFloat) = NeXLUncertainties.sum(a,uv(b))
     plusuv(a::AbstractFloat, b::UncertainValue) = NeXLUncertainties.sum(uv(a),b)
@@ -48,7 +48,7 @@ function _mp_level1(expr::AbstractString; lookup::Function=s->nothing)
     function f(s) # Lookup while maintaining the raw representation
         # Julia 1.6 fails when this is reduced to a single call to replace
         t = reduce((a,b)->replace(a, b), ( "₀"=>"0", "₁"=>"1", "₂"=>"2", "₃"=>"3", "₄"=>"4", "₅"=>"5", "₆"=>"6", "₇"=>"7", "₈"=>"8", "₉"=>"9" ), init=string(s))
-        return ( _mp_level2(t, s, lookup), s) # Finally parse expression
+        return ( _mp_level2(t, s, atomicweights, lookup), s) # Finally parse expression
     end
     return mapreduce(f, plus, split(expr, "+"))
 end
@@ -56,18 +56,19 @@ end
 """
 Parses "#EXPR" or "#*EXPR" into times(#, "EXPR")
 """
-function _mp_level2(expr::AbstractString, raw::AbstractString, lookup::Function)
+function _mp_level2(expr::AbstractString, raw::AbstractString, atomicweights::Dict{Element,Float64}, lookup::Function)
     mult(n,d) = Dict(elm => n*q for (elm, q) in d)
     rfp = r"^(\d+(?:[.]\d*)?|[.]\d+)\s*[\*|⋅]?\s*(.*)$"
     ruv = r"^(\(\s*(?:\d+(?:[.]\d*)?|[.]\d+)\s*[±|+-|-+]\s*(?:\d+(?:[.]\d*)?|[.]\d+)\s*\))\s*[\*|⋅]\s*(.*)$"
+    aa(el) = get(atomicweights, el, a(el))
     function luor3(s, raw)
         r=lookup(s)  # Look up is in mass fractions
         isnothing(r) && (r = lookup(raw))
         if isnothing(r) 
             rt = _mp_level3(s)
             # Convert to mass fractions
-            n = sum(a(elm) * value(v) for (elm, v) in rt)
-            r = Dict( elm => (a(elm) / n) * v for (elm, v) in rt)
+            n = sum(aa(elm) * value(v) for (elm, v) in rt)
+            r = Dict( elm => (aa(elm) / n) * v for (elm, v) in rt)
         end
         return r
     end

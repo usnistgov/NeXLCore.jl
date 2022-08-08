@@ -47,7 +47,13 @@ function elms(krs::Vector{<:KRatioBase})::Set{Element}
 end
 
 """
-    KRatio
+    KRatio(
+        xray::CharXRay,
+        unkProps::Dict{Symbol,<:Any},
+        stdProps::Dict{Symbol,<:Any},
+        standard::Material,
+        kratio::AbstractFloat,
+    )
 
 The k-ratio is the ratio of two similar intensity measurements - one on 
 a material of unknown composition and one on a standard with known 
@@ -131,6 +137,13 @@ struct KRatio <: KRatioBase
             convert(UncertainValue, kratio),
         )
     end
+    KRatio(
+        xray::CharXRay,
+        unkProps::Dict{Symbol,<:Any},
+        stdProps::Dict{Symbol,<:Any},
+        standard::Material,
+        kratio::AbstractFloat,
+    ) = KRatio( CharXRay[ xray ], unkProps, stdProps, standard, kratio)
 end
 
 NeXLUncertainties.value(kr::KRatio) = value(kr.kratio)

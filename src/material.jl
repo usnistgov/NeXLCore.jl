@@ -459,7 +459,7 @@ labeled(mat::Material) =
 Return the composition in atomic fraction representation.
 """
 function atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
-    norm = sum(mf / a(elm, mat) for (elm, mf) in mat.massfraction)
+    norm = sum(value(mf) / a(elm, mat) for (elm, mf) in mat.massfraction)
     return Dict( elm => (mf / a(elm, mat)) / norm for (elm, mf) in mat.massfraction )
 end
 

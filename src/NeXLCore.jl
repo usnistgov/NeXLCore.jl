@@ -282,6 +282,7 @@ export requiredbutmissing # Lists missing properties
 include("materials.jl")
 export loadsmithsoniandata, parsedsmithsoniandata
 export loadmineraldata
+export wikidata_minerals
 export srm470_k411, srm470_k412
 
 include("palettes.jl")

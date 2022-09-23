@@ -413,3 +413,28 @@ function parsedsmithsoniandata()::Dict{String,Material}
     end
     return res
 end
+
+"""
+    wikidata_minerals()::Dict{String, Material}
+
+Mineral data based on a WikiData SPARQL query of minerals.
+Only those minerals which represented distinct (uniquely defined) compositions
+are included.  Replicas were removed.
+
+Also includes `:Subclass` and `:Formula` and `:Description` properties.
+"""
+function wikidata_minerals()::Dict{String, Material}
+    df = CSV.read(joinpath(@__DIR__, "..", "data", "minerals.csv"), DataFrame)
+    res = map(Tables.rows(df)) do r
+        mat = missing
+        try
+            props = Dict{Symbol, Any}( :Subclass => r.subclass, :Description=> r.description )
+            mat = parse(Material, r.formula, name=r.name, properties = props)
+        catch err
+            @warn "Failed to parse $(r.formula) : $err"
+        end
+        r.name => mat
+    end
+    res = filter!(r->!ismissing(r.second), res)
+    Dict(res)
+end

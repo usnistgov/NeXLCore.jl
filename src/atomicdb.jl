@@ -100,7 +100,7 @@ let database_lock = Ref(ReentrantLock())
         mergethem(_::Nothing, res) = res
         mergethem(a::Dict, res) = isnothing(res) ? a : merge(a, res) # replace res[x] with a[x]
         mergethem(a::Vector, res) = isnothing(res) ? a : map(ab->ab[1]!=-1.0 ? ab[1] : ab[2], zip(a, res)) 
-        return mapreduce(f, mergethem, reverse(iter))
+        return mapreduce(f, mergethem, iter)
     end
 
     # Maps indices into names

@@ -421,14 +421,15 @@ Mineral data based on a WikiData SPARQL query of minerals.
 Only those minerals which represented distinct (uniquely defined) compositions
 are included.  Replicas were removed.
 
-Also includes `:Subclass` and `:Formula` and `:Description` properties.
+Also includes `:Class`, `:Formula` and `:Description` properties.
 """
 function wikidata_minerals()::Dict{String, Material}
     df = CSV.read(joinpath(@__DIR__, "..", "data", "minerals.csv"), DataFrame)
     res = map(Tables.rows(df)) do r
         mat = missing
         try
-            props = Dict{Symbol, Any}( :Subclass => r.subclass, :Description=> r.description )
+            sc = replace(r.subclass, ';'=>':')
+            props = Dict{Symbol, Any}( :Class => "Mineral; $sc", :Description=> r.description )
             mat = parse(Material, r.formula, name=r.name, properties = props)
         catch err
             @warn "Failed to parse $(r.formula) : $err"

@@ -534,7 +534,7 @@ function atomicfraction(
 ) where {U<:Real,V<:AbstractFloat}
     aw(elm) = get(atomicweights, elm, a(elm))
     norm = sum(af * aw(elm) for (elm, af) in atomfracs)
-    massfracs = Dict(elm => (aw(elm) / norm) * af for (elm, af) in atomfracs)
+    massfracs = Dict(elm => (af * aw(elm) / norm) for (elm, af) in atomfracs)
     return material(
         name,
         massfracs;

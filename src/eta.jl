@@ -54,9 +54,9 @@ struct Tomlin1963 <: BackscatterCoefficient end
 struct LoveScott1978η <: BackscatterCoefficient end
 
 function η(::Type{LoveScott1978η}, elm::Element, e0::Float64)
-    η20(z) = (-52.3791 + z * (150.48371 + z * (-1.67373 + z * 0.00716))) * 1.0e-4
-    Goη20(z) = (-1112.8 + z * (30.289 + z * -0.15498)) * 1.0e-4
-    zz = convert(Float64, z(elm))
+    η20(z) = evalpoly(z, (-52.3791e-4, 150.48371e-4, -1.67373e-4, 0.00716e-4))
+    Goη20(z) = evalpoly(z, (-1112.8e-4, 30.289e-4,-0.15498e-4))
+    zz = Float64(z(elm))
     return η20(zz) * (1.0 + Goη20(zz) * log(e0 / 20.0e3))
 end
 
@@ -72,16 +72,18 @@ struct Pouchou1991η <: BackscatterCoefficient end
 struct August1989η <: BackscatterCoefficient end
 
 function η(::Type{August1989η}, elm::Element, e0::Float64)
-    lz = log(z(elm))
-    return (0.1904 + lz * (-0.2236 + lz * (0.1292 + lz * -0.01491))) *
-           (2.167e-4 * z(elm) + 0.9987) *
-           (0.001 * e0)^(0.1382 - 0.9211 / sqrt(z(elm)))
+    zz, e0k = Float64(z(elm)), 0.001 * e0
+    return evalpoly(log(zz), (0.1904, -0.2236, 0.1292, -0.01491)) *
+           (0.9987 + 2.167e-4 * zz) * (e0k^(0.1382 - 0.9211 / sqrt(zz)))
 end
 
 """
 The model for Reimer's model of the BackscatterCoefficient.
 """
 struct Reimer1998 <: BackscatterCoefficient end
+
+η(::Type{Reimer1998}, elm::Element, e0::Float64) = #
+    evalpoly(z(elm), (-0.0254, 0.016, -1.86e-4, 8.3e-7))
 
 η(::Type{Reimer1998}, mat::Material, e0::Float64) = #
     evalpoly(sum(elm->value(mat[elm])*z(elm),keys(mat)), (-0.0254, 0.016, -1.86e-4, 8.3e-7))

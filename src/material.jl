@@ -3,7 +3,6 @@ using Unitful
 using Printf
 using DataFrames
 using LaTeXStrings
-using CSV
 import Base.rand
 import Statistics
 

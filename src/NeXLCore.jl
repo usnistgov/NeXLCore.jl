@@ -271,6 +271,7 @@ export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
 export colorize # Colorize a X-ray 
 export normalizek # Normalize a Vector{KRatio[s]}
+export ElementalMap # For visualizing maps
 #export strip # Removes one or more elements from a Vector{KRatio}
 
 include("properties.jl")
@@ -312,6 +313,9 @@ export isstandard # Does a k-ratio have the necessary properties to be a standar
 export standardize # Apply similar standards to a KRatio or KRatios
 
 include("materialdb.jl")
+
+include("mats.jl")
+export Materials
 
 export disp
 

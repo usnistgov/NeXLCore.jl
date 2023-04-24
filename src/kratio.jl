@@ -315,7 +315,7 @@ Converts `Vector{KRatios}` into a Dict that maps each Element present to an imag
     scale = [ Log3Band , Log3BancColorblind, Log3BandBright, LogScale, Gray ]
 
 """
-function asa(::Type{ElementalMap}, krs::AbstractVector{KRatios}, scale=Log3Band)
+function NeXLUncertainties.asa(::Type{ElementalMap}, krs::AbstractVector{KRatios}, scale=Log3Band)
     opt=optimizeks(SimpleKRatioOptimizer(2.0), krs)
     nks=normalizek(opt)
     Dict(map(nk-> nk.element => scale.(nk.kratios), nks))

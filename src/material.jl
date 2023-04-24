@@ -68,6 +68,8 @@ rename(mat::Material, newname::AbstractString) = Material(newname, mat.massfract
 Base.copy(m::Material) =
     Material(m.name, copy(m.massfraction), copy(m.a), copy(m.properties))
 
+properties(mat::Material) = mat.properties
+
 """
     elms(mat::Material)
 
@@ -399,7 +401,7 @@ end
 Convert the Material to a normalized Material form.  Negative mass fractions
 are set to zero before normalization.
 """
-function asnormalized(mat::Material, n = 1.0)
+function asnormalized(mat::Material{U,V}, n = one(V)) where {U<:AbstractFloat,V<:AbstractFloat}
     if !isempty(mat.massfraction)
         at = analyticaltotal(mat)
         if isapprox(at, n, rtol = 1.0e-8) && startswith(name(mat), "N[")

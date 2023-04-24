@@ -149,6 +149,7 @@ export labeled # Transform a data item into a Dict of (Label, value)
 export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
+export properties # Material, Spectrum or Other properties
 export compare # Compare compositions as a DataFrame
 export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
@@ -271,7 +272,6 @@ export nonnegk # Returns the k-ratio value truncated to non-negative.
 export elms  # Returns a list of the elements in a `List{KRatio}`
 export colorize # Colorize a X-ray 
 export normalizek # Normalize a Vector{KRatio[s]}
-export ElementalMap # For visualizing maps
 #export strip # Removes one or more elements from a Vector{KRatio}
 
 include("properties.jl")

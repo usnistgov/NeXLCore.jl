@@ -50,9 +50,13 @@ end
 
 Base.setindex!(mats::Materials, mat::Material, ci::CartesianIndex) = setindex!(mats, mat, ci.I...)
 
-function Base.show(io::IO, mats::Materials)
+function Base.show(io::IO, ::MIME"text/plain", mats::Materials)
     els = join(symbol.(sort( [ keys(mats.planes)... ])),", ")
-    print(io, "Materials[$(mats.name), $(size(mats.massfractions)[1:end-1]), [$els]]")
+    print(io, "Materials[$(mats.name), $(join(repr.(size(mats))," × ")) × ($els)]")
+end
+function Base.show(io::IO, ::MIME"text/html", mats::Materials)
+    els = join(symbol.(sort( [ keys(mats.planes)... ])),", ")
+    print(io, "Materials[$(mats.name), $(join(repr.(size(mats))," &times; ")) &times; ($els)]")
 end
 
 function Base.getindex(mats::Materials{U,V,N}, elm::Element) where {U<:AbstractFloat,V<:AbstractFloat,N}
@@ -62,14 +66,14 @@ end
 
 function Base.getindex(mats::Materials{U,V,N}, idx::Int...)::Material{U,V} where {U<:AbstractFloat,V<:AbstractFloat,N}
     mfs = Dict( el=>mats.massfractions[idx...,i] for (el, i) in mats.planes )
-    Material("$(mats.name)[$idx]", mfs, mats.a, mats.properties)
+    Material("$(mats.name)[$(join(repr.(idx),","))]", mfs, mats.a, mats.properties)
 end
 
 Base.getindex(mats::Materials, ci::CartesianIndex) = getindex(mats, ci.I...)
 
 function Base.getindex(mats::Materials{U,V,N}, idx::Int)::Material{U,V} where {U<:AbstractFloat,V<:AbstractFloat,N}
     mfs = Dict( el=>mats.massfractions[(idx-1)*size(mats.massfractions, ndims(mats.massfractions))+j] for (el, j) in mats.planes )
-    Material("$(mats.name)[$idx]", mfs, mats.a, mats.properties)
+    Material("$(mats.name)[$(join(repr.(idx),","))]", mfs, mats.a, mats.properties)
 end
 
 Base.eachindex(mats::Materials) = CartesianIndices(size(mats))
@@ -82,4 +86,15 @@ Base.ndims(mats::Materials) = ndims(mats.massfractions)-1
 Base.eltype(::Materials{U,V,N}) where {U<:AbstractFloat,V<:AbstractFloat,N} = Material{U,V}
 Base.similar(mats::Materials, T::Type=eltype(mats), dims=size(mats)) = Array{T}(undef, dims)
 
-NeXLCore.a(elm::Element, mat::Materials) = get(mat.a, elm, a(elm))
+a(elm::Element, mat::Materials) = get(mat.a, elm, a(elm))
+properties(mats::Materials) = mats.properties
+name(mats::Materials) = mats.name
+Base.keys(mats::Materials) = keys(mats.planes)
+
+function NeXLCore.asnormalized(mats::Materials{U,V}, n = one(V)) where {U<:AbstractFloat,V<:AbstractFloat}
+    res = Materials("N[$(mats.name)]", [ keys(mats.planes)...], eltype(mats.massfractions), size(mats), atomicweights=mats.a, properties=mats.properties)
+    for ci in CartesianIndices(mats)
+        res[ci]=asnormalized(mats[ci], n)
+    end
+    return res
+end

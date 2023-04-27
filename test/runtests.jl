@@ -20,6 +20,7 @@ using NeXLCore
     include("standardize.jl")
     include("stoichiometry.jl")
     include("xray.jl")
+    include("mats.jl")
 end
 
 # To test coverage (from NWMR's Win10 box)

@@ -18,3 +18,12 @@ using Statistics
     @test ndims(mats) == 2
     @test a(n"Pu", mats)==244.0
     @test a(n"Tc", mats)==99.0
+    @test properties(mats)[:Density]==2.2
+    @test length(properties(mats))==1
+
+    nmats=asnormalized(mats)
+    @test isapprox(mean(analyticaltotal.(nmats)), 1.0, atol=1.0e-8)
+    @test n"Pu" in keys(nmats)
+    @test !(n"Fe" in keys(mats))
+    @test keys(mats) == keys(nmats)
+end

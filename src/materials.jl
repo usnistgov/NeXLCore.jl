@@ -1,4 +1,5 @@
 using Pkg.Artifacts
+using CSV
 
 const srm470_k412 = parse(Material, "(0.4535±0.0020)*SiO2+(0.1933±0.0020)*MgO+(0.1525±0.0020)*CaO+(0.0927±0.0020)*Al2O3+(0.0996±0.0020)*FeO", 
     name="SRM-470 K412", density = 3.45, description="https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nbsspecialpublication260-74.pdf",

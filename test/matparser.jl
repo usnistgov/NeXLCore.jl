@@ -31,7 +31,7 @@ using Test
     @test cda(NeXLCore.mmm_biotite.massfraction, Dict(n"H"=>0.0043,n"O"=>0.4372,n"Mg"=>0.1186,n"Al"=>0.0846,n"Si"=>0.1791,n"K"=>0.0835,n"Ti"=>0.0094,n"Fe"=>0.0780))
     @test cda(Dict(elm=>value(v) for (elm, v) in NeXLCore.srm470_k412.massfraction), Dict(n"O"=>0.42758,n"Mg"=>0.116567,n"Al"=>0.0490615,n"Si"=>0.211982,n"Ca"=>0.10899,n"Fe"=>0.077419))
     
-    @test cda(NeXLCore._mp_level1("Ca5(PO4)3⋅1OH",lookup=s->nothing), Dict{Element, Float64}(n"P" => 0.184989, n"Ca" => 0.398942, n"H" => 0.00200674, n"O" => 0.414062))
+    @test cda(NeXLCore._mp_level1("Ca5(PO4)3⋅1OH", Dict{Element,Float64}(), s->nothing), Dict{Element, Float64}(n"P" => 0.184989, n"Ca" => 0.398942, n"H" => 0.00200674, n"O" => 0.414062))
 
     # Test the lookup function for named materials
     function luf(s)

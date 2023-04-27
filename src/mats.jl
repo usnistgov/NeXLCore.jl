@@ -66,14 +66,14 @@ end
 
 function Base.getindex(mats::Materials{U,V,N}, idx::Int...)::Material{U,V} where {U<:AbstractFloat,V<:AbstractFloat,N}
     mfs = Dict( el=>mats.massfractions[idx...,i] for (el, i) in mats.planes )
-    Material("$(mats.name)[$(join(repr.(idx),","))]", mfs, mats.a, mats.properties)
+    Material("$(mats.name)[$(join(repr.(idx),","))]", filter(mf->mf.second > 0.0, mfs), mats.a, mats.properties)
 end
 
 Base.getindex(mats::Materials, ci::CartesianIndex) = getindex(mats, ci.I...)
 
 function Base.getindex(mats::Materials{U,V,N}, idx::Int)::Material{U,V} where {U<:AbstractFloat,V<:AbstractFloat,N}
     mfs = Dict( el=>mats.massfractions[(idx-1)*size(mats.massfractions, ndims(mats.massfractions))+j] for (el, j) in mats.planes )
-    Material("$(mats.name)[$(join(repr.(idx),","))]", mfs, mats.a, mats.properties)
+    Material("$(mats.name)[$(join(repr.(idx),","))]", filter(mf->mf.second > 0.0, mfs), mats.a, mats.properties)
 end
 
 Base.eachindex(mats::Materials) = CartesianIndices(size(mats))

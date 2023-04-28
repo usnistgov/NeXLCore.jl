@@ -1,3 +1,5 @@
+using ConcurrentCollections
+
 """
 An abstract type for X-rays like `CharXRay` and `Continuum`
     
@@ -162,7 +164,7 @@ fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay) =
 
 
 let
-    CxrCache = Dict{Element, Vector{CharXRay}}()
+    CxrCache = ConcurrentDict{Element, Vector{CharXRay}}()
     """
         allcharacteristic(elm::Element)
 
@@ -175,8 +177,8 @@ let
     end
 
     """
-        characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)
-        characteristic(elm::Element, iter::AbstractVector{Transition}, filterfunc::Function)
+        characteristic(elm::Element, Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple}, filterfunc::Function)
+        characteristic(filterfunc::Function, elm::Element, Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple})
         characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6)
         characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6)
         characteristic(ass::AtomicSubShell)
@@ -188,8 +190,11 @@ let
         
     Example:
         
-        characteristic(n"Fe",ltransitions,0.01)
-        characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
+        characteristic(n"Fe", ltransitions, 0.01)
+        characteristic(n"Fe", ltransitions, cxr -> energy(cxr) > 700.0)
+        characteristic(n"Fe", alltransitions) do cxr
+            energy(cxr) > 6000.0
+        end
         characteristic(n"Fe L3")
     """
     global function characteristic(
@@ -204,20 +209,25 @@ let
         filter(cxr->transition(cxr) in trans, alltransitions(elm))
 end
 
-characteristic(
+characteristic(filterfunc::Function, elm::Element, iter::Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple}) = #
+    characteristic(elm, iter, filterfunc)
+
+function characteristic(
     elm::Element,
     iter::Union{Tuple{Vararg{Transition}},AbstractVector{Transition}},
     minweight::AbstractFloat=0.0,
     maxE::AbstractFloat=1.0e6,
-) = characteristic(
-    elm,
-    iter,
-    cxr -> (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE),
-)
+) 
+    characteristic(elm, iter) do cxr
+        (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE)
+    end
+end
 
-characteristic(ass::AtomicSubShell, minWeight=0.0) =
-    filter(cxr -> weight(NormalizeToUnity, cxr) > minWeight,
-        characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions)))
+function characteristic(ass::AtomicSubShell, minWeight=0.0)
+    characteristic(element(ass), alltransitions) do cxr
+        (cxr.transition.innershell == ass.subshell) && (weight(NormalizeToUnity, cxr) > minWeight)
+    end
+end
 
 
 """
@@ -229,17 +239,24 @@ AtomicSubShell and the values are a vector of CharXRay for that inner shell.
 function splitbyshell(cxrs)
     res = Dict{AtomicSubShell,Vector{CharXRay}}()
     for cxr in cxrs
-        shell = inner(cxr)
-        if haskey(res, shell)
-            push!(res[shell], cxr)
-        else
-            res[shell] = [cxr]
-        end
+        push!(get!(res, inner(cxr)) do
+            CharXRay[]
+        end, cxr)
     end
     return res
 end
 
-brightest(cxrs::Vector{CharXRay})::CharXRay = cxrs[findmax(weight.(NormalizeToUnity, cxrs))[2]]
+function brightest(cxrs::Vector{CharXRay})::CharXRay 
+    br, res = -1.0, Nothing
+    for cxr in cxrs
+        w = weight(NormalizeToUnity, cxr)
+        if w > br
+            br = w
+            res = cxr
+        end
+    end
+    res
+end
 
 """
     name(cxrs::AbstractVector{CharXRay}, byfamily=false)

@@ -319,7 +319,7 @@ function Base.show(io::IO, mat::Material)
     res = "$(name(mat))["
     res *= join(
         (
-            @sprintf("%s=%0.4f", elm.symbol, value(mf)) for (elm, mf) in mat.massfraction
+            @sprintf("%s=%0.4f", el.symbol, value(mat[el])) for el in sort(collect(keys(mat.massfraction)))
         ),
         ",",
     )

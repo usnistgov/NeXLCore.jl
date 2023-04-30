@@ -319,7 +319,7 @@ function Base.show(io::IO, mat::Material)
     res = "$(name(mat))["
     res *= join(
         (
-            @sprintf("%s=%0.4f", elm.symbol, value(mf)) for (elm, mf) in mat.massfraction
+            @sprintf("%s=%0.4f", el.symbol, value(mat[el])) for el in sort(collect(keys(mat.massfraction)))
         ),
         ",",
     )
@@ -455,13 +455,13 @@ labeled(mat::Material) =
     Dict(MassFractionLabel(name(mat), elm) => mf for (elm, mf) in mat.massfraction)
 
 """
-    atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
+    atomicfraction(mat::Material{U,V})::Dict{Element,U}
 
 Return the composition in atomic fraction representation.
 """
-function atomicfraction(mat::Material)::Dict{Element,AbstractFloat}
-    norm = sum(value(mf) / a(elm, mat) for (elm, mf) in mat.massfraction)
-    return Dict( elm => (mf / a(elm, mat)) / norm for (elm, mf) in mat.massfraction )
+function atomicfraction(mat::Material{U, V})::Dict{Element, U} where {U<:AbstractFloat, V<:AbstractFloat}
+    norm = sum(value(mf) / value(a(elm, mat)) for (elm, mf) in mat.massfraction; init=zero(Float64))
+    return Dict( elm => (mf / value(a(elm, mat))) / norm for (elm, mf) in mat.massfraction )
 end
 
 """
@@ -469,8 +469,8 @@ end
 
 Return the sum of the positive mass fractions.
 """
-function analyticaltotal(mat::Material{U,V}) where {U<:AbstractFloat,V<:AbstractFloat}
-    sum(elm->nonneg(mat, elm), keys(mat))
+function analyticaltotal(mat::Material{U,V})::Float64 where {U<:AbstractFloat,V<:AbstractFloat}
+    sum(elm->nonneg(mat, elm), keys(mat); init=zero(Float64))
 end
 
 """

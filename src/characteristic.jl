@@ -1,3 +1,5 @@
+using ConcurrentCollections
+
 """
 An abstract type for X-rays like `CharXRay` and `Continuum`
     
@@ -151,7 +153,7 @@ function fluorescenceyield(cxr::CharXRay)::Float64
 end
 function fluorescenceyield(ass::AtomicSubShell)
     cxrs = characteristic(ass)
-    return length(cxrs)>0 ? sum(cxrs) do cxr
+    return length(cxrs) > 0 ? sum(cxrs) do cxr
         inn, out = innerindex(cxr), outerindex(cxr)
         xrayweight(NormalizeRaw, z(cxr), inn, inn, out)
     end : 0.0
@@ -159,78 +161,73 @@ end
 fluorescenceyield(ash::AtomicSubShell, cxr::CharXRay) =
     ash.z == cxr.z ? xrayweight(NormalizeRaw, ash.z, ash.subshell.index, innerindex(cxr), outerindex(cxr)) : 0.0
 
-"""
-    eachcharacteristic(elm::Element [, trans=alltransitions])
-
-Iterates over the CharXRay(s) associated with the element.
-"""
-eachcharacteristic(elm::Element, trans=alltransitions) = ( characteristic(elm, tr) for tr in filter(tr -> has(elm, tr), trans ) )
 
 
-characteristic(
-    elm::Element,
-    iter::Tuple{Vararg{Transition}},
-    minweight = 0.0,
-    maxE = 1.0e6,
-) = characteristic(
-    elm,
-    iter,
-    cxr -> (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE),
-)
-characteristic(
-    elm::Element,
-    iter::AbstractVector{Transition},
-    minweight = 0.0,
-    maxE = 1.0e6,
-) = characteristic(
-    elm,
-    iter,
-    cxr -> (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE),
-)
+let
+    CxrCache = ConcurrentDict{Element, Vector{CharXRay}}()
+    """
+        allcharacteristic(elm::Element)
 
-"""
-    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, filterfunc::Function)
-    characteristic(elm::Element, iter::AbstractVector{Transition}, filterfunc::Function)
-    characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6)
-    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6)
-    characteristic(ass::AtomicSubShell)
-    characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
-
-The collection of available CharXRay for the specified `Element` or `AtomicSubShell`.  `filterfunc(...)`
-    * ` maxE` is compared to the edge energy.
-    * `minWeight` is compared to the weight
-      
-Example:
-      
-    characteristic(n"Fe",ltransitions,0.01)
-    characteristic(n"Fe",ltransitions,cxr->energy(cxr)>700.0)
-    characteristic(n"Fe L3")
-"""
-function characteristic(
-    elm::Element,
-    iter::Tuple{Vararg{Transition}},
-    filterfunc::Function,
-)::Vector{CharXRay}
-    res = CharXRay[]
-    for tr in filter(t->has(elm, t), iter)
-        cxr=characteristic(elm, tr)         
-        filterfunc(cxr) && push!(res, cxr)
+    Returns a NTuple{CharXRay} with CharXRay(s) associated with the element.
+    """
+    function allcharacteristic(elm::Element)::Vector{CharXRay}
+        get!(CxrCache, elm) do
+            collect(characteristic(elm, tr) for tr in filter(tr -> has(elm, tr), alltransitions))
+        end
     end
-    res
+
+    """
+        characteristic(elm::Element, Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple}, filterfunc::Function)
+        characteristic(filterfunc::Function, elm::Element, Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple})
+        characteristic(elm::Element, iter::AbstractVector{Transition}, minweight = 0.0, maxE = 1.0e6)
+        characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight = 0.0, maxE = 1.0e6)
+        characteristic(ass::AtomicSubShell)
+        characteristic(elm::Element, iter::Tuple{Vararg{Transition}}, minweight=0.0, maxE=1.0e6)
+
+    The collection of available CharXRay for the specified `Element` or `AtomicSubShell`.  `filterfunc(...)`
+        * ` maxE` is compared to the edge energy.
+        * `minWeight` is compared to the weight
+        
+    Example:
+        
+        characteristic(n"Fe", ltransitions, 0.01)
+        characteristic(n"Fe", ltransitions, cxr -> energy(cxr) > 700.0)
+        characteristic(n"Fe", alltransitions) do cxr
+            energy(cxr) > 6000.0
+        end
+        characteristic(n"Fe L3")
+    """
+    global function characteristic(
+        elm::Element,
+        iter::Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple},
+        filterfunc::Function
+    )::Vector{CharXRay}
+        filter(cxr -> (transition(cxr) in iter) && filterfunc(cxr), allcharacteristic(elm))
+    end
+
+    global eachtransition(elm::Element, trans::AbstractArray{Transition}) =
+        filter(cxr->transition(cxr) in trans, alltransitions(elm))
 end
 
-characteristic(
-    elm::Element,
-    iter::AbstractVector{Transition},
-    filterfunc::Function,
-)::Vector{CharXRay} = map(
-    tr -> characteristic(elm, tr),
-    filter(tr -> has(elm, tr) && filterfunc(characteristic(elm, tr)), collect(iter)),
-)
+characteristic(filterfunc::Function, elm::Element, iter::Union{Tuple{Vararg{Transition}}, AbstractVector{Transition}, AbstractSet{Transition}, NTuple}) = #
+    characteristic(elm, iter, filterfunc)
 
-characteristic(ass::AtomicSubShell, minWeight=0.0) =
-    filter(cxr->weight(NormalizeToUnity, cxr)>minWeight,
-        characteristic(element(ass), filter(tr -> inner(tr) == ass.subshell, alltransitions)))
+function characteristic(
+    elm::Element,
+    iter::Union{Tuple{Vararg{Transition}},AbstractVector{Transition}},
+    minweight::AbstractFloat=0.0,
+    maxE::AbstractFloat=1.0e6,
+) 
+    characteristic(elm, iter) do cxr
+        (weight(NormalizeToUnity, cxr) > minweight) && (energy(inner(cxr)) <= maxE)
+    end
+end
+
+function characteristic(ass::AtomicSubShell, minWeight=0.0)
+    characteristic(element(ass), alltransitions) do cxr
+        (cxr.transition.innershell == ass.subshell) && (weight(NormalizeToUnity, cxr) > minWeight)
+    end
+end
 
 
 """
@@ -242,17 +239,24 @@ AtomicSubShell and the values are a vector of CharXRay for that inner shell.
 function splitbyshell(cxrs)
     res = Dict{AtomicSubShell,Vector{CharXRay}}()
     for cxr in cxrs
-        shell = inner(cxr)
-        if haskey(res, shell)
-            push!(res[shell], cxr)
-        else
-            res[shell] = [cxr]
-        end
+        push!(get!(res, inner(cxr)) do
+            CharXRay[]
+        end, cxr)
     end
     return res
 end
 
-brightest(cxrs::Vector{CharXRay})::CharXRay = cxrs[findmax(weight.(NormalizeToUnity, cxrs))[2]]
+function brightest(cxrs::Vector{CharXRay})::CharXRay 
+    br, res = -1.0, Nothing
+    for cxr in cxrs
+        w = weight(NormalizeToUnity, cxr)
+        if w > br
+            br = w
+            res = cxr
+        end
+    end
+    res
+end
 
 """
     name(cxrs::AbstractVector{CharXRay}, byfamily=false)
@@ -265,10 +269,10 @@ function name(cxrs::AbstractVector{CharXRay}, byfamily::Bool=false)::String
     if byfamily
         for elm in elms
             tmp = String[]
-            prefix = symbol(elm)*" "
-            for sh in ( KShell, LShell, MShell, NShell )
-                trs = transition.(filter(c->element(c)==elm && shell(c) == sh, cxrs))
-                if length(trs)>0
+            prefix = symbol(elm) * " "
+            for sh in (KShell, LShell, MShell, NShell)
+                trs = transition.(filter(c -> element(c) == elm && shell(c) == sh, cxrs))
+                if length(trs) > 0
                     push!(tmp,
                         if all(tr in kalpha for tr in trs)
                             "$(prefix)Kα"
@@ -299,13 +303,13 @@ function name(cxrs::AbstractVector{CharXRay}, byfamily::Bool=false)::String
                         elseif all(tr in ntransitions for tr in trs)
                             "$(prefix)N family"
                         else
-                            "$(prefix)$(symbol(elm)) "*join(collect(repr.(trs)),", ", " & ")
+                            "$(prefix)$(symbol(elm)) " * join(collect(repr.(trs)), ", ", " & ")
                         end
                     )
-                    prefix=""
+                    prefix = ""
                 end
             end
-            push!(res, join(tmp,", ", " & "))
+            push!(res, join(tmp, ", ", " & "))
         end
     else
         for elm in elms
@@ -327,13 +331,13 @@ end
 function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay})
     cc = sort(cxrs)
     return DataFrame(
-        XRay = cc,
-        Inner = inner.(cc),
-        Outer = outer.(cc),
-        Energy = energy.(cc),
-        Relax = weight.(NormalizeRaw, cc),
-        WgtByShell = weight.(NormalizeByShell, cc),
-        WgtBySubShell = weight.(NormalizeBySubShell, cc),
-        Weight = weight.(NormalizeToUnity, cc),
+        XRay=cc,
+        Inner=inner.(cc),
+        Outer=outer.(cc),
+        Energy=energy.(cc),
+        Relax=weight.(NormalizeRaw, cc),
+        WgtByShell=weight.(NormalizeByShell, cc),
+        WgtBySubShell=weight.(NormalizeBySubShell, cc),
+        Weight=weight.(NormalizeToUnity, cc),
     )
 end

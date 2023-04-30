@@ -52,12 +52,12 @@ Base.isless(sh1::SubShell, sh2::SubShell) = sh1.index > sh2.index # Outer to inn
 
 const subshellnames = (
     "K",
-    ( "L$i" for i in 1:3 )...,
-    ( "M$i" for i in 1:5 )...,
-    ( "N$i" for i in 1:7 )...,
-    ( "O$i" for i in 1:9 )...,
-    ( "P$i" for i in 1:11 )...,
-    ( "Q$i" for i in 1:13 )...
+    ("L$i" for i in 1:3)...,
+    ("M$i" for i in 1:5)...,
+    ("N$i" for i in 1:7)...,
+    ("O$i" for i in 1:9)...,
+    ("P$i" for i in 1:11)...,
+    ("Q$i" for i in 1:13)...
 )
 
 """
@@ -96,7 +96,7 @@ have in that sub-shell.
 capacity(ss::SubShell) = convert(Int, 2 * j(ss)) + 1
 
 n(ss::SubShell) = (
-    1, 
+    1,
     (2 for _ in 1:3)...,
     (3 for _ in 1:5)...,
     (4 for _ in 1:7)...,
@@ -137,7 +137,7 @@ l(ss::SubShell) = (
     4,
     4,
     0, # 6
-    1, 
+    1,
     1,
     2,
     2,
@@ -192,7 +192,7 @@ j(ss::SubShell) = (
     5 // 2,
     7 // 2,
     7 // 2,
-    9 // 2, 
+    9 // 2,
     1 // 2, # 6
     1 // 2,
     3 // 2,
@@ -222,12 +222,12 @@ j(ss::SubShell) = (
 function NeXLUncertainties.asa(::Type{DataFrame}, vss::AbstractVector{SubShell})
     css = sort(vss, rev=true)
     return DataFrame(
-        SubShell = css,
-        Shell = shell.(css),
-        n = n.(css),
-        𝓁 = l.(css),
-        j = j.(css),
-        Capacity = capacity.(css)
+        SubShell=css,
+        Shell=shell.(css),
+        n=n.(css),
+        𝓁=l.(css),
+        j=j.(css),
+        Capacity=capacity.(css)
     )
 end
 
@@ -373,8 +373,8 @@ Example:
      Fe M4
      Fe M2
  """
-atomicsubshells(elm::Element) = map(ss->atomicsubshell(elm, SubShell(ss)), eachedge(z(elm)))
-atomicsubshells(elm::Element, maxE::Float64) = filter(ass->energy(ass)<maxE, atomicsubshells(elm))
+atomicsubshells(elm::Element) = map(ss -> atomicsubshell(elm, SubShell(ss)), eachedge(z(elm)))
+atomicsubshells(elm::Element, maxE::Float64) = filter(ass -> energy(ass) < maxE, atomicsubshells(elm))
 atomicsubshells(ss::SubShell) = AtomicSubShell[atomicsubshell(elm, ss) for elm in filter(e -> has(e, ss), eachelement())]
 
 
@@ -383,7 +383,7 @@ atomicsubshells(ss::SubShell) = AtomicSubShell[atomicsubshell(elm, ss) for elm i
 
 Iterates over each sub-shell that is present in an element.
 """
-eachsubshell(elm::Element) = ( atomicsubshell(elm, SubShell(ss)) for ss in eachedge(z(elm)) )
+eachsubshell(elm::Element) = (atomicsubshell(elm, SubShell(ss)) for ss in eachedge(z(elm)))
 
 z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)
@@ -391,12 +391,12 @@ n(ass::AtomicSubShell) = n(ass.subshell)
 function NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSubShell})
     cva = sort(vass)
     return DataFrame(
-        AtomicSubShell = cva,
-        SubShell = subshell.(cva),
-        Energy = energy.(cva),
-        ICX_U2 = map(a->ionizationcrosssection(a, 2.0*energy(a)), cva),
-        JumpRatio = jumpratio.(cva),
-        FluorYield = fluorescenceyield.(cva)
+        AtomicSubShell=cva,
+        SubShell=subshell.(cva),
+        Energy=energy.(cva),
+        ICX_U2=map(a -> ionizationcrosssection(a, 2.0 * energy(a)), cva),
+        JumpRatio=jumpratio.(cva),
+        FluorYield=fluorescenceyield.(cva)
     )
 end
 
@@ -432,70 +432,65 @@ relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat) =
 
 struct Bambynek1972 <: NeXLAlgorithm end
 
-"""
-    meanfluorescenceyield(elm::Element, sh::Shell)
-    meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
 
-Mean fluorescence yields from Bambynek in Reviews of Modern Physics 44(4), 1972
-"""
-function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
-    fluorYields = (
-        (0, 0, 0),
-        (0, 0, 0),
-        (0, 0, 0),
-        (0.00045, 0, 0),
-        (0.00101, 0, 0),
-        (0.00198, 0, 0),
-        (0.00351, 0, 0),
-        (0.00579, 0, 0),
-        (0.00901, 0, 0),
-        (0.0134, 0, 0),
-        (0.0192, 0, 0),
-        (0.0265, 0, 0),
-        (0.0357, 0, 0),
-        (0.0469, 0, 0),
-        (0.0603, 0, 0),
-        (0.076, 0, 0),
-        (0.0941, 0, 0),
-        (0.115, 0, 0),
-        (0.138, 0, 0),
-        (0.163, 0.00067, 0),
-        (0.19, 0.00092, 0),
-        (0.219, 0.00124, 0),
-        (0.249, 0.00163, 0),
-        (0.281, 0.0021, 0),
-        (0.314, 0.00267, 0),
-        (0.347, 0.00335, 0),
-        (0.381, 0.00415, 0),
-        (0.414, 0.00507, 0),
-        (0.446, 0.00614, 0),
-        (0.479, 0.00736, 0),
-        (0.51, 0.00875, 0),
-        (0.54, 0.0103, 0),
-        (0.568, 0.0121, 0),
-        (0.596, 0.014, 0),
-        (0.622, 0.0162, 0),
-        (0.646, 0.0186, 0),
-        (0.669, 0.0213, 0),
-        (0.691, 0.0242, 0),
-        (0.711, 0.0274, 0),
-        (0.73, 0.0308, 0),
-        (0.747, 0.0345, 0),
-        (0.764, 0.0385, 0),
-        (0.779, 0.0428, 0),
-        (0.793, 0.0474, 0),
-        (0.806, 0.0523, 0),
-        (0.818, 0.0575, 0),
-        (0.83, 0.063, 0),
-        (0.84, 0.0689, 0),
-        (0.85, 0.075, 0),
-        (0.859, 0.0815, 0),
-        (0.867, 0.0882, 0),
-        (0.875, 0.0953, 0),
-        (0.882, 0.103, 0),
-        (0.888, 0.11, 0),
-        (0.895, 0.118, 0),
-        (0.9, 0.126, 0),
+let
+    BambynekFluorYields = (
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.0, 0.0, 0.0),
+        (0.00045, 0.0, 0.0),
+        (0.00101, 0.0, 0.0),
+        (0.00198, 0.0, 0.0),
+        (0.00351, 0.0, 0.0),
+        (0.00579, 0.0, 0.0),
+        (0.00901, 0.0, 0.0),
+        (0.0134, 0.0, 0.0),
+        (0.0192, 0.0, 0.0),
+        (0.0265, 0.0, 0.0),
+        (0.0357, 0.0, 0.0),
+        (0.0469, 0.0, 0.0),
+        (0.0603, 0.0, 0.0),
+        (0.076, 0.0, 0.0),
+        (0.0941, 0.0, 0.0),
+        (0.115, 0.0, 0.0),
+        (0.138, 0.0, 0.0),
+        (0.163, 0.00067, 0.0),
+        (0.19, 0.00092, 0.0),
+        (0.219, 0.00124, 0.0),
+        (0.249, 0.00163, 0.0),
+        (0.281, 0.0021, 0.0),
+        (0.314, 0.00267, 0.0),
+        (0.347, 0.00335, 0.0),
+        (0.381, 0.00415, 0.0),
+        (0.414, 0.00507, 0.0),
+        (0.446, 0.00614, 0.0),
+        (0.479, 0.00736, 0.0),
+        (0.51, 0.00875, 0.0),
+        (0.54, 0.0103, 0.0),
+        (0.568, 0.0121, 0.0),
+        (0.596, 0.014, 0.0),
+        (0.622, 0.0162, 0.0),
+        (0.646, 0.0186, 0.0),
+        (0.669, 0.0213, 0.0),
+        (0.691, 0.0242, 0.0),
+        (0.711, 0.0274, 0.0),
+        (0.73, 0.0308, 0.0),
+        (0.747, 0.0345, 0.0),
+        (0.764, 0.0385, 0.0),
+        (0.779, 0.0428, 0.0),
+        (0.793, 0.0474, 0.0),
+        (0.806, 0.0523, 0.0),
+        (0.818, 0.0575, 0.0),
+        (0.83, 0.063, 0.0),
+        (0.84, 0.0689, 0.0),
+        (0.85, 0.075, 0.0),
+        (0.859, 0.0815, 0.0),
+        (0.867, 0.0882, 0.0),
+        (0.875, 0.0953, 0.0),
+        (0.882, 0.103, 0.0),
+        (0.888, 0.11, 0.0),
+        (0.895, 0.118, 0.0),
+        (0.9, 0.126, 0.0),
         (0.906, 0.135, 0.00111),
         (0.911, 0.144, 0.00115),
         (0.915, 0.153, 0.0012),
@@ -537,7 +532,17 @@ function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
         (0.9777, 0.40421064, 0.00129),
         (0.9787, 0.40837776, 0.00126),
     )
-    return fluorYields[z(elm)][n(sh)]
+
+    """
+        meanfluorescenceyield(elm::Element, sh::Shell)
+        meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
+
+    Mean fluorescence yields from Bambynek in Reviews of Modern Physics 44(4), 1972
+    """
+    global function meanfluorescenceyield(elm::Element, sh::Shell, ::Type{Bambynek1972})
+        BambynekFluorYields[z(elm)][n(sh)]
+    end
 end
+
 meanfluorescenceyield(elm::Element, sh::Shell) =
     meanfluorescenceyield(elm, sh, Bambynek1972)

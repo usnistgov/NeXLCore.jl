@@ -310,8 +310,8 @@ end
 
 Returns a new KRatios (referencing same basic data as krs) but with a single CharXRay in the `lines` field.
 """
-brightest(krs::KRatios) = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )
-brightest(krs::KRatio) = KRatio([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratio )
+brightest(krs::KRatios)::KRatios = KRatios([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratios )
+brightest(krs::KRatio)::KRatio = KRatio([brightest(krs.xrays)], krs.unkProps, krs.stdProps, krs.standard, krs.kratio )
 
 """
     colorize(krs::AbstractVector{<:KRatios}, red::Element, green::Element, blue::Element, normalize=:All[|:Each])

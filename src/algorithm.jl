@@ -281,7 +281,7 @@ Example:
     julia> (/)(map(e->NeXLCore.ionizationcrosssection(n"Fe K",e),[10.0e3,20.0e3])...)
     0.5672910174711278
 """
-function ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009})
+function ionizationcrosssection(z::Int, ss::Int, energy::AbstractFloat, ::Type{Bote2009})::Float64
     return BoteSalvatICX.hasedge(z, ss) ?
         BoteSalvatICX.ionizationcrosssection(z, ss, energy, BoteSalvatICX.edgeenergy(z, ss)) : #
         0.0

@@ -418,7 +418,7 @@ Returns the mass fraction of 'elm::Element' such that the returned value is non-
 and the sum of all values is unity.
 """
 function normalized(mat::Material{U,V}, elm::Element) where {U<:AbstractFloat,V<:AbstractFloat}
-    nonneg(mat, elm) / analyticaltotal(mat, one(U))
+    nonneg(mat, elm) / analyticaltotal(mat)
 end
 
 """
@@ -437,7 +437,7 @@ function asnormalized(mat::Material{U,V}, n=one(U)) where {U<:AbstractFloat,V<:A
         end
         return Material(
             "N[$(name(mat)),$(n)]",
-            Dict(elm => V((nonneg(mat, elm) / at) * n) for elm in keys(mat)),
+            Dict{Element,U}(elm => n * (nonneg(mat, elm) / at) for elm in keys(mat)),
             mat.a,
             copy(mat.properties),
         )

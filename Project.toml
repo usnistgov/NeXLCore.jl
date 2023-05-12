@@ -2,7 +2,7 @@ name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
 authors = ["Nicholas W.M. Ritchie <nicholas.ritchie@nist.gov>"]
 repo-url = "https://github.com/usnistgov/NeXLCore.jl"
-version = "0.3.8"
+version = "0.3.9"
 
 [deps]
 BoteSalvatICX = "fe54227b-96c7-489b-9963-dd1ce2905f30"

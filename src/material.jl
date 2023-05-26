@@ -496,6 +496,9 @@ Return the sum of the positive mass fractions.
 function analyticaltotal(mat::Material{U,V})::U where {U<:AbstractFloat,V<:AbstractFloat}
     sum(val -> value(val) < 0.0 ? zero(U) : val, values(mat.massfraction); init=zero(U))
 end
+function analyticaltotal(mat::Material{UncertainValue, V})::UncertainValue where {V<:AbstractFloat}
+    sum(map(val -> value(val) < 0.0 ? uv(0.0, σ(val)) : val, values(mat.massfraction)))
+end
 
 """
     haskey(mat::Material, elm::Element)

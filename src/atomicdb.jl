@@ -192,7 +192,7 @@ let database_lock = Ref(ReentrantLock())
             end
             occ
         else
-            nothing
+            Float64[]
         end
     end
 
@@ -201,7 +201,6 @@ let database_lock = Ref(ReentrantLock())
             withatomicdb() do db
                 if isempty(occupancy_data[z])
                     # @info "Reading occupancy_data data for Z=$z."
-                    # Use the MAC edges since this data is more sensitive to edge position
                     occupancy_data[z] = readOccupancyTable(z, db, "RELAX2014")
                 end
             end

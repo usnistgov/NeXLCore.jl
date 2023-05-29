@@ -186,11 +186,19 @@ using NeXLCore
         @test isapprox(k412u[n"O"], uv(0.4276, 0.0006), atol = 0.00001)
         @test isapprox(value(k412u[n"Si"]), 0.2120, atol = 0.00001)
         @test isapprox(σ(k412u[n"Si"]), 0.0005, atol = 0.00001)
-        @test isapprox(analyticaltotal(k412u), 0.9917, atol = 0.00005)
+        @test isapprox(value(analyticaltotal(k412u)), 0.9917, atol = 0.00005)
         @test k412u[:Density] == 3.45
         @test startswith(k412u[:Pedigree], "NIST SRM")
         @test k412u[:Conductivity] == :Insulator
         @test startswith(k412u[:Description], "NIST SRM glass")
+        # Check against values calculated `using Measurements`
+        nk = normalizedmassfraction(k412u)
+        @test isapprox(σ(nk[n"Al"]), 0.00096, atol=0.0005)
+        @test isapprox(σ(nk[n"Ca"]), 0.0011, atol=0.0005)
+        @test isapprox(σ(nk[n"Fe"]), 0.0013, atol=0.0005)
+        @test isapprox(σ(nk[n"Mg"]), 0.00093, atol=0.0005)
+        @test isapprox(σ(nk[n"O"]), 0.0011, atol=0.0005)
+        @test isapprox(σ(nk[n"Si"]), 0.00065, atol=0.0005)
 
         k412x = mat"0.4535⋅SiO2+0.0996⋅FeO+0.1933⋅MgO+0.1525⋅CaO+0.0927⋅Al2O3"
         k412y = parse(

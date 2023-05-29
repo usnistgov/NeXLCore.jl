@@ -390,7 +390,7 @@ Returns the mass fraction of `elm::Element` truncated to be non-negative.  Negat
 are returned as 0.0. Positive values are returned as is.
 """
 function nonneg(mat::Material{U,V}, elm::Element)::U where {U<:AbstractFloat,V<:AbstractFloat}
-    max(zero(U), value(mat[elm]))
+    max(zero(U), mat[elm])
 end
 function nonneg(mat::Material{UncertainValue,V}, elm::Element)::Float64 where {V<:AbstractFloat}
     max(0.0, value(mat[elm]))
@@ -405,20 +405,52 @@ nonneg(mat::Material) = #
 Return the normalized mass fraction as a Dict{Element, AbstractFloat}.  Negative values
 are set to zero.
 """
-function normalizedmassfraction(mat::Material)::Dict{Element,AbstractFloat}
-    n = analyticaltotal(mat)
-    return Dict(elm => nonneg(mat, elm) / n for elm in keys(mat))
+function normalizedmassfraction(mat::Material{U,V}, n=1.0)::Dict{Element,U} where {U<:AbstractFloat,V<:AbstractFloat}
+    at = analyticaltotal(Float64, mat)
+    if at < 1.0e-8
+        at = 1.0
+    end
+    nn(mat::Material, el) = max(zero(U), mat[el])
+    Dict{Element,U}(elm => (n / at) * nn(mat, elm) for elm in keys(mat))
+end
+function normalizedmassfraction(mat::Material{UncertainValue,V}, n=1.0)::Dict{Element,UncertainValue} where {V<:AbstractFloat}
+    at = analyticaltotal(mat)
+    if value(at) < 1.0e-8
+        at = one(UncertainValue)
+    end
+    valat, varat = value(at), variance(at)
+    # Assume uncorrelated except 100% with self
+    function f(el) 
+        val, var = max(value(mat[el]), 0.0), variance(mat[el])
+        r = (n / valat) * val
+        dr = sqrt(((valat - val)/(valat^2))^2*var + (val/(valat^2))^2*(varat-var))
+        uv(r, dr)
+    end
+    Dict{Element,UncertainValue}(el=>f(el) for el in keys(mat))
 end
 
 
 """
-    normalized(mat::Material{U,V}, elm::Element)
+    normalized(mat::Material{U,V}, elm::Element, n=1.0)
 
 Returns the mass fraction of 'elm::Element' such that the returned value is non-negative
 and the sum of all values is unity.
 """
-function normalized(mat::Material{U,V}, elm::Element) where {U<:AbstractFloat,V<:AbstractFloat}
-    nonneg(mat, elm) / analyticaltotal(mat)
+function normalized(mat::Material{UncertainValue,V}, elm::Element, n=1.0)::UncertainValue where {V<:AbstractFloat}
+    at = analyticaltotal(Float64, mat)
+    if at < 1.0e-8
+        at = 1.0
+    end
+    nn(mat, el) = value(mat[el]) < 0.0 ? uv(0.0, σ(mat[el])) : mat[el]
+    return (n / at) * nn(mat, elm)
+end
+function normalized(mat::Material{U,V}, elm::Element, n=1.0)::U where {U<:AbstractFloat,V<:AbstractFloat}
+    at = analyticaltotal(Float64, mat)
+    if at < 1.0e-8
+        at = 1.0
+    end
+    nn(mat, el) = mat[el] < zero(U) ? zero(U) : mat[el]
+    return (n / at) * nn(mat, elm)
 end
 
 """
@@ -427,17 +459,13 @@ end
 Convert the Material to a normalized Material form.  Negative mass fractions
 are set to zero before normalization.
 """
-function asnormalized(mat::Material{U,V}, n=one(U)) where {U<:AbstractFloat,V<:AbstractFloat}
-    at = analyticaltotal(mat)
-    if isapprox(at, n, rtol=1.0e-8) && startswith(mat.name, "N[")
+function asnormalized(mat::Material{U,V}, n=1.0) where {U<:AbstractFloat,V<:AbstractFloat}
+    if isapprox(analyticaltotal(Float64, mat), n, rtol=1.0e-8) && startswith(mat.name, "N[")
         return mat
     else
-        if at == 0.0
-            at = 1.0
-        end
         return Material(
             "N[$(name(mat)),$(n)]",
-            Dict{Element,U}(elm => n * (nonneg(mat, elm) / at) for elm in keys(mat)),
+            normalizedmassfraction(mat, n),
             mat.a,
             copy(mat.properties),
         )
@@ -496,8 +524,11 @@ Return the sum of the positive mass fractions.
 function analyticaltotal(mat::Material{U,V})::U where {U<:AbstractFloat,V<:AbstractFloat}
     sum(val -> value(val) < 0.0 ? zero(U) : val, values(mat.massfraction); init=zero(U))
 end
-function analyticaltotal(mat::Material{UncertainValue, V})::UncertainValue where {V<:AbstractFloat}
-    sum(map(val -> value(val) < 0.0 ? uv(0.0, σ(val)) : val, values(mat.massfraction)))
+function analyticaltotal(mat::Material{UncertainValue,V})::UncertainValue where {V<:AbstractFloat}
+    sum(map(val -> value(val) < 0.0 ? zero(UncertainValue) : val, values(mat.massfraction)))
+end
+function analyticaltotal(::Type{Float64}, mat::Material{U,V})::Float64 where {U<:AbstractFloat,V<:AbstractFloat}
+    sum(val -> max(0.0, value(val)), values(mat.massfraction))
 end
 
 """

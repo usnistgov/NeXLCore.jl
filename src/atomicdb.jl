@@ -149,7 +149,7 @@ let database_lock = Ref(ReentrantLock())
         if isempty(edgeenergy_data[z])
             withatomicdb() do db
                 # @info "Reading edge data for Z=$z."
-                # Use the MAC edges since this data is more sensitive to edge position
+                # Favor the MAC table edges since this data is more sensitive to edge position
                 if isempty(edgeenergy_data[z])
                     edgeenergy_data[z] = _merge([ "Chantler2005", "Sabbatucci2016", "RELAX2014" ]) do ref
                         readEdgeTable(z, db, ref)
@@ -259,7 +259,7 @@ let database_lock = Ref(ReentrantLock())
 
     global function jumpratio(z::Int, ss::Int)
         jr = get(getjumpratios(z), ss, -1.0)
-        (jr<=0.0) && @error "The jump-ratio is not available for sub-shell $z $(subshells[ss])."
+        # (jr<=0.0) && @error "The jump-ratio is not available for sub-shell $z $(subshells[ss])."
         return jr
     end
 
@@ -284,6 +284,15 @@ let database_lock = Ref(ReentrantLock())
                 ( subshelllookup[r.Ionized], subshelllookup[r.Inner], subshelllookup[r.Outer] ) => r.Probability # 
                     for r in Tables.rows(res) #
             ) : nothing
+    end
+
+    function charact(elm)
+        cxrs = characteristic(elm, alltransitions)
+        print("add(Element.$(name(elm)), new Characteristic[ \n"* #
+            join(
+            map(cxrs) do cxr
+                "\tCharacteristic(SubShell.$(symbol(element(cxr)))_$(subshell(inner(cxr))), SubShell.$(symbol(element(cxr)))_$(subshell(outer(cxr))), $(fluorescenceyield(cxr)))"
+            end, ",\n","\n") *"\n]);")
     end
 
     function getxrayenergies(z::Int)::Dict{Tuple{Int,Int}, Float64}

@@ -525,10 +525,10 @@ function analyticaltotal(mat::Material{U,V})::U where {U<:AbstractFloat,V<:Abstr
     sum(val -> value(val) < 0.0 ? zero(U) : val, values(mat.massfraction); init=zero(U))
 end
 function analyticaltotal(mat::Material{UncertainValue,V})::UncertainValue where {V<:AbstractFloat}
-    sum(map(val -> value(val) < 0.0 ? zero(UncertainValue) : val, values(mat.massfraction)))
+    sum(map(val -> value(val) < 0.0 ? zero(UncertainValue) : val, values(mat.massfraction)); init=zero(UncertainValue))
 end
 function analyticaltotal(::Type{Float64}, mat::Material{U,V})::Float64 where {U<:AbstractFloat,V<:AbstractFloat}
-    sum(val -> max(0.0, value(val)), values(mat.massfraction))
+    sum(val -> max(0.0, value(val)), values(mat.massfraction); init=0.0)
 end
 
 """

@@ -227,11 +227,15 @@ using NeXLCore
         @test typeof(m[:Drizzle]) == Int64
         lm = labeled(m)
         @test all(e -> lm[MassFractionLabel("Hematite", e)] == m[e], keys(m))
-        m = asnormalized(mat"0.8*Fe+0.15*Ni+0.04*Cr", 1.0)
+        mu = mat"0.8*Fe+0.15*Ni+0.04*Cr"
+        @test isapprox(analyticaltotal(mu), 0.8+0.15+0.04)
+        @test isapprox(analyticaltotal(Float64, mu), 0.8+0.15+0.04)
+        m = asnormalized(mu, 1.0)
         @test isapprox(m[n"Fe"], 0.8081, atol = 0.0001)
         @test isapprox(m[n"Ni"], 0.1515, atol = 0.0001)
         @test isapprox(m[n"Cr"], 0.0404, atol = 0.0001)
-        @test analyticaltotal(m) == 1.0
+        @test isapprox(analyticaltotal(m), 1.0)
+        @test isapprox(analyticaltotal(Float64, m), 1.0)
         lm = labeled(m)
         @test all(
             el -> lm[MassFractionLabel("N[0⋅8⋅Fe+0⋅15⋅Ni+0⋅04⋅Cr,1.0]", el)] == m[el],

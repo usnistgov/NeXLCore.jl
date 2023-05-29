@@ -410,7 +410,7 @@ struct Pouchou1991 <: NeXLAlgorithm end
     relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat, ::Type{Pouchou1991})
 
 An approximate expression based of Pouchou and Pouchoir's 1991 (Green Book) expression
-for the ionization crosssection plus an additional factor for sub-shell capacity.
+for the ionization crosssection plus an additional factor for sub-shell occupancy.
 
 Example:
 
@@ -425,7 +425,7 @@ function relativeionizationcrosssection(
     u = ev / energy(ass)
     ss = ass.subshell.index
     m = ss == 1 ? 0.86 + 0.12 * exp(-(0.2 * ass.z)^2) : (ss <= 4 ? 0.82 : 0.78)
-    return capacity(ass.subshell) * log(u) / ((energy(ass)^2) * (u^m))
+    return occupancy(ass) * log(u) / ((energy(ass)^2) * (u^m))
 end
 relativeionizationcrosssection(ass::AtomicSubShell, ev::AbstractFloat) =
     relativeionizationcrosssection(ass, ev, Pouchou1991)

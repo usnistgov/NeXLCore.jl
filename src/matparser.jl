@@ -50,7 +50,7 @@ function _mp_level1(expr::AbstractString, atomicweights::Dict{Element,Float64}, 
         t = reduce((a, b) -> replace(a, b), ("₀" => "0", "₁" => "1", "₂" => "2", "₃" => "3", "₄" => "4", "₅" => "5", "₆" => "6", "₇" => "7", "₈" => "8", "₉" => "9"), init=string(s))
         return (_mp_level2(t, s, atomicweights, lookup), s) # Finally parse expression
     end
-    return mapreduce(f, plus, split(expr, "+"))
+    return mapreduce(f, plus, strip.(split(expr, "+")))
 end
 
 """
@@ -69,7 +69,7 @@ function _mp_level2(expr::AbstractString, raw::AbstractString, atomicweights::Di
             # Convert to mass fractions
             n = sum(aa(elm) * value(v) for (elm, v) in rt)
             r = Dict(elm => (aa(elm) / n) * v for (elm, v) in rt)
-        end
+        end 
         return r
     end
     muv = match(ruv, strip(expr))
@@ -160,9 +160,9 @@ Evaluate simple expressions like Al2O3 or SiO2 etc.
 """
 function _mp_level5(expr::AbstractString)::Dict{Element,Int}
     function eval(res, s)
-        relm = r"^(He|Li|Be|Ne|Na|Mg|Al|Si|Cl|Ar|Ca|Sc|Ti|Cr|Mn|Fe|Co|Ni|Cu|Zn|Ga|Ge|As|Se|Br|Kr|Rb|Sr|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|In|Sn|Sb|Te|Xe|Cs|Ba|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|Re|Os|Ir|Pt|Au|Hg|Tl|Pb|Bi|Po|At|Rn|Fr|Ra|Ac|Th|Pa|Np|Pu|Am|Cm|Bk|Cf|Es|Fm|H|B|C|N|O|F|P|S|K|V|Y|I|W|U)(\d*)(.*)"
+        relm= r"^(He|Li|Be|Ne|Na|Mg|Al|Si|Cl|Ar|Ca|Sc|Ti|Cr|Mn|Fe|Co|Ni|Cu|Zn|Ga|Ge|As|Se|Br|Kr|Rb|Sr|Zr|Nb|Mo|Tc|Ru|Rh|Pd|Ag|Cd|In|Sn|Sb|Te|Xe|Cs|Ba|La|Ce|Pr|Nd|Pm|Sm|Eu|Gd|Tb|Dy|Ho|Er|Tm|Yb|Lu|Hf|Ta|Re|Os|Ir|Pt|Au|Hg|Tl|Pb|Bi|Po|At|Rn|Fr|Ra|Ac|Th|Pa|Np|Pu|Am|Cm|Bk|Cf|Es|Fm|H|B|C|N|O|F|P|S|K|V|Y|I|W|U)(\d*)(.*)"
         m = match(relm, s)
-        isnothing(m) && error("Unable to parse $expr as a simple formula.")
+        isnothing(m) && error("Unable to parse $expr ($s) as a simple formula.")
         elm = parse(Element, m[1])
         res[elm] = get(res, elm, 0) + (length(m[2]) == 0 ? 1 : parse(Int, m[2]))
         return length(m[3]) > 0 ? eval(res, m[3]) : res

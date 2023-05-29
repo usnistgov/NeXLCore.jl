@@ -436,17 +436,20 @@ end
 Returns the mass fraction of 'elm::Element' such that the returned value is non-negative
 and the sum of all values is unity.
 """
-function normalized(mat::Material{U,V}, elm::Element, n=1.0) where {U<:AbstractFloat,V<:AbstractFloat}
+function normalized(mat::Material{UncertainValue,V}, elm::Element, n=1.0)::UncertainValue where {V<:AbstractFloat}
     at = analyticaltotal(Float64, mat)
     if at < 1.0e-8
         at = 1.0
     end
-    function nn(mat::Material{UncertainValue,V}, el)
-        value(mat[el]) < 0.0 ? uv(0.0, σ(mat[el])) : mat[el]
+    nn(mat, el) = value(mat[el]) < 0.0 ? uv(0.0, σ(mat[el])) : mat[el]
+    return (n / at) * nn(mat, elm)
+end
+function normalized(mat::Material{U,V}, elm::Element, n=1.0)::U where {U<:AbstractFloat,V<:AbstractFloat}
+    at = analyticaltotal(Float64, mat)
+    if at < 1.0e-8
+        at = 1.0
     end
-    function nn(mat::Material, el)
-        mat[el] < zero(U) ? zero(U) : mat[el]
-    end
+    nn(mat, el) = mat[el] < zero(U) ? zero(U) : mat[el]
     return (n / at) * nn(mat, elm)
 end
 

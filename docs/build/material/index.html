@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Materials · NeXLCore</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link rel="stylesheet" href="https://pages.nist.gov/nist-header-footer/css/nist-combined.css">
+<script src="https://pages.nist.gov/nist-header-footer/js/jquery-1.9.0.min.js" type="text/javascript" defer="defer"></script>
+<script src="https://pages.nist.gov/nist-header-footer/js/nist-header-footer.js" type="text/javascript" defer="defer"></script>
+</head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../gettingstarted/"><img src="../assets/logo.png" alt="NeXLCore logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../gettingstarted/">NeXLCore</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../gettingstarted/">Getting Started</a></li><li class="is-active"><a class="tocitem" href>Materials</a><ul class="internal"><li><a class="tocitem" href="#Using-Material"><span>Using <code>Material</code></span></a></li></ul></li><li><a class="tocitem" href="../bremsstrahlung/">Bremsstrahlung</a></li><li><a class="tocitem" href="../Au60Ag40unc/">Mass Fraction Uncertainty</a></li><li><a class="tocitem" href="../eta/">Backscatter</a></li><li><a class="tocitem" href="../fluoryield/">Fluorescence Yield</a></li><li><a class="tocitem" href="../OByStoic/">O by Stoichiometry</a></li><li><a class="tocitem" href="../meanionizationpotential/">Mean Ionization Potential</a></li><li><a class="tocitem" href="../methods/">API: Structures and Methods</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Materials</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Materials</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/usnistgov/NeXLCore.jl/blob/master/docs/src/material.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h2 id="Using-Material"><a class="docs-heading-anchor" href="#Using-Material">Using <code>Material</code></a><a id="Using-Material-1"></a><a class="docs-heading-anchor-permalink" href="#Using-Material" title="Permalink"></a></h2><p><code>Material</code> is the data type for working with elemental compositions in <code>NeXL</code>.</p><pre><code class="language-julia hljs">julia&gt; using NeXLCore</code></pre><p>There are various mechanisms to construct a <code>Material</code>.</p><p>If you know the chemical formula, these mechanisms parse the formula.  </p><pre><code class="language-julia hljs">julia&gt; m = mat&quot;Ca5(PO4)3F&quot; # Fluorapatite
+Ca5(PO4)3F[O=0.3807,F=0.0377,P=0.1843,Ca=0.3974]
+
+julia&gt; m = mat&quot;Ca₅(PO₄)₃F&quot; # Equivalent
+Ca₅(PO₄)₃F[O=0.3807,F=0.0377,P=0.1843,Ca=0.3974]
+
+julia&gt; m = parse(Material, &quot;Ca5(PO4)3F&quot;, name = &quot;Fluorapatite&quot;, density = 3.2)  # Equivalent with density of 3.2 g/cm³
+Fluorapatite[O=0.3807,F=0.0377,P=0.1843,Ca=0.3974,3.20 g/cm³]
+
+julia&gt; m = atomicfraction(&quot;Fluorapatite&quot;, n&quot;Ca&quot;=&gt;5, n&quot;P&quot;=&gt;3, n&quot;O&quot;=&gt;12, n&quot;F&quot;=&gt;1, density=3.2)
+Fluorapatite[O=0.3807,F=0.0377,P=0.1843,Ca=0.3974,3.20 g/cm³]</code></pre><p>You can construct pure elements with nominal densities.</p><pre><code class="language-julia hljs">julia&gt; pure(n&quot;Fe&quot;)
+Pure Fe[Fe=1.0000,7.87 g/cm³]
+
+julia&gt; pure(n&quot;Ca&quot;)
+Pure Ca[Ca=1.0000,1.55 g/cm³]</code></pre><p>These mechanisms necessarily produce an analytical total of unity (all the mass fractions sum to one.)</p><p>Other methods are not so constrained.</p><pre><code class="language-julia hljs">julia&gt; m = material(&quot;Fluorapatite&quot;, n&quot;Ca&quot;=&gt;0.1843, n&quot;P&quot;=&gt;0.3974, n&quot;O&quot;=&gt;0.3807, n&quot;F&quot;=&gt;0.0377, density=3.2)
+Fluorapatite[O=0.3807,F=0.0377,P=0.3974,Ca=0.1843,3.20 g/cm³]
+
+julia&gt; analyticaltotal(m)
+1.0001</code></pre><p>It is possible with many of these methods to specify custom atomic weights.</p><pre><code class="language-julia hljs">julia&gt; u1=parse(Material, &quot;U3O8&quot;, atomicweights = Dict(n&quot;U&quot;=&gt;235.0))
+U3O8[O=0.1537,U=0.8463]
+
+julia&gt; u2=parse(Material, &quot;U3O8&quot;, atomicweights = Dict(n&quot;U&quot;=&gt;238.0))
+U3O8[O=0.1520,U=0.8480]</code></pre><p>It is possible to inspect a <code>Material</code>&#39;s atomic weight (either custom like U or default like O).</p><pre><code class="language-julia hljs">julia&gt; a(n&quot;U&quot;, u1)
+235.0
+
+julia&gt; a(n&quot;U&quot;, u2)
+238.0
+
+julia&gt; a(n&quot;O&quot;, u1) == a(n&quot;O&quot;, u2)
+true
+
+julia&gt; a(n&quot;O&quot;, u1) == a(n&quot;O&quot;)
+true</code></pre><p>The parse function can also do elemental mass-fraction math using the <code>+</code> and <code>*</code> operators.</p><pre><code class="language-julia hljs">julia&gt; mat&quot;0.6*Al+0.4*O&quot;
+0⋅6⋅Al+0⋅4⋅O[O=0.4000,Al=0.6000]</code></pre><p>We can sum materials within the parse function...</p><pre><code class="language-julia hljs">julia&gt; mat&quot;0.6*Fe2O3+0.4*FeO2&quot;
+0⋅6⋅Fe2O3+0⋅4⋅FeO2[O=0.3260,Fe=0.6740]</code></pre><p>We can even use a lookup function to map names of materials to compositions.  Using this mechanism, it is possible to look up materials in a database by name or using some other custom mechanism.</p><pre><code class="language-julia hljs">julia&gt; function mylibrary(name)
+           m = get(Dict(&quot;K411&quot;=&gt;NeXLCore.srm470_k411, &quot;K412&quot;=&gt;NeXLCore.srm470_k412), name, missing)
+           ismissing(m) ? missing : massfraction(m)
+       end
+mylibrary (generic function with 1 method)
+
+julia&gt; m=parse(Material,&quot;0.59*K411+0.39*K412&quot;, lookup=mylibrary)
+0⋅59⋅K411+0⋅39⋅K412[O=0.4167,Mg=0.0977,Al=0.0191,Si=0.2324,Ca=0.1077,Fe=0.0964]</code></pre><p>Accessing the composition as mass-fraction is easy.</p><pre><code class="language-julia hljs">julia&gt; m[n&quot;Fe&quot;]
+0.0964 ± 0.0011
+
+julia&gt; m[26]
+0.0964 ± 0.0011
+
+julia&gt; m[92] # Elements that are not present return zero
+0.0e+00 ± 0.0e+00
+
+julia&gt; nonneg(m, n&quot;Fe&quot;)  # Sets negative mass fractions to zero
+0.09637164504859125
+
+julia&gt; nonneg(material(&quot;Cruft&quot;, n&quot;Fe&quot;=&gt;-0.001, n&quot;Al&quot;=&gt;0.999),n&quot;Fe&quot;)
+0.0
+
+julia&gt; [ el=&gt;m[el] for el in keys(m) ]
+6-element Vector{Pair{Element, UncertainValue}}:
+ Element(Aluminium) =&gt; 0.0191 ± 0.0004
+   Element(Calcium) =&gt; 0.1077 ± 0.0010
+      Element(Iron) =&gt; 0.0964 ± 0.0011
+ Element(Magnesium) =&gt; 0.0977 ± 0.0009
+    Element(Oxygen) =&gt; 0.4167 ± 0.0011
+   Element(Silicon) =&gt; 0.2324 ± 0.0007
+
+julia&gt; massfraction(m)
+Dict{Element, AbstractFloat} with 6 entries:
+  Element(Aluminium) =&gt; 0.0191 ± 0.0004
+  Element(Calcium)   =&gt; 0.1077 ± 0.0010
+  Element(Iron)      =&gt; 0.0964 ± 0.0011
+  Element(Magnesium) =&gt; 0.0977 ± 0.0009
+  Element(Oxygen)    =&gt; 0.4167 ± 0.0011
+  Element(Silicon)   =&gt; 0.2324 ± 0.0007</code></pre><p>There are various ways to produce the compositional data in a normalized form.</p><pre><code class="language-julia hljs">julia&gt; normalizedmassfraction(m) # as a Dict(Element, T)
+Dict{Element, UncertainValue} with 6 entries:
+  Element(Aluminium) =&gt; 0.0197 ± 0.0004
+  Element(Calcium)   =&gt; 0.1111 ± 0.0009
+  Element(Iron)      =&gt; 0.0993 ± 0.0010
+  Element(Magnesium) =&gt; 0.1007 ± 0.0008
+  Element(Oxygen)    =&gt; 0.4296 ± 0.0004
+  Element(Silicon)   =&gt; 0.2396 ± 0.0005
+
+julia&gt; normalized(m,n&quot;Fe&quot;) # as a number
+0.0993 ± 0.0011
+
+julia&gt; asnormalized(m) # as a Material
+N[0⋅59⋅K411+0⋅39⋅K412,1.0][O=0.4296,Mg=0.1007,Al=0.0197,Si=0.2396,Ca=0.1111,Fe=0.0993]</code></pre><p>The equivalent in atomic-fraction is</p><pre><code class="language-julia hljs">julia&gt; atomicfraction(m)
+Dict{Element, UncertainValue} with 6 entries:
+  Element(Aluminium) =&gt; 0.0163 ± 0.0004
+  Element(Calcium)   =&gt; 0.0618 ± 0.0006
+  Element(Iron)      =&gt; 0.0397 ± 0.0005
+  Element(Magnesium) =&gt; 0.0924 ± 0.0008
+  Element(Oxygen)    =&gt; 0.5993 ± 0.0016
+  Element(Silicon)   =&gt; 0.1904 ± 0.0005</code></pre><p>Defining and extracting default or custom material properties is easy</p><pre><code class="language-julia hljs">julia&gt; m = parse(Material, &quot;NaAlSi3O8&quot;, density=2.6, name=&quot;Albite&quot;)
+Albite[O=0.4881,Na=0.0877,Al=0.1029,Si=0.3213,2.60 g/cm³]
+
+julia&gt; m[:MyProperty]=12.23
+12.23
+
+julia&gt; m[:MyOtherProperty]=&quot;This or that&quot;
+&quot;This or that&quot;
+
+julia&gt; m[:Density]
+2.6
+
+julia&gt; m[:MyProperty]
+12.23
+
+julia&gt; m[:MyOtherProperty]
+&quot;This or that&quot;</code></pre><p>How many atoms of an element or all elements per gram of material?</p><pre><code class="language-julia hljs">julia&gt; atoms_per_g(m, n&quot;Al&quot;)
+2.2966133865065546e21
+
+julia&gt; atoms_per_g(n&quot;Al&quot;)
+2.231948613447806e22</code></pre><p>Combining the density with the composition we get</p><pre><code class="language-julia hljs">julia&gt; m[:Density]=3.0 # g/cm³
+3.0
+
+julia&gt; atoms_per_cm³(m, n&quot;Al&quot;)
+6.889840159519664e21
+
+julia&gt; atoms_per_cm³(m)
+8.956792207375563e22</code></pre><p>You will notice that when appropriate the mass-fractions and atomic-fractions can has associated uncertainties. Typically, the mass-fractions in a <code>Material</code> are represented by a <code>Float64</code>.  However, it is possible to  use <code>UncertainValue</code> from <code>NeXLUncertainties</code>.</p><pre><code class="language-julia hljs">julia&gt; material(&quot;Stuff&quot;,n&quot;Al&quot; =&gt; uv(0.0163,0.0004), n&quot;Ca&quot; =&gt; uv(0.0618,0.0006), n&quot;Fe&quot;=&gt;uv(0.0397,0.0005), n&quot;Mg&quot;=&gt;uv(0.0924,0.0008),n&quot;O&quot;=&gt;uv(0.5993,0.0016))
+Stuff[O=0.5993,Mg=0.0924,Al=0.0163,Ca=0.0618,Fe=0.0397]
+
+julia&gt; parse(Material, &quot;(0.0163±0.0004)*Al+(0.0618±0.0006)*Ca+(0.0397±0.0005)*Fe+(0.0924±0.0008)*Mg+(0.5993±0.0016)*O&quot;)
+(0⋅0163±0⋅0004)⋅Al+(0⋅0618±0⋅0006)⋅Ca+(0⋅0397±0⋅0005)⋅Fe+(0⋅0924±0⋅0008)⋅Mg+(0⋅5993±0⋅0016)⋅O[O=0.5993,Mg=0.0924,Al=0.0163,Ca=0.0618,Fe=0.0397]</code></pre><p>To summarize the <code>Material</code> we can convert it to a <code>DataFrame</code>.</p><pre><code class="language-julia hljs">julia&gt; using DataFrames
+
+julia&gt; asa(DataFrame, m)
+4×7 DataFrame
+ Row │ Material  Element  Z      A        C(z)       Norm[C(z)]  A(z)
+     │ String    String   Int64  Float64  Float64    Float64     Float64
+─────┼─────────────────────────────────────────────────────────────────────
+   1 │ Albite    O            8  15.999   0.488112    0.488112   0.615385
+   2 │ Albite    Na          11  22.9898  0.0876742   0.0876742  0.0769231
+   3 │ Albite    Al          13  26.9815  0.102897    0.102897   0.0769231
+   4 │ Albite    Si          14  28.085   0.321316    0.321316   0.230769</code></pre><p>Or we can summarize a <code>Material[]</code> in a <code>DataFrame</code></p><pre><code class="language-julia hljs">julia&gt; asa(DataFrame, [ NeXLCore.srm470_k411, NeXLCore.srm470_k412])
+2×8 DataFrame
+ Row │ Material      O          Mg         Al         Si         Ca         Fe         Total
+     │ String        Abstract…  Abstract…  Abstract…  Abstract…  Abstract…  Abstract…  Abstract…
+─────┼────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ SRM-470 K411   0.423686  0.0884662  0.0         0.253818   0.110564  0.112166   9.887000e-01 ± 0.0e+00
+   2 │ SRM-470 K412   0.427576  0.116568   0.0490621   0.211983   0.108991  0.0774201  9.916000e-01 ± 0.0e+00</code></pre><p>We can also compare materials in a <code>DataFrame</code></p><pre><code class="language-julia hljs">julia&gt; compare(NeXLCore.srm470_k411,NeXLCore.srm470_k412)
+6×11 DataFrame
+ Row │ Material 1    Material 2    Elm     C₁(z)            C₂(z)      ΔC           ΔC/C         A₁(z)      A₂(z)      ΔA           ΔA/A
+     │ String        String        String  Uncertai…        Float64    Float64      Float64      Float64    Float64    Float64      Float64
+─────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+   1 │ SRM-470 K411  SRM-470 K412  Ca      0.1090 ± 0.0014  0.110564   -0.00157234  -0.0142211   0.0604414  0.0628022  -0.00236083  -0.0375915
+   2 │ SRM-470 K411  SRM-470 K412  Mg      0.1166 ± 0.0012  0.0884662   0.0281018    0.241076    0.106595   0.0828619   0.023733     0.222647
+   3 │ SRM-470 K411  SRM-470 K412  O       0.4276 ± 0.0018  0.423686    0.0038898    0.00909733  0.593982   0.602871   -0.00888897  -0.0147444
+   4 │ SRM-470 K411  SRM-470 K412  Al      0.0491 ± 0.0011  0.0         0.0490621    1.0         0.040414   0.0         0.040414     1.0
+   5 │ SRM-470 K411  SRM-470 K412  Fe      0.0774 ± 0.0016  0.112166   -0.0347457   -0.309771    0.030812   0.0457243  -0.0149123   -0.326135
+   6 │ SRM-470 K411  SRM-470 K412  Si      0.2120 ± 0.0009  0.253818   -0.0418356   -0.164825    0.167756   0.205741   -0.0379849   -0.184625</code></pre><p>It is possible to do math using the <code>+</code> and <code>*</code> operators ith <code>Material</code> data items.</p><pre><code class="language-julia hljs">julia&gt; m1, m2 = mat&quot;FeO2&quot;, mat&quot;Al2O3&quot;
+(FeO2[O=0.3643,Fe=0.6357], Al2O3[O=0.4707,Al=0.5293])
+
+julia&gt; m3 = 0.9*m1 + 0.1*m2
+0.9⋅FeO2+0.1⋅Al2O3[O=0.3749,Al=0.0529,Fe=0.5722]
+
+julia&gt; isapprox(m3, mat&quot;0.9*FeO2+0.1*Al2O3&quot;)
+true</code></pre><p>There are various different ways to compute the mean atomic number.</p><pre><code class="language-julia hljs">julia&gt; z(m3)
+16.602113041602944
+
+julia&gt; z(NeXLCore.NaiveZ, m3), z(NeXLCore.AtomicFraction, m3), z(NeXLCore.ElectronFraction, m3)
+(18.563572946574325, 13.449627818584222, 18.26890156121255)
+
+julia&gt; z(NeXLCore.ElasticFraction, m3, 10.0e3), z(NeXLCore.Donovan2002, m3)
+(19.82831737587615, 16.602113041602944)</code></pre><p><code>Material</code> data items are used throughout the <code>NeXL</code> libraries.  For example:</p><pre><code class="language-julia hljs">julia&gt; mac(m3, n&quot;O K-L3&quot;)
+2800.893061698401</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../gettingstarted/">« Getting Started</a><a class="docs-footer-nextpage" href="../bremsstrahlung/">Bremsstrahlung »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Monday 26 June 2023 15:07">Monday 26 June 2023</span>. Using Julia version 1.9.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

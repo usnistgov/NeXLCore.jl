@@ -110,7 +110,7 @@ end
 Construct sample consisting of one or more thin films on an optional bulk substrate.
 """
 function thin_film(
-    prs::Pair{Material,Float64}...;
+    prs::Pair{<:Material,Float64}...;
     substrate::Union{Nothing,Material} = nothing,
 )
     c = chamber()
@@ -144,12 +144,12 @@ function allmaterials(reg::Region)
 end
 
 """
-    colorize(reg::Region)::Dict{Material, Color}
+    colorize(reg::Region)::Dict{<:Material, Color}
 
 Generate a `Dict{Material, Color}` for all the `Materials` in the specified `Region`.
 Designed for distinctive but not necessarily attractive colors.
 """
-function colorize(reg::Region)::Dict{Material,Color}
+function colorize(reg::Region)::Dict{<:Material,Color}
     mats = allmaterials(reg)
     colors = distinguishable_colors(
         length(mats) + 2,

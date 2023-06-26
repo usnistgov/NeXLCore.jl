@@ -41,6 +41,13 @@ function buildMaterialTables(db::SQLite.DB)
     end
 end
 
+
+function find(db::SQLite.DB, ::Type{Material}, matname::AbstractString)::Int
+    stmt1 = SQLite.Stmt(db, "SELECT PKEY FROM MATERIAL WHERE NAME=?;")
+    q1 = DBInterface.execute(stmt1, (matname, ))
+    return SQLite.done(q1) ? -1 : first(q1)[:PKEY]
+end
+
 """
     Base.write(db::SQLite.DB, ::Type{Material}, mat::Material)::Int
 
@@ -48,9 +55,14 @@ Add a `Material` to the SQLite database.  Will not overwrite a previously define
 To replace a definition, first `delete!(db, Material, matname)`.
 Returns the database key associated with the `Material`.
 """
-function Base.write(db::SQLite.DB, ::Type{Material}, mat::Material)::Int
-    haskey(db, Material, mat.name) && error("$(mat.name) has already been defined as $(mat).")
-    SQLite.transaction(db) do
+function Base.write(db::SQLite.DB, ::Type{Material}, mat::Material; atol=1.0e-4)::Int
+    pkey = find(db, Material, mat.name)
+    if pkey ≠ -1
+        dbmat = read(db, Material, pkey)
+        if !isapprox(mat, dbmat, atol=atol)
+            error("$(mat.name) has already been defined as $(mat).")
+        end
+    else
         stmt1 = SQLite.Stmt(db, "INSERT INTO MATERIAL (NAME, DENSITY) VALUES ( ?, ? );")
         r = DBInterface.execute(stmt1, (name(mat), get(mat, :Density, missing)))
         pkey = DBInterface.lastrowid(r)
@@ -60,9 +72,10 @@ function Base.write(db::SQLite.DB, ::Type{Material}, mat::Material)::Int
         for (key, val) in filter(p->p[2] isa AbstractString, mat.properties)
             DBInterface.execute(stmt4, (pkey, repr(key)[2:end], val, "String"))
         end
-        return pkey
     end
+    return pkey
 end
+# Base.write(db::SQLite, mat::Material) = write(db, Material,mat)
 
 """
     Base.read(db::SQLite.DB, ::Type{Material}, pkey::Int)::Material
@@ -139,18 +152,16 @@ NeXLCore.material(db::SQLite.DB, matname::AbstractString) =
 Delete the named `Material` from the database.
 """
 function Base.delete!(db::SQLite.DB, ::Type{Material}, matname::AbstractString)
-    DBInterface.transaction(db) do 
-        stmt1 = SQLite.Stmt(db, "SELECT PKEY FROM MATERIAL WHERE NAME=?;")
-        q1 = DBInterface.execute(stmt1, (matname, ))
-        for r1 in q1
-            SQLite.transaction(db) do
-                stmt1 = SQLite.Stmt(db, "DELETE FROM MASSFRACTION where MATKEY=?;")
-                DBInterface.execute(stmt1, (r1[:PKEY], ))
-                stmt2 = SQLite.Stmt(db, "DELETE FROM MATERIALPROPERTY where MATKEY=?;")
-                DBInterface.execute(stmt2, (r1[:PKEY], ))
-                stmt3 = SQLite.Stmt(db, "DELETE FROM MATERIAL where PKEY=?;")
-                DBInterface.execute(stmt3, (r1[:PKEY], ))
-            end
+    stmt1 = SQLite.Stmt(db, "SELECT PKEY FROM MATERIAL WHERE NAME=?;")
+    q1 = DBInterface.execute(stmt1, (matname, ))
+    for r1 in q1
+        SQLite.transaction(db) do
+            stmt1 = SQLite.Stmt(db, "DELETE FROM MASSFRACTION where MATKEY=?;")
+            DBInterface.execute(stmt1, (r1[:PKEY], ))
+            stmt2 = SQLite.Stmt(db, "DELETE FROM MATERIALPROPERTY where MATKEY=?;")
+            DBInterface.execute(stmt2, (r1[:PKEY], ))
+            stmt3 = SQLite.Stmt(db, "DELETE FROM MATERIAL where PKEY=?;")
+            DBInterface.execute(stmt3, (r1[:PKEY], ))
         end
     end
 end

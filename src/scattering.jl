@@ -155,8 +155,8 @@ function σₜ(::Type{Browning1991}, elm::Element, E::Float64)
     )
 end
 function σₜ(::Type{Browning1994}, elm::Element, E::Float64)
-    e = 0.001 * E
-    return 3.0e-18 * z(elm)^1.7 /
+    e = 0.001 * E # eV to keV
+    return (3.0e-18 * z(elm)^1.7) /
            (e + 0.005 * z(elm)^1.7 * sqrt(e) + 0.0007 * z(elm)^2 / sqrt(e))
 end
 
@@ -203,7 +203,7 @@ function Base.rand(
     E::Float64,
 )::NTuple{3,Float64}
     elm′, λ′ = elements[119], 1.0e308
-    for (i, z) in enumerate(keys(mat))
+    for z in keys(mat)
         l = -λ(ty, mat, z, E) * log(rand())
         (elm′, λ′) = l < λ′ ? (z, l) : (elm′, λ′)
     end
@@ -242,9 +242,9 @@ function Base.rand(ty::Type{<:ScreenedRutherfordType}, elm::Element, E::Float64)
     Y = rand()
     return acos(1.0 + (Y - 1.0) / (ϵ(ty, elm, E) * Y + 0.5))
 end
-function Base.rand(ty::Type{Browning1994}, elm::Element, E::Float64)::Float64
-    α, R = 7.0e-3 / (0.001 * E), rand()
-    return acos(1.0 - 2.0 * α * R / (1.0 + α - R))
-end
+#function Base.rand(::Type{Browning1994}, ::Element, E::Float64)::Float64
+#    α, R = 7.0e-3 / (0.001 * E), rand()
+#    return acos(1.0 - 2.0 * α * R / (1.0 + α - R))
+#end
 
 

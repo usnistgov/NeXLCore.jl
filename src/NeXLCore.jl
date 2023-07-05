@@ -209,7 +209,8 @@ export August1989η
 export Pouchou1991η
 export Reimer1998
 export η
-export zbar  # Calculated using Donovan's elastic fraction algorithm
+export zbar  # Calculated using Donovan's improveed average number calculation
+export zfractionaverage # Compute a function of an element averaged using Donovan's improveed average number calculation
 
 include("bethe.jl")
 export BetheEnergyLoss # <: BetheEnergyLoss

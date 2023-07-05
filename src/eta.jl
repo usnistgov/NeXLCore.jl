@@ -114,8 +114,8 @@ Calculate the backscatter coefficient for a material using Armstrong's 1991 algo
 """
 η(ty::Type{<:BackscatterCoefficient}, mat::Material, e0::Float64)::Float64 =
     mapreduce(el -> η(ty, el, e0) * elasticfraction(el, mat, e0), +, keys(mat))
-η(mat::Material, e0::Float64)::Float64 =
-    mapreduce(el -> η(el, e0) * elasticfraction(el, mat, e0), +, keys(mat))
+η(mat::Material, e0::Float64, exp=0.7)::Float64 =
+    zfractionaverage(el -> η(el, e0), mat, exp)
 
 
 
@@ -164,9 +164,10 @@ The electron fraction as defined in:
   publisher={Cambridge University Press}
 }
 """
-function electronfraction(elm::Element, mat::Material)::Float64
-    aw = atomicfraction(mat)
-    return value(get(aw, elm, zero(valtype(aw)))) * z(elm) / mapreduce(el -> value(aw[el]) * z(el), +, keys(mat))
+function electronfraction(elm::Element, mat::Material, exp=1.0)::Float64
+    aw = atomicfraction(convert(Material{Float64,Float64},mat))
+    f(el, aw) = aw * z(el)^exp
+    return f(elm, get(aw, elm, 0.0)) / sum(p->f(p...), aw)
 end
 
 """
@@ -174,8 +175,8 @@ end
 
 The mean atomic number as calculated using
 
-@article{donovan2003compositional,
-  title={Compositional averaging of backscatter intensities in compounds},
+@article{donovan2023compositional,
+  title={An Improved averaging of backscatter intensities in compounds},
   author={Donovan, John J and Pingitore, Nicholas E and Westphal, Andrew},
   journal={Microscopy and Microanalysis},
   volume={9},
@@ -185,7 +186,7 @@ The mean atomic number as calculated using
   publisher={Cambridge University Press}
 }
 
-or, equivalently,
+or, equivalently, (for `exp=1.0`)
 
 @article{saldick1954backscattering,
   title={Backscattering from Targets of Low Atomic Number Bombarded with 1—2 Mev Electrons},
@@ -197,7 +198,19 @@ or, equivalently,
   year={1954},
   publisher={American Institute of Physics}
 }
+"""
+zbar(mat::Material, exp=0.7) = #
+    zfractionaverage(z, mat, exp)
 
 """
-zbar(mat::Material)::Float64 =
-    mapreduce(el -> electronfraction(el, mat) * z(el), +, keys(mat))
+    zfractionaverage(func::Function, mat::Material, exp=0.7)
+
+Average `func(elm)` using Donovan's 2023 improved average number calculation.
+Tests against Donovan's table 2.
+"""
+function zfractionaverage(func::Function, mat::Material, exp=0.7)
+    aw = atomicfraction(convert(Material{Float64,Float64}, mat))
+    f(el, af) = af*z(el)^exp
+    return sum(el->f(el, aw[el])*func(el), keys(aw))/sum(p->f(p...), aw)
+end
+    

@@ -234,7 +234,7 @@ J(::Type{Berger1982}, z::Int) = (
     980.0,
     994.0, # Z = 120-21+1 = 100
 )[z]
-J(ty::Type{Berger1982}, elm::Element) = J(Berger1982, z(elm))
+J(ty::Type{Berger1982}, elm::Element) = J(ty, z(elm))
 J(ty::Type{<:NeXLMeanIonizationPotential}, elm::Element) = J(ty, convert(Float64, z(elm)))
 
 """

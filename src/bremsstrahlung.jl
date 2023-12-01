@@ -233,4 +233,4 @@ end
 # as these models were often based on data from Be window detectors.  Castellano2004a and Trincavelli1997 were
 # designed around the Riveros1993 matrix correction model and don't perform well using CitZAF.
 
-# My current recommendation is Castellano2004a & Riveros1993.
+# My current recommendation is Castellano2004b & CitZAF.

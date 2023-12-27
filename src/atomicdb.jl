@@ -452,7 +452,8 @@ let database_lock = Ref(ReentrantLock())
             end
             # Replace zero values up front with the first non-zero value
             fnz=findfirst(x->x>0.0, vals)
-            intp = interpolate1d(log.(en[fnz:end]), log.(vals[fnz:end]))
+            vals[1:fnz] = vals[fnz]
+            intp = interpolate1d(log.(en[1:end]), log.(vals[1:end]))
             e -> exp(intp(log(e)))
         else
             nothing

@@ -48,7 +48,7 @@ end
 
 """
     KRatio(
-        xray::CharXRay,
+        xray::Vector{CharXRay},
         unkProps::Dict{Symbol,<:Any},
         stdProps::Dict{Symbol,<:Any},
         standard::Material,

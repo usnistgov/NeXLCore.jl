@@ -48,6 +48,6 @@ end
     @test isapprox(η(LoveScott1978η, mat"0.201*Au+0.798*Cu", 20.0e3), 0.3511, atol = 1.0e-3)
     @test isapprox(η(LoveScott1978η, mat"0.801*Au+0.198*Cu", 20.0e3), 0.4610, atol = 1.0e-3)
 
-    @test isapprox(zbar(mat"PbS), 66.053963, atol=0.0001)
-    @test isapprox(zbar(mat"ZrSiO4), 20.5635, atol=0.0001)
+    @test isapprox(zbar(mat"PbS"), 66.053963, atol=0.0001)
+    @test isapprox(zbar(mat"ZrSiO4"), 20.5635, atol=0.0001)
 end

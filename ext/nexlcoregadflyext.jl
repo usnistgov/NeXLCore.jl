@@ -1,4 +1,7 @@
-using .Gadfly
+module NeXLCoreGadflyExt
+
+using NeXLCore
+using Gadfly
 
 using Colors
 using Pkg.Artifacts
@@ -437,3 +440,5 @@ function plot2(
 end
 
 disp(p) = display(Gadfly.GadflyDisplay(), p)
+
+end # module

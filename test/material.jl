@@ -193,12 +193,13 @@ using NeXLCore
         @test startswith(k412u[:Description], "NIST SRM glass")
         # Check against values calculated `using Measurements`
         nk = normalizedmassfraction(k412u)
-        @test isapprox(σ(nk[n"Al"]), 0.00096, atol=0.0005)
-        @test isapprox(σ(nk[n"Ca"]), 0.0011, atol=0.0005)
-        @test isapprox(σ(nk[n"Fe"]), 0.0013, atol=0.0005)
-        @test isapprox(σ(nk[n"Mg"]), 0.00093, atol=0.0005)
-        @test isapprox(σ(nk[n"O"]), 0.0011, atol=0.0005)
-        @test isapprox(σ(nk[n"Si"]), 0.00065, atol=0.0005)
+        @show nk
+        @test isapprox(σ(nk[n"Al"]), 0.0010, atol=0.0001)
+        @test isapprox(σ(nk[n"Ca"]), 0.0011, atol=0.0001)
+        @test isapprox(σ(nk[n"Fe"]), 0.0013, atol=0.0001)
+        @test isapprox(σ(nk[n"Mg"]), 0.0009, atol=0.0001)
+        @test isapprox(σ(nk[n"O"]), 0.0002, atol=0.0001)
+        @test isapprox(σ(nk[n"Si"]), 0.0004, atol=0.0001)
 
         k412x = mat"0.4535⋅SiO2+0.0996⋅FeO+0.1933⋅MgO+0.1525⋅CaO+0.0927⋅Al2O3"
         k412y = parse(

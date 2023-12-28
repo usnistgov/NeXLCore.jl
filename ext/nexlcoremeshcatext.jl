@@ -1,4 +1,8 @@
-using .MeshCat
+module NeXLCoreMeshCatExt
+
+using NeXLCore
+using MeshCat
+using Colors
 using CoordinateTransformations
 
 """
@@ -43,3 +47,5 @@ function draw(vis::Visualizer, e0::Float64, sample::Region, num_trajectories::In
         setobject!(vis["Trajectory[$i]"], PointCloud(pts, colors)) # Add replacements
     end
 end
+
+end # module

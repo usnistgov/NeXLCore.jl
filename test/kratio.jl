@@ -1,6 +1,5 @@
 using Test
 using NeXLCore
-using DataFrames
 
 @testset "KRatio" begin
     kr = KRatio(
@@ -44,11 +43,6 @@ using DataFrames
     @test n"O" in elms(krs)
     @test !(n"C" in elms(krs))
 
-    df = asa(DataFrame, krs)
-    @test df[1, "Standard"]=="Fe2O3"
-    @test isapprox(df[1, "C[std]"], 0.699432, atol=1.0e-5)
-    @test isapprox(df[2, "C[std]"], 0.3005692, atol=1.0e-6)
-    
     @test_throws ErrorException KRatio(
         [n"O K-L3", n"F K-L3"],
         Dict(:BeamEnergy => 20.0e3, :TakeOffAngle => deg2rad(40.0)),

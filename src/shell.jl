@@ -1,4 +1,3 @@
-using DataFrames
 
 # import Base.isequal, Base.show, Base.isless, Base.parse
 
@@ -219,18 +218,6 @@ j(ss::SubShell) = (
     13 // 2
 )[ss.index]
 
-function NeXLUncertainties.asa(::Type{DataFrame}, vss::AbstractVector{SubShell})
-    css = sort(vss, rev=true)
-    return DataFrame(
-        SubShell=css,
-        Shell=shell.(css),
-        n=n.(css),
-        𝓁=l.(css),
-        j=j.(css),
-        Capacity=capacity.(css)
-    )
-end
-
 """
     shell(sh::SubShell)
 
@@ -387,18 +374,6 @@ eachsubshell(elm::Element) = (atomicsubshell(elm, SubShell(ss)) for ss in eached
 
 z(ass::AtomicSubShell) = ass.z
 n(ass::AtomicSubShell) = n(ass.subshell)
-
-function NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSubShell})
-    cva = sort(vass)
-    return DataFrame(
-        AtomicSubShell=cva,
-        SubShell=subshell.(cva),
-        Energy=energy.(cva),
-        ICX_U2=map(a -> ionizationcrosssection(a, 2.0 * energy(a)), cva),
-        JumpRatio=jumpratio.(cva),
-        FluorYield=fluorescenceyield.(cva)
-    )
-end
 
 capacity(ass::AtomicSubShell) = capacity(ass.subshell)
 occupancy(ass::AtomicSubShell) = occupancy(z(ass), ass.subshell.index)

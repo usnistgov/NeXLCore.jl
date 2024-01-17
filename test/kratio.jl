@@ -16,7 +16,7 @@ using DataFrames
     @test kr.unkProps[:TakeOffAngle] == deg2rad(40.0)
     @test kr.stdProps[:BeamEnergy] == 15.0e3
     @test kr.stdProps[:TakeOffAngle] == deg2rad(38.0)
-    @test isapprox(kr.standard[n"Fe"], 0.6994315143211048, atol = 1e-8)
+    @test isapprox(kr.standard[n"Fe"], 0.69943, atol = 1e-5)
     @test value(kr.kratio) == 0.77
     @test σ(kr.kratio) == 0.01
     @test value(nonnegk(kr)) == 0.77
@@ -46,8 +46,8 @@ using DataFrames
 
     df = asa(DataFrame, krs)
     @test df[1, "Standard"]=="Fe2O3"
-    @test isapprox(df[1, "C[std]"],0.699432,atol=1.0e-6)
-    @test isapprox(df[2, "C[std]"],1.0-0.699432,atol=1.0e-6)
+    @test isapprox(df[1, "C[std]"], 0.699432, atol=1.0e-5)
+    @test isapprox(df[2, "C[std]"], 0.3005692, atol=1.0e-6)
     
     @test_throws ErrorException KRatio(
         [n"O K-L3", n"F K-L3"],

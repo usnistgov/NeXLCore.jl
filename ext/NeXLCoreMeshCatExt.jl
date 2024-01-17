@@ -10,7 +10,7 @@ using CoordinateTransformations
 
 Draw the samples on the visualizer in translucent colors by Material. 
 """
-function draw(
+function NeXLCore.draw(
     vis::Visualizer,
     region::Region,
     colors::Dict{Material,Color},
@@ -33,7 +33,7 @@ function draw(
     end
 end
 
-function draw(vis::Visualizer, e0::Float64, sample::Region, num_trajectories::Int = 100)
+function NeXLCore.draw(vis::Visualizer, e0::Float64, sample::Region, num_trajectories::Int = 100)
     matcolors = colorize(sample)
     # Run many trajectories
     draw(vis, sample, matcolors, "Sample")

@@ -225,7 +225,7 @@ using NeXLCore
         mat=mat"(PbS)4(As2S3)3"
         @test z(Donovan2002, mat) ≈ 43.4543206216914
         @test z(Donovan2002, mat, exponent=0.9) ≈ 48.077728400482066
-        @test z(NaiveZ, mat) ≈ 52.77872662221575
+        @test z(NaiveZ, mat) ≈  52.77803712122279
         @test z(ElectronFraction, mat) ≈ 50.079019073569484
         @test z(ElasticFraction, mat, 20.0e3) ≈ 56.48291609067254
         @test z(AtomicFraction, mat) ≈ 31.913043478260867

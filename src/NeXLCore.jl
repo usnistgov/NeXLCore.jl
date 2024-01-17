@@ -2,7 +2,6 @@ module NeXLCore
 
 using Reexport
 using LinearAlgebra
-using DataFrames
 using DataDeps, Downloads
 
 @reexport using PeriodicTable
@@ -149,7 +148,6 @@ export Material # Material struct
 # export Base.keys # Element keys into Material
 export name # Material name
 export properties # Material, Spectrum or Other properties
-export compare # Compare compositions as a DataFrame
 export elms # Use elms instead of elements since elements taken by PeriodicTable
 export nonneg # Returns the mass fraction as a Float64 >= 0.0
 export atoms_per_cm³ # Returns the number of atoms in one cm² of the Material
@@ -171,11 +169,6 @@ include("stoichiometry.jl")
 export asoxide # Compute the standard oxide
 export valence # a table of elemental valences (valence[z(n"O")] = -2)
 export obystoichiometry # computes the mass fraction of O using valence rules.
-
-export NeXLPalette
-export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions
-export plotXrayWeights # Plot weights of lines
-export plotEdgeEnergies # Plot edge energies
 
 include("bremsstrahlung.jl")
 export NeXLBremsstrahlung # <: NeXLAlgorithm
@@ -350,4 +343,29 @@ function __init__()
     )
 end
 
+# Implemented in NeXLCoreGadflyExt (dummy implementations here)
+export NeXLPalette
+export plotXrayEnergies # A Gadfly plot of X-ray energies for a set of transitions
+function plotXrayEnergies() end
+export plotXrayWeights # Plot weights of lines
+function plotXrayWeights() end
+export plotEdgeEnergies # Plot edge energies
+function plotEdgeEnergies() end
+export compareMACs
+function compareMACs() end
+export plot2 
+function plot2() end
+# Implemented in NeXLCoreDataFramesExt (dummy implementations here)
+export compare
+function compare() end
+export loadmineraldata
+function loadmineraldata(::Type{Material}) end
+export loadsmithsoniandata
+function loadsmithsoniandata(::Type{Material}) end
+export wikidata_minerals
+function wikidata_minerals(::Type{Material}) end
+
+# Implemented in NeXLCoreMeshCatExt (dummy implementations here)
+export draw
+function draw() end
 end

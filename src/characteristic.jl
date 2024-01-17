@@ -327,17 +327,3 @@ end
 function Base.show(io::IO, cxrs::AbstractVector{CharXRay})
     print(io, name(cxrs))
 end
-
-function NeXLUncertainties.asa(::Type{DataFrame}, cxrs::AbstractVector{CharXRay})
-    cc = sort(cxrs)
-    return DataFrame(
-        XRay=cc,
-        Inner=inner.(cc),
-        Outer=outer.(cc),
-        Energy=energy.(cc),
-        Relax=weight.(NormalizeRaw, cc),
-        WgtByShell=weight.(NormalizeByShell, cc),
-        WgtBySubShell=weight.(NormalizeBySubShell, cc),
-        Weight=weight.(NormalizeToUnity, cc),
-    )
-end

@@ -88,7 +88,8 @@ Methods:
     > Statistics.mean(krs::AbstractVector{KRatio})::UncertainValue
     > Base.getindex(krs::AbstractVector{KRatio}, cxr::CharXRay)
     > strip(krs::AbstractVector{KRatio}, els::Element...)::Vector{KRatio}
-    > asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
+	> using DataFrames
+    > DataFrame(krs::AbstractVector{KRatio})::DataFrame
 """
 struct KRatio <: KRatioBase
     element::Element
@@ -167,21 +168,6 @@ Base.strip(krs::AbstractVector{KRatio}, els::Element...) =
 
 Base.show(io::IO, kr::KRatio) =
     print(io, "k[$(name(kr.xrays)), $(name(kr.standard))] = $(round(kr.kratio))")
-
-function NeXLUncertainties.asa(::Type{DataFrame}, krs::AbstractVector{KRatio})::DataFrame
-    return DataFrame(
-        Symbol("X-rays") => [ repr(kr.xrays) for kr in krs ],
-        Symbol("Standard") => [ name(kr.standard) for kr in krs ],
-        Symbol("C[std]") => [ value(kr.standard[kr.element]) for kr in krs ],
-        Symbol("ΔC[std]") => [ σ(kr.standard[kr.element]) for kr in krs ],
-        Symbol("E₀[unk]") => [ get(kr.unkProps, :BeamEnergy, missing) for kr in krs ],
-        Symbol("θ[unk]") => [ get(kr.unkProps, :TakeOffAngle, missing) for kr in krs ],
-        Symbol("E₀[std]") => [ get(kr.stdProps, :BeamEnergy, missing) for kr in krs ],
-        Symbol("θ[std]") => [ get(kr.stdProps, :TakeOffAngle, missing) for kr in krs ],
-        Symbol("k") => [ value(kr.kratio) for kr in krs ],
-        Symbol("Δk") => [ σ(kr.kratio) for kr in krs ],
-    )
-end
 
 """
 `KRatios` represents the hyper-spectral equivalent of the KRatio type.  Each pixel in the `KRatios` object

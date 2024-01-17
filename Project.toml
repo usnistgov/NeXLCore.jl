@@ -2,7 +2,7 @@ name = "NeXLCore"
 uuid = "93a0284f-3680-435e-8d39-dd6e52a1dbc8"
 authors = ["Nicholas W.M. Ritchie <nicholas.ritchie@nist.gov>"]
 repo-url = "https://github.com/usnistgov/NeXLCore.jl"
-version = "0.3.14"
+version = "0.3.15-dev"
 
 [deps]
 BoteSalvatICX = "fe54227b-96c7-489b-9963-dd1ce2905f30"
@@ -14,13 +14,11 @@ ConcurrentCollections = "5060bff5-0b44-40c5-b522-fcd3ca5cecdd"
 CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
 DBInterface = "a10d1c49-ce27-4219-8d33-6db1a4562965"
 DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dierckx = "39dd38d3-220a-591b-8e3c-4c3a8c710a94"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
-LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
 Measures = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
@@ -44,10 +42,14 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 [weakdeps]
 Gadfly = "c91e804a-d5a3-530f-b6f0-dfbca275c004"
 MeshCat = "283c5d60-a78f-5afe-a0af-af636b173e11"
+LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 
 [extensions]
 NeXLCoreGadflyExt = "Gadfly"
 NeXLCoreMeshCatExt = "MeshCat"
+NeXLCoreDataFramesExt = "DataFrames"
+NeXLCoreLaTeXStringsExt = "LaTeXStrings"
 
 [compat]
 BoteSalvatICX = "2.0.1"

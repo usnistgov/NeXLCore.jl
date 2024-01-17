@@ -161,39 +161,3 @@ const atomic_weight = Dict{Element, AbstractFloat}(
 )
 
 NeXLUncertainties.value(r::NumberInterval) = mid(r)
-
-"""
-    asa(::Type{DataFrame}, links::Dict{Element,String})
-
-Create a DataFrame which contains a periodic table with links to URLs.
-This doesn't work so well at the REPL when represented as text but works
-nicely in HTML.
-"""
-function NeXLUncertainties.asa(::Type{DataFrame}, links::Dict{Element,String})
-    blank = Markdown.parse("")
-    df=DataFrame(
-        IA=fill(blank, 10),
-        IIA=fill(blank, 10),
-        IIIB=fill(blank, 10),
-        IVB=fill(blank, 10),
-        VB=fill(blank, 10),
-        VIB=fill(blank, 10),
-        VIIB=fill(blank, 10),
-        VIII₁=fill(blank, 10),
-        VIII₂=fill(blank, 10),
-        VIII₃=fill(blank, 10),
-        IB=fill(blank, 10),
-        IIB=fill(blank, 10),
-        IIIA=fill(blank, 10),
-        IVA=fill(blank, 10),
-        VA=fill(blank, 10),
-        VIA=fill(blank, 10),
-        VIIA=fill(blank, 10),
-        VIIIA=fill(blank, 10),
-        copycols = false
-    )
-    for el in elements
-        df[el.ypos, el.xpos] = Markdown.parse(haskey(links,el) ? "[$(el.symbol)]($(links[el]))" : el.symbol)
-    end
-    return df
-end

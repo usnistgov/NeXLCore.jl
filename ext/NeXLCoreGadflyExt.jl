@@ -2,11 +2,9 @@ module NeXLCoreGadflyExt
 
 using NeXLCore
 using Gadfly
-
 using Colors
 using Pkg.Artifacts
 using CSV
-using DataFrames
 using Statistics
 using CategoricalArrays
 
@@ -66,7 +64,7 @@ function plotXrayEnergies(transitions::AbstractVector{Transition}; palette = NeX
     )
 end
 
-function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Bool = false; palette = NeXLPalette)
+function plotXrayWeights(transitions::AbstractVector{Transition}; palette = NeXLPalette)
     layers, names, colors = [], String[], []
     for (tr, col) in zip(transitions, Iterators.cycle(palette))
         elems = filter(e->has(e,tr), eachelement())
@@ -77,49 +75,12 @@ function plotXrayWeights(transitions::AbstractVector{Transition}, schoonjan::Boo
                 layers,
                 Gadfly.layer(
                     x = [ z(elm) for elm in elems ],
-                    y = [weight(schoonjan ? NormalizeBySubShell : NormalizeByShell, characteristic(elm, tr)) for elm in elems ],
+                    y = [weight(NormalizeByShell, characteristic(elm, tr)) for elm in elems ],
                     Geom.point,
                     Gadfly.Theme(default_color = col),
                 )
             )
         end
-    end
-    if schoonjan  # Compare to Shoonjan's xraylib on GitHub
-        function parse2(tr)
-            ss1, ss2 = missing, missing
-            try
-                if tr[1] == 'K'
-                    ss1 = n"K1"
-                    ss2 =
-                        (tr[2] ≠ 'O' && tr[2] ≠ 'P') ? parse(SubShell, tr[2:end]) :
-                        (tr[2] == 'O' ? n"O3" : n"P3")
-                else
-                    ss1 = parse(SubShell, tr[1:2])
-                    ss2 =
-                        (tr[3] ≠ 'O' && tr[3] ≠ 'P') ? parse(SubShell, tr[3:end]) :
-                        (tr[3] == 'O' ? n"O3" : n"P3")
-                end
-                return exists(ss1, ss2) ? Transition(ss1, ss2) : missing
-            catch
-                return missing
-            end
-        end
-        artpath = downloadschoonjan()
-        csv = CSV.read(
-            joinpath(artpath, "radrate.dat"),
-            DataFrame,
-            delim = ' ',
-            ignorerepeated = true,
-            header = 0,
-        )
-        insertcols!(csv, 3, :Column2p => parse2.(csv[!, :Column2]))
-        filter!(r -> (!ismissing(r[:Column2p])) && (r[:Column2p] in transitions), csv)
-        insertcols!(
-            csv,
-            3,
-            :Column2pp => CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2p])),
-        )
-        append!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2pp))
     end
     Gadfly.plot(
         layers...,
@@ -145,29 +106,7 @@ function Gadfly.plot(sss::AbstractVector{SubShell}, mode = :EdgeEnergy)
     end
 end
 
-# Download the data once per installation...
-function downloadschoonjan()
-    artifacts_toml = joinpath(@__DIR__, "Artifacts.toml")
-    hash = artifact_hash("schoonjan", artifacts_toml)
-    if hash === nothing || !artifact_exists(hash)
-        hash = create_artifact() do artifact_dir
-            # We create the artifact by simply downloading a few files into the new artifact directory
-            download(
-                "https://github.com/tschoonj/xraylib/blob/master/data/fluor_yield.dat?raw=true",
-                joinpath(artifact_dir, "fluor_yield.dat"),
-            )
-            download(
-                "https://github.com/tschoonj/xraylib/blob/master/data/radrate.dat?raw=true",
-                joinpath(artifact_dir, "radrate.dat"),
-            )
-        end
-        bind_artifact!(artifacts_toml, "schoonjan", hash)
-        @info "Downloaded Schoonjan data into Archive."
-    end
-    return artifact_path(hash)
-end
-
-function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = false)
+function plotFluorescenceYield(sss::AbstractVector{SubShell})
     layers, names = [], String[]
     colors = distinguishable_colors(
         length(sss) + 2,
@@ -187,24 +126,6 @@ function plotFluorescenceYield(sss::AbstractVector{SubShell}, schoonjan::Bool = 
                 )
             )
         end
-    end
-    if schoonjan
-        artpath = downloadschoonjan()
-        csv = CSV.read(
-            joinpath(artpath, "fluor_yield.dat"),
-            DataFrame,
-            delim = ' ',
-            ignorerepeated = true,
-            header = 0,
-        )
-        sssname = [repr(ss) for ss in sss]
-        filter!(r -> r[:Column2] in sssname, csv)
-        insertcols!(
-            csv,
-            3,
-            Column2p = CategoricalArray(map(n -> "Schoonj $n", csv[!, :Column2])),
-        )
-        append!(layers, layer(csv, x = :Column1, y = :Column3, color = :Column2p))
     end
     Gadfly.plot(
         layers...,

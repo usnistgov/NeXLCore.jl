@@ -1,8 +1,6 @@
 # Defines the Material struct and functions on it.
 using Unitful
 using Printf
-using DataFrames
-using LaTeXStrings
 import Base.rand
 import Statistics
 
@@ -605,122 +603,6 @@ function atomicfraction(
         conductivity=conductivity
     )
 end
-
-"""
-    NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
-
-Tabulate the composition of this Material as a DataFrame.  Columns for
-material name, element abbreviation, atomic number, atomic weight, mass fraction,
-normalized mass fraction, and atomic fraction. Rows for each element in mat.
-"""
-function NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)
-    af, nmf = atomicfraction(mat), normalizedmassfraction(mat)
-    els = sort(collect(keys(mat)))
-    return DataFrame(
-        "Material" => [name(mat) for _ in els],
-        "Element" => [el.symbol for el in els],
-        "Z" => [z(el) for el in els],
-        "A" => [a(el, mat) for el in els],
-        "C(z)" => [mat[el] for el in els],
-        "Norm[C(z)]" => [nmf[el] for el in els],
-        "A(z)" => [af[el] for el in els]
-    )
-end
-
-"""
-    NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractArray{Material}, mode=:MassFraction)
-
-Tabulate the composition of a list of materials in a DataFrame.  One column
-for each element in any of the materials.
-
-    mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
-"""
-function NeXLUncertainties.asa(
-    ::Type{DataFrame},
-    mats::AbstractArray{<:Material},
-    mode=:MassFraction,
-)
-    elms = sort(collect(union(keys.(mats)...))) # array of sorted Element
-    cols = (Symbol("Material"), Symbol.(symbol.(elms))..., Symbol("Total")) # Column names
-    empty = NamedTuple{cols}(
-        map(c -> c == :Material ? Vector{String}() : Vector{AbstractFloat}(), cols),
-    )
-    res = DataFrame(empty) # Emtpy data frame with necessary columns
-    for mat in mats
-        vals = if mode == :AtomicFraction
-            atomicfraction(mat)
-        elseif mode == :NormalizedMassFraction
-            normalizedmassfraction(mat)
-        else
-            massfraction(mat)
-        end
-        tmp = [
-            name(mat),
-            (value(get(vals, elm, 0.0)) for elm in elms)...,
-            analyticaltotal(mat),
-        ]
-        push!(res, tmp)
-    end
-    return res
-end
-
-"""
-    NeXLUncertainties.asa(::Type{LaTeXString}, mat::Material; parsename=true, order = :massfraction | :z)
-
-Converts a `Material` into a `LaTeXString`.  `parsename` controls whether the material name is assumed to
-be a parsable chemical formula (according to \\ce{...}).
-"""
-function NeXLUncertainties.asa(
-    ::Type{LaTeXString},
-    mat::Material;
-    parsename=true,
-    order=:massfraction
-)
-    elms = if order == :massfraction
-        sort(collect(keys(mat)), lt=(e1, e2) -> mat[e1] > mat[e2])
-    else
-        sort(collect(keys(mat)))
-    end
-    cstr = join(
-        ["\\ce{$(symbol(elm))}:\\num{$(round(mat[elm], digits=4))}" for elm in elms],
-        ", ",
-    )
-    nm = parsename ? "\\ce{$(name(mat))}" : "\\mathrm{$(name(mat))}"
-    return latexstring("$nm~:~\\left( $cstr \\mathrm{~by~mass} \\right)")
-end
-
-"""
-    compare(unk::Material, known::Material)::DataFrame
-
-Compare two compositions in a DataFrame.
-"""
-function compare(unk::Material, known::Material)::DataFrame
-    afk, afr = atomicfraction(known), atomicfraction(unk)
-    els = collect(union(keys(known), keys(unk)))
-    return DataFrame(
-        Symbol("Material 1") => [name(unk) for _ in els],
-        Symbol("Material 2") => [name(known) for _ in els],
-        Symbol("Elm") => [symbol(el) for el in els],
-        Symbol("C₁(z)") => [known[el] for el in els],
-        Symbol("C₂(z)") => [value(unk[el]) for el in els],
-        Symbol("ΔC") => [value(known[el]) - value(unk[el]) for el in els],
-        Symbol("ΔC/C") => map(els) do el
-            (value(known[el]) - value(unk[el])) / #
-            max(value(known[el]), value(unk[el]))
-        end,
-        Symbol("A₁(z)") => [value(get(afk, el, 0.0)) for el in els],
-        Symbol("A₂(z)") => [value(get(afr, el, 0.0)) for el in els],
-        Symbol("ΔA") => [value(get(afk, el, 0.0)) - value(get(afr, el, 0.0)) for el in els],
-        Symbol("ΔA/A") => map(els) do el
-            (value(get(afk, el, 0.0)) - value(get(afr, el, 0.0))) / #
-            max(value(get(afk, el, 0.0)), value(get(afr, el, 0.0)))
-        end, copycols=false
-    )
-end
-
-compare(unks::AbstractVector{<:Material}, known::Material) =
-    mapreduce(unk -> compare(unk, known), append!, unks)
-
 
 """
     mac(mat::Material, xray::Union{Float64,CharXRay}, alg::Type{<:NeXLAlgorithm}=DefaultAlgorithm)::Float64

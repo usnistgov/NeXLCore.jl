@@ -162,17 +162,17 @@ function NeXLCore.compare(unk::Material, known::Material)::DataFrame
         Symbol("Material 1") => [name(unk) for _ in els],
         Symbol("Material 2") => [name(known) for _ in els],
         Symbol("Elm") => [symbol(el) for el in els],
-        Symbol("C₁(z)") => [known[el] for el in els],
-        Symbol("C₂(z)") => [value(unk[el]) for el in els],
-        Symbol("ΔC") => [value(known[el]) - value(unk[el]) for el in els],
-        Symbol("ΔC/C") => map(els) do el
-            (value(known[el]) - value(unk[el])) / value(known[el])
+        Symbol("C₁(z)") => [value(unk[el]) for el in els],
+        Symbol("C₂(z)") => [known[el] for el in els],
+        Symbol("ΔC") => [value(unk[el]) - value(known[el]) for el in els],
+        Symbol("RDEV[C]") => map(els) do el
+            (value(unk[el]) - value(known[el])) / value(known[el])
         end,
-        Symbol("A₁(z)") => [value(get(afk, el, 0.0)) for el in els],
-        Symbol("A₂(z)") => [value(get(afr, el, 0.0)) for el in els],
-        Symbol("ΔA") => [value(get(afk, el, 0.0)) - value(get(afr, el, 0.0)) for el in els],
-        Symbol("ΔA/A") => map(els) do el
-            (value(get(afk, el, 0.0)) - value(get(afr, el, 0.0))) / value(get(afk, el, 0.0))
+        Symbol("A₁(z)") => [value(get(afr, el, 0.0)) for el in els],
+        Symbol("A₂(z)") => [value(get(afk, el, 0.0)) for el in els],
+        Symbol("ΔA") => [value(get(afr, el, 0.0)) - value(get(afk, el, 0.0)) for el in els],
+        Symbol("RDEV[A]") => map(els) do el
+            (value(get(afr, el, 0.0)) - value(get(afk, el, 0.0))) / value(get(afk, el, 0.0))
         end, copycols=false
     )
 end
@@ -255,8 +255,8 @@ function NeXLCore.loadmineraldata(parseit::Bool = false)::DataFrame
                 return parse(Material, str, properties=props, name = row["Mineral Name"])
             end
         catch e
-            @warn "\"" * str * "\"  " * repr(e)
-            return missing
+            # @warn "\"" * str * "\"  " * repr(e)
+            return nothing
         end
     end
     if parseit
@@ -304,7 +304,7 @@ are included.  Replicas were removed.
 Also includes `:Class`, `:Formula` and `:Description` properties.
 """
 function NeXLCore.wikidata_minerals()::Dict{String, Material}
-    df = CSV.read(joinpath(@__DIR__, "..", "..", "data", "minerals.csv"), DataFrame)
+    df = CSV.read(joinpath(@__DIR__, "..", "data", "minerals.csv"), DataFrame)
     res = map(Tables.rows(df)) do r
         mat = missing
         try

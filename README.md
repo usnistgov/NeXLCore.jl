@@ -1,15 +1,13 @@
 # ![NeXL Logo](NeXL_sm.png)Core
 
 ## Core X-ray Microanalysis Data and Algorithms
-| **Documentation**                        | **Build Status**                  |
-|:----------------------------------------:|:---------------------------------:|
-| [![][docs-stable-img]][docs-stable-url]  | [![][travis-img]][travis-url]     |
+| **Documentation**                        | 
+|:----------------------------------------:|
+| [![][docs-stable-img]][docs-stable-url]  |
 
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://pages.nist.gov/NeXLCore.jl
-[travis-img]: https://travis-ci.com/usnistgov/NeXLCore.jl.svg?branch=master
-[travis-url]: https://travis-ci.com/usnistgov/NeXLCore.jl
 
 #### Installation
 Install NeXLCore using the Julia package manager

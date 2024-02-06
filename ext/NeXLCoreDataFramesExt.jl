@@ -6,6 +6,25 @@ using PeriodicTable
 using CSV
 using DataFrames
 
+"""
+Special `DataFrame` methods for `NeXLCore` data types.  Requires `import DataFrame`.
+
+    DataFrame(vss::AbstractVector{SubShell})
+    
+    DataFrame(vass::AbstractVector{AtomicSubShell})
+
+    DataFrame(cxrs::AbstractVector{CharXRay})
+
+    DataFrame(mat::Material)
+
+    DataFrame(mats::AbstractVector{Material}, mode=[ :MassFraction | :NormalizedMassFraction | :AtomicFraction ])
+        
+    DataFrame(::Type{Element}, links::Dict{Element,String})
+
+Creates a DataFrame which contains a periodic table with links to URLs.
+This doesn't work so well at the REPL when represented as text but works
+nicely when the `Markdown` is converted to HTML.
+        """
 function DataFrames.DataFrame(cxrs::AbstractVector{CharXRay})
     cc = sort(cxrs)
     return DataFrame(
@@ -21,11 +40,6 @@ function DataFrames.DataFrame(cxrs::AbstractVector{CharXRay})
 end
 
 """
-DataFrames.DataFrame(::Type{Element}, links::Dict{Element,String})
-
-Create a DataFrame which contains a periodic table with links to URLs.
-This doesn't work so well at the REPL when represented as text but works
-nicely in HTML.
 """
 function DataFrames.DataFrame(::Type{Element}, links::Dict{Element,String})
     blank = Markdown.parse("")
@@ -71,13 +85,6 @@ function DataFrames.DataFrame(krs::AbstractVector{KRatio})::DataFrame
     )
 end
 
-"""
-    DataFrames.DataFrame(mat::Material)
-
-Tabulate the composition of this Material as a DataFrame.  Columns for
-material name, element abbreviation, atomic number, atomic weight, mass fraction,
-normalized mass fraction, and atomic fraction. Rows for each element in mat.
-"""
 function DataFrames.DataFrame(mat::Material)
     af, nmf = atomicfraction(mat), normalizedmassfraction(mat)
     els = sort(collect(keys(mat)))
@@ -92,14 +99,6 @@ function DataFrames.DataFrame(mat::Material)
     )
 end
 
-"""
-    DataFrames.DataFrame(mats::AbstractVector{Material}, mode=:MassFraction)
-
-Tabulate the composition of a list of materials in a DataFrame.  One column
-for each element in any of the materials.
-
-    mode = :MassFraction | :NormalizedMassFraction | :AtomicFraction.
-"""
 function DataFrames.DataFrame(
     mats::AbstractVector{T},
     mode::Symbol=:MassFraction,
@@ -124,7 +123,7 @@ function DataFrames.DataFrame(
         map(elms) do elm 
             Symbol(symbol(elm)) =>  map(mat->value(get(vals[mat], elm, 0.0)), mats)
         end...,
-        Symbol("Analytical Total") => analyticaltotal.(mats)
+        Symbol("Analytical Total") => value.(analyticaltotal.(mats))
     )
 end
 
@@ -154,8 +153,7 @@ end
 
 """
     compare(unk::Material, known::Material)::DataFrame
-
-Compare two compositions in a DataFrame.
+    compare(unks::AbstractVector{<:Material}, known::Material)
 """
 function NeXLCore.compare(unk::Material, known::Material)::DataFrame
     afk, afr = atomicfraction(known), atomicfraction(unk)
@@ -164,19 +162,17 @@ function NeXLCore.compare(unk::Material, known::Material)::DataFrame
         Symbol("Material 1") => [name(unk) for _ in els],
         Symbol("Material 2") => [name(known) for _ in els],
         Symbol("Elm") => [symbol(el) for el in els],
-        Symbol("C₁(z)") => [known[el] for el in els],
-        Symbol("C₂(z)") => [value(unk[el]) for el in els],
-        Symbol("ΔC") => [value(known[el]) - value(unk[el]) for el in els],
-        Symbol("ΔC/C") => map(els) do el
-            (value(known[el]) - value(unk[el])) / #
-            max(value(known[el]), value(unk[el]))
+        Symbol("C₁(z)") => [value(unk[el]) for el in els],
+        Symbol("C₂(z)") => [known[el] for el in els],
+        Symbol("ΔC") => [value(unk[el]) - value(known[el]) for el in els],
+        Symbol("RDEV[C]") => map(els) do el
+            (value(unk[el]) - value(known[el])) / value(known[el])
         end,
-        Symbol("A₁(z)") => [value(get(afk, el, 0.0)) for el in els],
-        Symbol("A₂(z)") => [value(get(afr, el, 0.0)) for el in els],
-        Symbol("ΔA") => [value(get(afk, el, 0.0)) - value(get(afr, el, 0.0)) for el in els],
-        Symbol("ΔA/A") => map(els) do el
-            (value(get(afk, el, 0.0)) - value(get(afr, el, 0.0))) / #
-            max(value(get(afk, el, 0.0)), value(get(afr, el, 0.0)))
+        Symbol("A₁(z)") => [value(get(afr, el, 0.0)) for el in els],
+        Symbol("A₂(z)") => [value(get(afk, el, 0.0)) for el in els],
+        Symbol("ΔA") => [value(get(afr, el, 0.0)) - value(get(afk, el, 0.0)) for el in els],
+        Symbol("RDEV[A]") => map(els) do el
+            (value(get(afr, el, 0.0)) - value(get(afk, el, 0.0))) / value(get(afk, el, 0.0))
         end, copycols=false
     )
 end
@@ -185,6 +181,14 @@ NeXLCore.compare(unks::AbstractVector{<:Material}, known::Material) =
     mapreduce(unk -> compare(unk, known), append!, unks)
 
 
+"""
+    loadmineraldata(parseit::Bool = false)::DataFrame
+
+Loads [RRUFF](https://rruff.info/) mineral database into a `DataFrame`.  Parsing the data
+only works for a sub-set of the compositions.  Unparsable compositions are set to `missing`.
+The database uses the special abbrevations `Ln`, `An` and `REE` to refer to lanthanides, 
+actinides and rare-earth elements.
+"""
 function NeXLCore.loadmineraldata(parseit::Bool = false)::DataFrame
     minpath = datadep"RUFFDatabase"
     res = CSV.File(joinpath(minpath, "RRUFF_Export_20191025_022204.csv")) |> DataFrame
@@ -251,8 +255,8 @@ function NeXLCore.loadmineraldata(parseit::Bool = false)::DataFrame
                 return parse(Material, str, properties=props, name = row["Mineral Name"])
             end
         catch e
-            @warn "\"" * str * "\"  " * repr(e)
-            return missing
+            # @warn "\"" * str * "\"  " * repr(e)
+            return nothing
         end
     end
     if parseit
@@ -300,7 +304,7 @@ are included.  Replicas were removed.
 Also includes `:Class`, `:Formula` and `:Description` properties.
 """
 function NeXLCore.wikidata_minerals()::Dict{String, Material}
-    df = CSV.read(joinpath(@__DIR__, "..", "..", "data", "minerals.csv"), DataFrame)
+    df = CSV.read(joinpath(@__DIR__, "..", "data", "minerals.csv"), DataFrame)
     res = map(Tables.rows(df)) do r
         mat = missing
         try

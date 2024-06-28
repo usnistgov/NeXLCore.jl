@@ -168,6 +168,7 @@ export parsedtsa2comp # Parse a mass fraction (+opt density) as written by todts
 include("stoichiometry.jl")
 export asoxide # Compute the standard oxide
 export valence # a table of elemental valences (valence[z(n"O")] = -2)
+export elmbystoichiometry # Generic element-by-stoichiometric function
 export obystoichiometry # computes the mass fraction of O using valence rules.
 
 include("bremsstrahlung.jl")

@@ -192,11 +192,13 @@ Example:
     obystoichiometry(n"Mg"=>0.1099, n"Al"=>0.0443, n"Si"=>0.1941, n"Ca"=>0.1034, n"Fe"=>0.0756)
     0.39582340257233467
 """
-function obystoichiometry(elms::Dict{Element,<:AbstractFloat}; valences = NeXLCore.defaultValences)
+function elmbystoichiometry(el::Element, elms::Dict{Element,<:AbstractFloat}; valences = NeXLCore.defaultValences)
     sum(elms) do (elm, f)
-        elm ≠ n"O" ?  f * (-valences[z(elm)] * a(n"O")) / (a(elm) * valences[z(n"O")]) : 0.0
+        # elm ≠ n"O" ?  f * (-valences[z(elm)] * a(n"O")) / (a(elm) * valences[z(n"O")]) : 0.0
+        elm ≠ el ?  f * (-valences[z(elm)] * a(el)) / (a(elm) * valences[z(el)]) : 0.0
     end
 end
+obystoichiometry(elms::Dict{Element,<:AbstractFloat}; valences = NeXLCore.defaultValences) = elmbystoichiometry(n"O", elms; valences=valences)
 function obystoichiometry(elms::Pair{Element,<:AbstractFloat}...; valences = NeXLCore.defaultValences)
     obystoichiometry(Dict(elms...); valences = valences)
 end

@@ -27,8 +27,8 @@ Base.isapprox(f1::Film, f2::Film) =
 
 Base.show(io::IO, flm::Film) =
     flm.thickness < 1.0e-4 ?
-    print(io, 1.0e7 * flm.thickness, " nm of ", name(flm.material)) : #
-    print(io, 1.0e4 * flm.thickness, " μm of ", name(flm.material))
+    print(io, round(1.0e7 * flm.thickness, digits=1), " nm of ", name(flm.material)) : #
+    print(io, round(1.0e4 * flm.thickness, digits=2), " μm of ", name(flm.material))
 
 """
     massthickness(flm::Film)

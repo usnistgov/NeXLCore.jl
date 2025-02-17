@@ -170,7 +170,7 @@ function δσδΩ(::Type{ScreenedRutherford}, θ::Float64, elm::Element, E::Floa
            (1.0 - cos(θ) + ϵ(ScreenedRutherford, elm, E)^-1)^-2
 end
 function δσδΩ(::Type{Liljequist1989}, θ::Float64, elm::Element, E::Float64)::Float64
-    return σ(ScreenedRutherford, θ, elm, E) / LiljequistCorrection[z(elm)](E)
+    return δσδΩ(ScreenedRutherford, θ, elm, E) / LiljequistCorrection[z(elm)](E)
 end
 
 """

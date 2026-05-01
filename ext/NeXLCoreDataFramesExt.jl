@@ -151,6 +151,21 @@ function DataFrames.DataFrame(vass::AbstractVector{AtomicSubShell})
     )
 end
 
+function DataFrames.DataFrame(mat::Materials;  uncertainties = false)
+    function wu(v)
+        isa(v, UncertainValue) ? (uncertainties ? uncertainty(v) : value(v)) : (uncertainties ? NaN64 : v)
+    end
+    ci = CartesianIndices(mat)
+    elms = sort(collect(keys(mat)))
+    res = DataFrame(
+        "Row" => reshape(collect(map(ci->ci[1], ci)),(:)),
+        "Col" => reshape(collect(map(ci->ci[2],ci)),(:)),
+        map(elm->symbol(elm)=>collect(reshape(map(ci->wu(mat[ci][elm]),ci),(:))),elms)...
+    )
+end
+
+
+
 """
     compare(unk::Material, known::Material)::DataFrame
     compare(unks::AbstractVector{<:Material}, known::Material)
@@ -328,5 +343,6 @@ NeXLUncertainties.asa(::Type{DataFrame}, mat::Material)  = DataFrames.DataFrame(
 NeXLUncertainties.asa(::Type{DataFrame}, mats::AbstractVector{<:Material}, mode=:MassFraction)  = DataFrames.DataFrame(mats, mode)
 NeXLUncertainties.asa(::Type{DataFrame}, vss::AbstractVector{SubShell}) = DataFrames.DataFrame(vss)
 NeXLUncertainties.asa(::Type{DataFrame}, vass::AbstractVector{AtomicSubShell}) = DataFrames.DataFrame(vass)
+NeXLUncertainties.asa(::Type{DataFrame}, mats::Materials; uncertainties=false) = DataFrames.DataFrame(mats; uncertainties=uncertainties)
 
 end

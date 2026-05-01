@@ -310,6 +310,7 @@ include("materialdb.jl")
 
 include("mats.jl")
 export Materials
+export grayscale
 
 export disp
 

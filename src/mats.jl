@@ -101,15 +101,18 @@ function NeXLCore.asnormalized(mats::Materials{U,V}, n = one(V)) where {U<:Abstr
     return res
 end
 
-function NeXLUncertainties.asa(::Type{DataFrame}, mat::Materials;  uncertainties = false)
-    function wu(v)
-        isa(v, UncertainValue) ? (uncertainties ? uncertainty(v) : value(v)) : (uncertainties ? NaN64 : v)
-    end
-    ci = CartesianIndices(mat)
-    elms = sort(collect(keys(mat)))
-    res = DataFrame(
-        "Row" => reshape(collect(map(ci->ci[2], ci)),(:)),
-        "Col" => reshape(collect(map(ci->ci[1],ci)),(:)),
-        map(elm->symbol(elm)=>collect(reshape(map(ci->wu(mat[ci][elm]),ci),(:))),elms)...
-    )
+using FixedPointNumbers
+using Colors
+
+function grayscale(mats::Materials, elm::Element)
+    vof(v::UncertainValue) = value(v)
+    vof(v) = v
+    Gray.(N0f8.(map(CartesianIndices(mats)) do ci
+        clamp(vof(mats[ci][elm]),0.0,1.0)
+    end))
+end
+
+function colorize(mats::Materials, elms::AbstractArray{Element})
+    colori(i) = length(elms)>=i && haskey(mats.planes, elms[i]) ? grayscale(mats, elms[i]) :  zeros(N0f8, size(mats))
+    colorview(RGB, colori(1), colori(2), colori(3))
 end

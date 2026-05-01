@@ -65,8 +65,10 @@ function Base.getindex(mats::Materials{U,V,N}, elm::Element) where {U<:AbstractF
 end
 
 function Base.getindex(mats::Materials{U,V,N}, idx::Int...)::Material{U,V} where {U<:AbstractFloat,V<:AbstractFloat,N}
+    vof(v::UncertainValue) = value(v)
+    vof(v) = v
     mfs = Dict( el=>mats.massfractions[idx...,i] for (el, i) in mats.planes )
-    Material("$(mats.name)[$(join(repr.(idx),","))]", filter(mf->mf.second > 0.0, mfs), mats.a, mats.properties)
+    Material("$(mats.name)[$(join(repr.(idx),","))]", filter(mf->vof(mf.second) > 0.0, mfs), mats.a, mats.properties)
 end
 
 Base.getindex(mats::Materials, ci::CartesianIndex) = getindex(mats, ci.I...)
@@ -97,4 +99,17 @@ function NeXLCore.asnormalized(mats::Materials{U,V}, n = one(V)) where {U<:Abstr
         res[ci]=asnormalized(mats[ci], n)
     end
     return res
+end
+
+function NeXLUncertainties.asa(::Type{DataFrame}, mat::Materials;  uncertainties = false)
+    function wu(v)
+        isa(v, UncertainValue) ? (uncertainties ? uncertainty(v) : value(v)) : (uncertainties ? NaN64 : v)
+    end
+    ci = CartesianIndices(mat)
+    elms = sort(collect(keys(mat)))
+    res = DataFrame(
+        "Row" => reshape(collect(map(ci->ci[2], ci)),(:)),
+        "Col" => reshape(collect(map(ci->ci[1],ci)),(:)),
+        map(elm->symbol(elm)=>collect(reshape(map(ci->wu(mat[ci][elm]),ci),(:))),elms)...
+    )
 end

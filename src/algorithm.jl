@@ -152,7 +152,7 @@ function fractionaluncertainty(::Type{MonatomicGas}, z::Integer, energy)
         low, high = 0.5, 1.0
     elseif energy < 500.0
         low, high = 0.20, 0.30
-    elseif energy < 1.0
+    elseif energy < 1000.0
         low, high = 0.03, 0.10
     end
     distance = ( (energy - edgeenergy(z, sh)) / energy for sh in eachedge(z) )
@@ -198,10 +198,10 @@ Based on [this table](https://physics.nist.gov/PhysRefData/FFast/Text2000/sec06.
 function fractionaluncertainty(::Type{SolidLiquid}, z::Integer, energy)
     low, high = 0.01, 0.01
     if energy < 200.0
-        low, high = 1.0, 2.0
+        low, high = 0.9, 2.0
     elseif energy < 500.0
         low, high = 0.50, 1.0
-    elseif energy < 1.0
+    elseif energy < 1000.0
         low, high = 0.05, 0.20
     end
     distance = ( (energy - edgeenergy(z, sh)) / energy for sh in eachedge(z) )
